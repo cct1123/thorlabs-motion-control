@@ -129,10 +129,17 @@ class GuiController:
         self._mount = None
         with self._condition:
             self._state.update(
-                connected=False, recovery=False, identity={}, status={}, position=None, updated=None
+                connected=False,
+                recovery=False,
+                identity={},
+                status={},
+                position=None,
+                updated=None,
+                unknown=False,
             )
 
     def _run(self, command, serial, target, step):
+        stop_handled = False
         try:
             if command == "connect":
                 self._mount = self._factory(serial)
@@ -142,6 +149,8 @@ class GuiController:
                 with self._condition:
                     self._state.update(connected=True, identity=asdict(identity))
             elif command == "disconnect":
+                if self._state["unknown"]:
+                    raise ValueError("Physical state UNKNOWN; use Stop before disconnecting.")
                 status = self._mount.status() if not self._mount.recovery_required else None
                 if status is not None and status.busy:
                     raise ValueError("Mount is moving; use Stop before disconnecting.")
@@ -162,39 +171,63 @@ class GuiController:
                     if command == "home"
                     else self._mount.move_absolute(target, **kwargs)
                 )
-                # A Stop arriving at the completion boundary still uses this same owner.
-                if self._cancel.is_set():
-                    result = self._mount.stop()
                 self._readback(result.status, result.position)
             with self._condition:
                 if command != "refresh":
                     self._state.update(error="", message=f"{command} complete.")
                     self._event(self._state["message"])
         except Exception as exc:
-            if isinstance(exc, MotionError) and exc.cleanup.stop is not None:
-                self._readback(exc.cleanup.stop.status, exc.cleanup.stop.position)
-            message = f"{type(exc).__name__}: {exc}"
-            if command == "connect":
-                try:
-                    self._disconnect()
-                except Exception as close_error:
-                    message += f"; close failed: {close_error}"
-                    with self._condition:
-                        self._state["connected"] = True  # Keep Disconnect/Stop accessible.
-            with self._condition:
-                self._state.update(error=message, message="Operation failed; inspect Activity.")
-                if self._mount is not None and self._mount.recovery_required:
-                    self._state["unknown"] = not (
-                        isinstance(exc, MotionError) and exc.cleanup.confirmed_stopped
-                    )
-                self._event(message, "error")
+            # MotionError means cleanup was already attempted; never replay it.
+            stop_handled = isinstance(exc, MotionError)
+            self._failed(command, exc)
         finally:
             with self._condition:
-                self._state.update(
-                    busy=None,
-                    recovery=self._mount is not None and self._mount.recovery_required,
+                # Stop acceptance and owner release share one lock. A Stop accepted
+                # before this boundary must be serviced before another owner starts.
+                pending_stop = command in MOTIONS and self._cancel.is_set() and not stop_handled
+                if not pending_stop:
+                    self._finish_operation()
+            if pending_stop:
+                try:
+                    result = self._mount.stop()
+                    self._readback(result.status, result.position)
+                    with self._condition:
+                        self._state["message"] = "Stop confirmed by controller."
+                        self._event(self._state["message"])
+                except Exception as exc:
+                    self._failed("stop", exc)
+                finally:
+                    with self._condition:
+                        self._finish_operation()
+
+    def _finish_operation(self):
+        """Publish owner release while holding the condition lock."""
+        self._state.update(
+            busy=None,
+            recovery=self._mount is not None and self._mount.recovery_required,
+        )
+        self._condition.notify_all()
+
+    def _failed(self, command, exc):
+        if isinstance(exc, MotionError) and exc.cleanup.stop is not None:
+            self._readback(exc.cleanup.stop.status, exc.cleanup.stop.position)
+        message = f"{type(exc).__name__}: {exc}"
+        if command == "connect":
+            try:
+                self._disconnect()
+            except Exception as close_error:
+                message += f"; close failed: {close_error}"
+                with self._condition:
+                    self._state["connected"] = True  # Keep Disconnect/Stop accessible.
+        with self._condition:
+            if self._mount is not None and self._mount.recovery_required:
+                self._state["unknown"] = not (
+                    isinstance(exc, MotionError) and exc.cleanup.confirmed_stopped
                 )
-                self._condition.notify_all()
+            if self._state["unknown"]:
+                message += "; physical state UNKNOWN. Use Stop before disconnecting."
+            self._state.update(error=message, message="Operation failed; inspect Activity.")
+            self._event(message, "error")
 
     def refresh(self):
         with self._condition:
@@ -228,10 +261,15 @@ class GuiController:
             # connection also requires a stop attempt before the GUI releases it.
             if self._mount is not None:
                 state = self._state
+                # Front-panel movement can start after the last browser sample.
+                fresh_status = self._mount.status() if not self._mount.recovery_required else None
                 if (
                     state["unknown"]
-                    or state["status"].get("moving")
-                    or state["status"].get("homing")
+                    or (fresh_status is not None and fresh_status.busy)
+                    or (
+                        fresh_status is None
+                        and (state["status"].get("moving") or state["status"].get("homing"))
+                    )
                 ):
                     result = self._mount.stop()
                     self._readback(result.status, result.position)

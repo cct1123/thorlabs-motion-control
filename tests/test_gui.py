@@ -103,3 +103,17 @@ def test_gui_help_and_import_do_not_import_usb():
         env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
     )
     assert result.returncode == 0, result.stderr
+
+
+def test_unknown_physical_state_keeps_stop_available_and_blocks_disconnect():
+    snapshot = GuiController().snapshot()
+    snapshot.update(
+        connected=True,
+        recovery=True,
+        unknown=True,
+        status={"homed": True},
+        position={"degrees": 0},
+    )
+    disabled, _ = controls(snapshot, 90, 1)
+    assert not disabled["stop"]
+    assert all(disabled[name] for name in COMMANDS if name != "stop")

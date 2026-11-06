@@ -70,6 +70,7 @@ def controls(snapshot, target, step):
     ready = (
         idle
         and not snapshot["recovery"]
+        and not snapshot["unknown"]
         and not status.get("moving")
         and not status.get("homing")
         and not status.get("motion_error")
@@ -78,7 +79,9 @@ def controls(snapshot, target, step):
     disabled = {name: True for name in COMMANDS}
     disabled.update(
         connect=connected or bool(busy) or snapshot["closing"],
-        disconnect=not idle or bool(status.get("moving") or status.get("homing")),
+        disconnect=not idle
+        or snapshot["unknown"]
+        or bool(status.get("moving") or status.get("homing")),
         home=not ready,
         stop=not connected or (bool(busy) and busy not in MOTIONS) or snapshot["closing"],
     )

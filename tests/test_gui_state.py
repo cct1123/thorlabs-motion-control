@@ -258,3 +258,78 @@ def test_shutdown_timeout_does_not_close_an_active_owner(gui_owner):
         release.set()
     wait_idle(owner)
     assert owner.shutdown()
+
+
+@pytest.mark.parametrize("fail_stop", [False, True])
+def test_stop_at_final_readback_is_not_lost(gui_owner, fail_stop):
+    owner, mount = gui_owner
+    mount.homed = True
+    mount.fail_stop = fail_stop
+    connect(owner)
+    entered, release = threading.Event(), threading.Event()
+    original = owner._readback
+
+    def final_readback(status, position):
+        if position.degrees == 90 and not entered.is_set():
+            entered.set()
+            assert release.wait(2)
+        original(status, position)
+
+    owner._readback = final_readback
+    owner.submit("move-to", target=90)
+    try:
+        assert entered.wait(1)
+        assert "Stop requested" in owner.submit("stop")
+    finally:
+        release.set()
+    snap = wait_idle(owner)
+    names = [name for name, _ in mount.calls]
+    assert names.count("stop") == 1
+    assert snap["unknown"] == fail_stop
+    if fail_stop:
+        assert "UNKNOWN" in snap["error"]
+    else:
+        assert "Stop confirmed" in snap["message"]
+
+
+def test_disconnect_cannot_abandon_an_unconfirmed_stop(gui_owner):
+    owner, mount = gui_owner
+    connect(owner)
+    mount.fail_stop = True
+    owner.submit("stop")
+    assert wait_idle(owner)["unknown"]
+    owner.submit("disconnect")
+    snap = wait_idle(owner)
+    assert snap["connected"] and snap["unknown"]
+    assert not any(name == "close" for name, _ in mount.calls)
+    assert "Stop" in snap["error"]
+    mount.fail_stop = False
+    owner.submit("stop")
+    assert not wait_idle(owner)["unknown"]
+    owner.submit("disconnect")
+    assert not wait_idle(owner)["connected"]
+
+
+def test_shutdown_checks_fresh_status_before_releasing(gui_owner):
+    owner, mount = gui_owner
+    connect(owner)
+    # Movement began after the last UI sample (e.g. a front-panel action).
+    idle_status = mount.status
+    moving = [True]
+
+    def fresh_status():
+        if moving[0]:
+            mount.record("status:moving")
+            return Status(0x80000010, True, False, False, True, False)
+        return idle_status()
+
+    stop = mount.stop
+
+    def stop_and_settle():
+        moving[0] = False
+        return stop()
+
+    mount.status, mount.stop = fresh_status, stop_and_settle
+    assert owner.shutdown()
+    names = [name for name, _ in mount.calls]
+    assert names.index("status:moving") < names.index("stop") < names.index("close")
