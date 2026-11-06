@@ -14,6 +14,13 @@ from .protocol import COUNTS_PER_DEGREE, DEVICE, HOST
 VELOCITY_SCALE = 7_329_109
 ACCELERATION_SCALE = 1_502
 MAX_ANGLE = 15_480
+UNIT_FACTORS = {
+    "deg": 1,
+    "rad": math.pi / 180,
+    "mrad": math.pi / 180 * 1e3,
+    "urad": math.pi / 180 * 1e6,
+    "counts": COUNTS_PER_DEGREE,
+}
 
 
 @dataclass(frozen=True)
@@ -107,13 +114,7 @@ def display_angle(angle, mode, units="deg", decimals=6):
         return "—"
     if mode == "equivalent":
         angle %= 360
-    factor = {
-        "deg": 1,
-        "rad": math.pi / 180,
-        "mrad": math.pi / 180 * 1e3,
-        "urad": math.pi / 180 * 1e6,
-        "counts": COUNTS_PER_DEGREE,
-    }[units]
+    factor = UNIT_FACTORS[units]
     value = angle * factor
     if mode == "equivalent" and round(value, decimals) >= 360 * factor:
         value = 0

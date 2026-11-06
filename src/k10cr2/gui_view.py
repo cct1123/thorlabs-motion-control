@@ -9,7 +9,7 @@ from dash import Dash, Input, Output, State, ctx, dcc, html, no_update
 from flask import abort, jsonify, redirect, request, send_file
 
 from .gui_state import MANUAL, MOTIONS, GuiController
-from .settings import VELOCITY_SCALE, display_angle, resolve_target, to_display
+from .settings import UNIT_FACTORS, VELOCITY_SCALE, display_angle, resolve_target, to_display
 
 COMMANDS = (
     "connect",
@@ -575,7 +575,9 @@ def controls(snapshot, target, _step=None):
         identify=not ready,
     )
     disabled["stop"] = (
-        not snapshot["connected"] or snapshot["closing"] or (bool(busy) and busy not in MOTIONS)
+        not snapshot["connected"]
+        or snapshot["closing"]
+        or busy in {"connect", "disconnect", "stop"}
     )
     for name in ("refresh-state", "load-settings"):
         disabled[name] = not ready
@@ -1252,7 +1254,7 @@ def create_app(controller=None, *, serial=None):
             {} if state.get("enabled") else {"display": "none"},
             read_status,
             home_details,
-            "Factor is derived from the selected unit; display options apply to this session.",
+            f"Factor: {UNIT_FACTORS[ui['units']]:.12g} per degree (applied display units).",
             disabled["stop"],
             disabled["stop"],
             *[disabled[name] for name in COMMANDS],
