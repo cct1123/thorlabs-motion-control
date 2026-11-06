@@ -336,3 +336,29 @@ def test_shutdown_checks_fresh_status_before_releasing(gui_owner):
     assert owner.shutdown()
     names = [name for name, _ in mount.calls]
     assert names.index("status:moving") < names.index("stop") < names.index("close")
+
+
+def test_stop_accepted_during_readback_is_serviced_by_that_owner(gui_owner):
+    owner, mount = gui_owner
+    connect(owner)
+    entered, release = threading.Event(), threading.Event()
+    original = mount.status
+
+    def blocked():
+        entered.set()
+        assert release.wait(2)
+        return original()
+
+    mount.status = blocked
+    owner.submit("refresh")
+    try:
+        assert entered.wait(1)
+        assert "Stop requested" in owner.submit("stop")
+        assert not any(name == "stop" for name, _ in mount.calls)
+    finally:
+        release.set()
+    snapshot = wait_idle(owner)
+    assert "Stop confirmed" in snapshot["message"]
+    calls = mount.calls[-5:]
+    assert len({ident for _, ident in calls}) == 1
+    assert [name for name, _ in mount.calls].count("stop") == 1

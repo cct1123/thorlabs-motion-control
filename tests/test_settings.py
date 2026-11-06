@@ -45,6 +45,26 @@ def test_invalid_complete_draft_has_no_setting_writes(mount_factory):
     assert not fake.steps
 
 
+def test_all_groups_validate_before_first_write(mount_factory):
+    jog_query = bytes.fromhex("17 04 01 00 50 01")
+    jog_reply = bytes.fromhex(
+        "18 04 16 00 81 50 01 00 02 00 00 80 bb 00 00 00 00 00 de 05 00 00 55 d5 6f 00 02 00"
+    )
+    mount, fake = mount_factory(
+        [(STATUS_REQUEST, HOMED), (VEL_QUERY, VEL_REPLY), (jog_query, jog_reply)]
+    )
+    with pytest.raises(ValueError):
+        mount.configure(
+            {
+                "velocity": dict(velocity=8, acceleration=8),
+                "jog": dict(
+                    jog_step=5, jog_mode=2, jog_stop=2, jog_velocity=100, jog_acceleration=10
+                ),
+            }
+        )
+    assert fake.sent == [bytes.fromhex("05 00 00 00 50 01"), STATUS_REQUEST, VEL_QUERY, jog_query]
+
+
 def test_readback_mismatch_requires_explicit_recovery(mount_factory):
     mount, fake = mount_factory(
         [
