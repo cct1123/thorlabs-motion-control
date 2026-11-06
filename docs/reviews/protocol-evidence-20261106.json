@@ -1,0 +1,321 @@
+{
+  "reviewed_at_utc": "2026-11-06T21:01:36.002225+00:00",
+  "review_snapshot_commit": "eda8ede0a4bf42f2e70ca49e217bebfbdeef5cf8",
+  "hash_convention": "Exact git-archive bytes, before checkout line-ending conversion",
+  "scope": "Offline catalogue, reference hash, JSON/traffic consistency and fixture checks; no USB access",
+  "software_validation": {
+    "python": "3.12.7",
+    "pytest": {
+      "passed": 142,
+      "warnings": 1,
+      "warning_source": "Dash pytest plugin deprecated hook declaration"
+    },
+    "ruff": "0.17.4",
+    "lint": "passed",
+    "format": "32 files already formatted",
+    "uv_lock_check_offline": "passed; 32 packages resolved"
+  },
+  "checks": [
+    "All 56 shared-index and 3 related-trigger catalogue IDs appear in the capability table",
+    "Both copies of each issue-48 protocol and K10CR2 manual match the catalogue SHA256 values",
+    "All five packaged bench logs reassemble into complete, correctly addressed APT frames",
+    "Only identity, status, position, home, absolute-move and profiled-stop requests appear in those logs",
+    "All receive lengths, channel words, identity serial/model/firmware and final zero/stopped readbacks agree",
+    "Both home/90/zero records contain one home and two absolute moves, with matching completion counts",
+    "Each stop record has exactly one profiled-stop request and one completion matching its saved fixture",
+    "Ctrl+C record preserves KeyboardInterrupt, confirmed stop, recovery-required and explicit reconnect evidence",
+    "All four motion/stop records contain identical historical source hash sets"
+  ],
+  "shared_catalogue_ids": 56,
+  "related_trigger_ids": 3,
+  "reference_hashes": [
+    {
+      "path": "docs/references/APT_Communications_Protocol-Issue-48.pdf",
+      "sha256": "911bdd8cc6a445f959a5fae3f44456ebf345c65d5103f3f7d5c5fd547d6e523f"
+    },
+    {
+      "path": "docs/hardware/APT-communications-protocol-issue48.pdf",
+      "sha256": "911bdd8cc6a445f959a5fae3f44456ebf345c65d5103f3f7d5c5fd547d6e523f"
+    },
+    {
+      "path": "docs/references/K10CR2-User-Guide-ETN064249-D02.pdf",
+      "sha256": "e0c3a77232005cfca12381493ed8ea6907e0cfdc7fa406b8c7c02a6bd04dbeab"
+    },
+    {
+      "path": "docs/hardware/K10CR2-user-guide-ETN064249-D02.pdf",
+      "sha256": "e0c3a77232005cfca12381493ed8ea6907e0cfdc7fa406b8c7c02a6bd04dbeab"
+    }
+  ],
+  "records": [
+    {
+      "record": "docs/bench/package-ctrlc-stop-20261106-143848.json",
+      "tx_message_counts": {
+        "0x0005": 3,
+        "0x0411": 7,
+        "0x0429": 314,
+        "0x0453": 2,
+        "0x0465": 1
+      },
+      "rx_message_counts": {
+        "0x0006": 3,
+        "0x0412": 7,
+        "0x042A": 314,
+        "0x0464": 2,
+        "0x0466": 1
+      },
+      "completion_positions": [
+        {
+          "id": "0x0466",
+          "counts": 9373739
+        },
+        {
+          "id": "0x0464",
+          "counts": 9373739
+        },
+        {
+          "id": "0x0464",
+          "counts": 0
+        }
+      ],
+      "final_counts": 0,
+      "final_status": "0x80000400"
+    },
+    {
+      "record": "docs/bench/package-motion-20261106-143305.json",
+      "tx_message_counts": {
+        "0x0005": 2,
+        "0x0411": 9,
+        "0x0429": 455,
+        "0x0443": 1,
+        "0x0453": 2
+      },
+      "rx_message_counts": {
+        "0x0006": 2,
+        "0x0412": 9,
+        "0x042A": 455,
+        "0x0444": 1,
+        "0x0464": 2
+      },
+      "completion_positions": [
+        {
+          "id": "0x0464",
+          "counts": 12288000
+        },
+        {
+          "id": "0x0464",
+          "counts": 0
+        }
+      ],
+      "final_counts": 0,
+      "final_status": "0x80000400"
+    },
+    {
+      "record": "docs/bench/package-motion-20261106-143522.json",
+      "tx_message_counts": {
+        "0x0005": 2,
+        "0x0411": 9,
+        "0x0429": 457,
+        "0x0443": 1,
+        "0x0453": 2
+      },
+      "rx_message_counts": {
+        "0x0006": 2,
+        "0x0412": 9,
+        "0x042A": 457,
+        "0x0444": 1,
+        "0x0464": 2
+      },
+      "completion_positions": [
+        {
+          "id": "0x0464",
+          "counts": 12288000
+        },
+        {
+          "id": "0x0464",
+          "counts": 0
+        }
+      ],
+      "final_counts": 0,
+      "final_status": "0x80000400"
+    },
+    {
+      "record": "docs/bench/package-profiled-stop-20261106-143829.json",
+      "tx_message_counts": {
+        "0x0005": 2,
+        "0x0411": 7,
+        "0x0429": 72,
+        "0x0453": 2,
+        "0x0465": 1
+      },
+      "rx_message_counts": {
+        "0x0006": 2,
+        "0x0412": 7,
+        "0x042A": 72,
+        "0x0464": 2,
+        "0x0466": 1
+      },
+      "completion_positions": [
+        {
+          "id": "0x0466",
+          "counts": 2065104
+        },
+        {
+          "id": "0x0464",
+          "counts": 2065104
+        },
+        {
+          "id": "0x0464",
+          "counts": 0
+        }
+      ],
+      "final_counts": 0,
+      "final_status": "0x80000400"
+    },
+    {
+      "record": "docs/bench/package-query-20261106.json",
+      "tx_message_counts": {
+        "0x0005": 2,
+        "0x0411": 1,
+        "0x0429": 1
+      },
+      "rx_message_counts": {
+        "0x0006": 2,
+        "0x0412": 1,
+        "0x042A": 1
+      },
+      "completion_positions": [],
+      "final_counts": 0,
+      "final_status": "0x80000400"
+    }
+  ],
+  "bench_source_provenance": [
+    {
+      "path": "src/k10cr2/__init__.py",
+      "bench_sha256": "4cbebcff1ea32a1b0d2c4434dbd486475f8d43e8124369e3a51c9335e77e5604",
+      "review_snapshot_sha256": "3979d41644f22d02c5ecb69bc8ad00c1bf2c7b84cbd9ed4d7c5a823a58ddff9e",
+      "matches_bench_allowing_crlf": false,
+      "matches_bench_after_final_newline_normalization": false
+    },
+    {
+      "path": "src/k10cr2/__main__.py",
+      "bench_sha256": "935a1c1166b0c1ea35a82256345000bf2c73ded718d77773bc27a71ecce28f7d",
+      "review_snapshot_sha256": "482b8693e2fe6dbd732e3d7961e03827d3efa187bad11d29da188be580ebbeea",
+      "matches_bench_allowing_crlf": false,
+      "matches_bench_after_final_newline_normalization": true
+    },
+    {
+      "path": "src/k10cr2/cli.py",
+      "bench_sha256": "fd7dab1ac490c53413b24c860769c27b11b4e78ea361dce9d3589e00e20456b1",
+      "review_snapshot_sha256": "0d8dbad3113c57977a2033aca33ea2d9c3c60d8fe9af85f07b5b799b7a7eda42",
+      "matches_bench_allowing_crlf": false,
+      "matches_bench_after_final_newline_normalization": true
+    },
+    {
+      "path": "src/k10cr2/controller.py",
+      "bench_sha256": "057248e6317e412935298017456678d3545cb421e62433678846e71613544691",
+      "review_snapshot_sha256": "6b1621689cb42aff7b71095dd6ec18cbe6de467ea5dae9fc3f759d590af38017",
+      "matches_bench_allowing_crlf": false,
+      "matches_bench_after_final_newline_normalization": false
+    },
+    {
+      "path": "src/k10cr2/protocol.py",
+      "bench_sha256": "e11e2b93ba7563415daba3023a5fa5bd59531072f90775f7c47383512c7d7196",
+      "review_snapshot_sha256": "0ca2b2c44d158a4a3f67859291059cd037ba6ba27d5d209bfa0d6ebff488255d",
+      "matches_bench_allowing_crlf": false,
+      "matches_bench_after_final_newline_normalization": false
+    },
+    {
+      "path": "src/k10cr2/transport.py",
+      "bench_sha256": "cb246d89100930d4dd5a3b9c43029d5bb5e3f3e193f51e712829a13bb31f9ad3",
+      "review_snapshot_sha256": "b17e631bd912c7f2aaab16b844a82c208f20a25c9f0cfc54db5ad8bfcd744d8a",
+      "matches_bench_allowing_crlf": false,
+      "matches_bench_after_final_newline_normalization": false
+    }
+  ],
+  "manifest": [
+    {
+      "path": "docs/bench/package-ctrlc-stop-20261106-143848.json",
+      "sha256": "c71dc0afd4d8da6719d6cd872906d85ac5b46b8128008fc4f6b74495e3a0664c"
+    },
+    {
+      "path": "docs/bench/package-ctrlc-stop-20261106-143848.log",
+      "sha256": "19df390e8e31ac9e6f3d4c99198cacf0683addb4e5f179b84cc3af8cf931c208"
+    },
+    {
+      "path": "docs/bench/package-motion-20261106-143305.json",
+      "sha256": "9a44ece4026e45b1433ac03493eba3386dcb134552a94eb0fefa701a994482f8"
+    },
+    {
+      "path": "docs/bench/package-motion-20261106-143305.log",
+      "sha256": "f8d7f599adefe481823061bc9117e33e7087bc20efa2c97739e1cbdaa5650372"
+    },
+    {
+      "path": "docs/bench/package-motion-20261106-143522.json",
+      "sha256": "46daa3fe5af1a4500b387a2254fab2ba71320cf4ca7a4729dfc24f491043f31c"
+    },
+    {
+      "path": "docs/bench/package-motion-20261106-143522.log",
+      "sha256": "e0c2738e4726b1778c28055a652589920d9a628b70b9e7cc697d82f8fc9442f7"
+    },
+    {
+      "path": "docs/bench/package-profiled-stop-20261106-143829.json",
+      "sha256": "d032ace10962505486ebb87dd7d57b91365d3cf04bcaa1ff1afcd5d1df58f879"
+    },
+    {
+      "path": "docs/bench/package-profiled-stop-20261106-143829.log",
+      "sha256": "60d68a4b6b0823b00a76e85928dc36e8c741145fff736d2d8d4cb968b91bdcdc"
+    },
+    {
+      "path": "docs/bench/package-query-20261106.json",
+      "sha256": "3f3c4fe2ea4ff445e6e061cd649ba0e1d9e2937750d6ae034c9855fae8a3a705"
+    },
+    {
+      "path": "docs/bench/package-query-20261106.log",
+      "sha256": "7475ff34c5306fb1ebca1307900d4872ba03cc2943d731fc2cb66ad231aa9f1d"
+    },
+    {
+      "path": "docs/command-catalog.md",
+      "sha256": "15122f4fe8bd388beeada8dd285748d428f17a84fccaf4dda06ded50c441363e"
+    },
+    {
+      "path": "docs/commands.md",
+      "sha256": "62f67726ad5fd3e5e5f5812252d9a839ca3f78d87aa8a6a74565d732b1055712"
+    },
+    {
+      "path": "docs/validation.md",
+      "sha256": "0e2b139893368764a0e32207ffdf25a8ebdc67e78de4354bc585f8a76a26af07"
+    },
+    {
+      "path": "tests/fixtures/bench-home-20261106.json",
+      "sha256": "c020b9acba31f5fbf812ac819a32d88898b872543468e74a0c90f912e69e8f8e"
+    },
+    {
+      "path": "tests/fixtures/bench-status-20261106.json",
+      "sha256": "fb88b5346a78a0573697f29747942042d81724ca777d8a0faf31d2d6c5f66e55"
+    },
+    {
+      "path": "tests/fixtures/ctrlc-stopped.hex",
+      "sha256": "8109fa9e8b1b78e4ee030c04ce7d99b98edbced427aaf99d6c25b2a12d5cc3ca"
+    },
+    {
+      "path": "tests/fixtures/identity.hex",
+      "sha256": "075c3e1c3a4a7010daa30f1103098d0ace019260be3feed9134ba6c3fb616592"
+    },
+    {
+      "path": "tests/fixtures/move-completed-90.hex",
+      "sha256": "a03a13608ea891b37f56a4dd854256cf535b059726926e943cb26f61e86a60b1"
+    },
+    {
+      "path": "tests/fixtures/move-completed-zero.hex",
+      "sha256": "6ad511e0ea7b14f238bde2c35d95a817a2fdc9d644aa7d378e645a5dc07b1b48"
+    },
+    {
+      "path": "tests/fixtures/profiled-stopped.hex",
+      "sha256": "fdb89d812e9beb6cb04bb933661f5fa9d91e0bd0c57482a3dccbcdb6ed59eb8e"
+    },
+    {
+      "path": "tests/fixtures/protocol-issue48-catalog.json",
+      "sha256": "d7c10f308d8ef9fbb1212706b02e23dcfbc1536ead4badecdb7308eb1643db0e"
+    }
+  ]
+}
