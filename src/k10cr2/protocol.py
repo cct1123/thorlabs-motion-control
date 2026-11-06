@@ -54,6 +54,7 @@ COMMANDS = {
     "stop": Command(0x0465, 1, 2, 0x0466, 14),
 }
 RESPONSE_SIZES = {c.response_id: c.response_size for c in COMMANDS.values() if c.response_id}
+RESPONSE_SIZES.update({0x0415: 14, 0x0418: 22, 0x043C: 6, 0x0442: 14, 0x04B8: 16})
 FAULT_RESPONSE_SIZES = {0x0080: 0, 0x0081: 68}
 
 

@@ -1,6 +1,7 @@
 """Synchronous K10CR2 controller. One operation and receive path per instance."""
 
 import math
+import struct
 import threading
 import time
 from collections.abc import Callable
@@ -18,6 +19,19 @@ from .protocol import (
     decode_position,
     decode_status,
     request,
+)
+from .settings import (
+    ACCELERATION_SCALE,
+    EDITABLE,
+    MAX_ANGLE,
+    SETTINGS,
+    VELOCITY_SCALE,
+    data_packet,
+    encode_changes,
+    finite,
+    position_counts,
+    resolve_target,
+    short_packet,
 )
 from .transport import WinUSBTransport, remaining
 
@@ -219,6 +233,233 @@ class K10CR2:
         with self._operation():
             return self._position(deadline)
 
+    def _setting(self, group, deadline):
+        spec = SETTINGS[group]
+        deadline = min(deadline, time.monotonic() + self.query_timeout)
+        try:
+            self._transport.write(short_packet(spec.request_id), deadline)
+            frame = self._wait_for(spec.response_id, deadline)
+            return dict(zip(spec.fields, struct.unpack(spec.format, frame.payload), strict=True))
+        except BaseException:
+            self._needs_recovery = True
+            raise
+
+    def _write_setting(self, group, values, deadline):
+        spec = SETTINGS[group]
+        try:
+            payload = struct.pack(spec.format, *(values[field] for field in spec.fields))
+            self._transport.write(data_packet(spec.set_id, payload), deadline)
+            actual = self._setting(group, deadline)
+            if actual != values:
+                raise RuntimeError(f"{group} readback does not match requested settings")
+            return actual
+        except BaseException:
+            self._needs_recovery = True
+            raise
+
+    def query_settings(self, groups=None):
+        groups = list(SETTINGS) if groups is None else list(groups)
+        if not groups or any(group not in SETTINGS for group in groups):
+            raise ValueError("Unknown settings group")
+        deadline = self._deadline(self.query_timeout * len(groups), self.query_timeout)
+        with self._operation():
+            return {group: self._setting(group, deadline) for group in groups}
+
+    def configure(self, changes, *, high_power=False, persist=False):
+        """Read, validate the whole draft, apply changed groups, and verify readback.
+
+        EEPROM has no acknowledgement: persistence reports a request, not proof.
+        Stage/axis, power, trigger, bow index and factory reset remain unavailable.
+        """
+        if not changes or any(group not in EDITABLE for group in changes):
+            raise ValueError("Unknown, locked or unverified settings group")
+        deadline = self._deadline(self.query_timeout * (3 * len(changes) + 1), self.query_timeout)
+        with self._operation():
+            state = self._status(deadline)
+            self._check_motion_status(state)
+            if state.busy:
+                raise RuntimeError("Stop motion before changing settings")
+            before = {group: self._setting(group, deadline) for group in changes}
+            # No setting writes until EVERY group has passed validation.
+            prepared = {
+                group: encode_changes(group, draft, before[group], high_power)
+                for group, draft in changes.items()
+            }
+            result = {}
+            for group, values in prepared.items():
+                result[group] = (
+                    self._write_setting(group, values, deadline)
+                    if values != before[group]
+                    else before[group]
+                )
+            if persist:
+                try:
+                    for group in prepared:
+                        self._transport.write(
+                            data_packet(0x04B9, struct.pack("<HH", 1, SETTINGS[group].set_id)),
+                            deadline,
+                        )
+                except BaseException:
+                    self._needs_recovery = True
+                    raise
+            return result
+
+    def set_enabled(self, enabled):
+        if not isinstance(enabled, bool):
+            raise ValueError("Enabled must be True or False")
+        deadline = self._deadline(None, self.query_timeout)
+        with self._operation():
+            state = self._status(deadline)
+            if state.busy:
+                raise RuntimeError("Stop motion before enabling or disabling the motor")
+            try:
+                self._transport.write(short_packet(0x0210, 1, 1 if enabled else 2), deadline)
+                state = self._status(deadline)
+                if state.enabled != enabled:
+                    raise RuntimeError("Motor enable readback did not match the request")
+                return state
+            except BaseException:
+                self._needs_recovery = True
+                raise
+
+    def identify(self):
+        deadline = self._deadline(None, self.query_timeout)
+        with self._operation():
+            try:
+                self._transport.write(short_packet(0x0223, 0, 0), deadline)
+            except BaseException:
+                self._needs_recovery = True
+                raise
+
+    def move_to(
+        self,
+        angle,
+        *,
+        mode="fixed",
+        direction="quickest",
+        timeout=None,
+        cancel=None,
+        on_progress=None,
+    ):
+        # Resolve the equivalent-angle route on a fresh counter while owning USB.
+        resolve_target(angle, 0, mode, direction)  # Validate before I/O.
+        return self._motion("move", (angle, mode, direction), timeout, cancel, on_progress)
+
+    def manual_motion(
+        self,
+        direction,
+        *,
+        jog=False,
+        speed=None,
+        mode="fixed",
+        high_power=False,
+        cancel=None,
+        held=None,
+        on_progress=None,
+        timeout=None,
+    ):
+        """Held drive or jog. Continuous motion uses a finite boundary target.
+
+        A released or expired browser lease stops through this owner. A single jog
+        finishes once, and repeats only while held. Temporary velocity changes are
+        verified and restored. No receive path competes with this operation.
+        """
+        if direction not in {-1, 1} or isinstance(direction, bool):
+            raise ValueError("Direction must be -1 or +1")
+        if mode not in {"fixed", "total", "equivalent"}:
+            raise ValueError("Invalid rotation mode")
+        if not jog:
+            finite(speed, "Drive velocity / °/s", 0.005, 20 if high_power else 10)
+        deadline = self._deadline(timeout, self.motion_timeout)
+        with self._operation():
+            state = self._status(deadline)
+            self._check_motion_status(state)
+            if state.busy or not state.homed or not state.enabled:
+                raise RuntimeError("Manual control requires an idle, enabled, homed mount")
+            profile = self._setting("jog", deadline) if jog else None
+            continuous = not jog or profile["mode"] == 1
+            stop_mode = profile["stop"] if jog else 2
+            old_velocity = self._setting("velocity", deadline) if continuous else None
+            lower, upper = (0, 360) if mode == "fixed" else (-MAX_ANGLE, MAX_ANGLE)
+            restore = False
+            try:
+                if continuous:
+                    maximum = profile["maximum"] if jog else round(speed * VELOCITY_SCALE)
+                    finite(
+                        maximum / VELOCITY_SCALE, "Velocity / °/s", 0.005, 20 if high_power else 10
+                    )
+                    acceleration = profile["acceleration"] if jog else old_velocity["acceleration"]
+                    finite(acceleration / ACCELERATION_SCALE, "Acceleration / °/s²", 0.001, 20)
+                    if cancel is not None and cancel.is_set():
+                        raise MotionCancelled("Cancelled before manual motion")
+                    velocity = {
+                        **old_velocity,
+                        "minimum": 0,
+                        "maximum": maximum,
+                        "acceleration": acceleration,
+                    }
+                    restore = True
+                    self._write_setting("velocity", velocity, deadline)
+                while True:
+                    before = self._position(deadline)
+                    target = (
+                        position_counts(upper if direction > 0 else lower)
+                        if continuous
+                        else before.counts + direction * profile["step"]
+                    )
+                    if not position_counts(lower) <= target <= position_counts(upper):
+                        raise ValueError("Jog would exceed the selected rotation range")
+                    if before.counts == target:
+                        return MotionResult(state, before, False, no_op=True)
+                    if cancel is not None and cancel.is_set():
+                        raise MotionCancelled("Cancelled before manual motion")
+                    if continuous and held is not None and not held():
+                        return MotionResult(state, before, False, no_op=True)
+                    self._events.clear()
+                    packet = (
+                        request("move", counts=target)
+                        if continuous
+                        else short_packet(0x046A, 1, 1 if direction > 0 else 2)
+                    )
+                    try:
+                        self._transport.write(packet, deadline)
+                        while True:
+                            if cancel is not None and cancel.is_set():
+                                raise MotionCancelled("Stop requested")
+                            if continuous and held is not None and not held():
+                                return self._stop(
+                                    deadline=self._deadline(None, self.cleanup_timeout),
+                                    mode=stop_mode,
+                                )
+                            state = self._status(deadline)
+                            self._check_motion_status(state)
+                            position = self._position(deadline)
+                            if on_progress is not None:
+                                on_progress(state, position)
+                            if cancel is not None and cancel.is_set():
+                                raise MotionCancelled("Stop requested")
+                            if not state.busy and position.counts == target:
+                                if continuous or held is None or not held():
+                                    return MotionResult(state, position, 0x0464 in self._events)
+                                break
+                            self._pause(deadline)
+                    except BaseException as original:
+                        self._needs_recovery = True
+                        try:
+                            cleanup = CleanupResult(
+                                True, stop=self._stop(self._deadline(None, self.cleanup_timeout))
+                            )
+                        except BaseException as exc:
+                            cleanup = CleanupResult(False, error=f"{type(exc).__name__}: {exc}")
+                        raise MotionError(original, cleanup) from original
+            finally:
+                if restore and not self._needs_recovery:
+                    self._write_setting(
+                        "velocity",
+                        old_velocity,
+                        self._deadline(self.query_timeout * 2, self.query_timeout),
+                    )
+
     def _pause(self, deadline):
         time.sleep(min(0.05, remaining(deadline)))
         remaining(deadline)
@@ -227,9 +468,9 @@ class K10CR2:
         if state.motion_error or state.raw_bits & 0x40000000:
             raise RuntimeError(f"Controller reports a motion/error flag: {state.raw_bits:#010x}")
 
-    def _stop(self, deadline) -> StopResult:
+    def _stop(self, deadline, mode=2) -> StopResult:
         self._events.discard(0x0466)
-        self._transport.write(request("stop"), deadline)
+        self._transport.write(short_packet(0x0465, 1, mode), deadline)
         self._wait_for(0x0466, deadline)
         while True:
             state = self._status(deadline)
@@ -263,6 +504,9 @@ class K10CR2:
             if name == "move" and not state.homed:
                 raise RuntimeError("Home the mount explicitly before an absolute move")
             before = self._position(deadline)
+            if isinstance(target, tuple):
+                angle, mode, direction = target
+                target = resolve_target(angle, before.degrees, mode, direction)
             if cancel is not None and cancel.is_set():
                 raise MotionCancelled("Cancelled before motion; no motion command sent")
             if name == "move" and before.counts == target:
