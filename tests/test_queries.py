@@ -79,3 +79,18 @@ def test_second_controller_cannot_own_same_serial(mount_factory):
         other.connect()
     assert len(fake.sent) == 1
     mount.close()
+
+
+def test_identity_decode_failure_requires_reconnect(mount_factory, identity_bytes):
+    from conftest import INFO_REQUEST
+
+    from k10cr2 import ProtocolError
+
+    malformed = identity_bytes[:10] + b"\xff" + identity_bytes[11:]
+    mount, fake = mount_factory([(INFO_REQUEST, malformed)])
+    with pytest.raises(ProtocolError, match="Non-ASCII"):
+        mount.info()
+    assert mount.recovery_required
+    with pytest.raises(RuntimeError, match="uncertain"):
+        mount.status()
+    assert not fake.steps

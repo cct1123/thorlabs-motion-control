@@ -186,23 +186,23 @@ class K10CR2:
                 remaining(deadline)
                 return frame
 
-    def _query(self, name, deadline):
+    def _query(self, name, deadline, decode):
         deadline = min(deadline, time.monotonic() + self.query_timeout)
         try:
             self._transport.write(request(name), deadline)
-            return self._wait_for(COMMANDS[name].response_id, deadline)
+            return decode(self._wait_for(COMMANDS[name].response_id, deadline))
         except BaseException:
             self._needs_recovery = True
             raise
 
     def _info(self, deadline):
-        return decode_identity(self._query("info", deadline))
+        return self._query("info", deadline, decode_identity)
 
     def _status(self, deadline):
-        return decode_status(self._query("status", deadline))
+        return self._query("status", deadline, decode_status)
 
     def _position(self, deadline):
-        return decode_position(self._query("position", deadline))
+        return self._query("position", deadline, decode_position)
 
     def info(self, *, timeout: float | None = None) -> Identity:
         deadline = self._deadline(timeout, self.query_timeout)
@@ -307,15 +307,17 @@ class K10CR2:
                             name == "move" and before.counts != position.counts
                         )
                         if progressed and position.counts == expected:
+                            if cancel is not None and cancel.is_set():
+                                raise MotionCancelled("Stop requested")
                             remaining(deadline)
                             return MotionResult(state, position, completion in self._events)
                     self._pause(deadline)
-            except (Exception, KeyboardInterrupt) as original:
+            except BaseException as original:
                 self._needs_recovery = True
                 try:
                     stopped = self._stop(self._deadline(None, self.cleanup_timeout))
                     cleanup = CleanupResult(True, stop=stopped)
-                except (Exception, KeyboardInterrupt) as stop_error:
+                except BaseException as stop_error:
                     cleanup = CleanupResult(
                         False, error=f"{type(stop_error).__name__}: {stop_error}"
                     )

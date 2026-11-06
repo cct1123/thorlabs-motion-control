@@ -314,3 +314,46 @@ def test_progress_callback_failure_runs_stop_cleanup(mount_factory):
         mount.move_absolute(90, on_progress=report)
     assert str(caught.value.original) == "UI observer failed"
     assert caught.value.cleanup.confirmed_stopped and not fake.steps
+
+
+def test_cancel_from_final_progress_callback_still_stops(mount_factory):
+    import threading
+
+    from k10cr2 import MotionCancelled
+
+    cancel = threading.Event()
+    mount, fake = mount_factory(
+        [
+            (STATUS_REQUEST, HOMED),
+            (POSITION_REQUEST, POSITION_ZERO),
+            (MOVE_90, b""),
+            (STATUS_REQUEST, HOMED),
+            (POSITION_REQUEST, POSITION_90),
+            *stop_steps(),
+        ]
+    )
+    with pytest.raises(MotionError) as caught:
+        mount.move_absolute(90, cancel=cancel, on_progress=lambda *_: cancel.set())
+    assert isinstance(caught.value.original, MotionCancelled)
+    assert caught.value.cleanup.confirmed_stopped and not fake.steps
+
+
+def test_observer_system_exit_still_runs_stop_cleanup(mount_factory):
+    mount, fake = mount_factory(
+        [
+            (STATUS_REQUEST, HOMED),
+            (POSITION_REQUEST, POSITION_ZERO),
+            (MOVE_90, b""),
+            (STATUS_REQUEST, MOVING),
+            (POSITION_REQUEST, POSITION_ZERO),
+            *stop_steps(),
+        ]
+    )
+
+    def exit_observer(*_):
+        raise SystemExit("observer exited")
+
+    with pytest.raises(MotionError) as caught:
+        mount.move_absolute(90, on_progress=exit_observer)
+    assert isinstance(caught.value.original, SystemExit)
+    assert caught.value.cleanup.confirmed_stopped and not fake.steps

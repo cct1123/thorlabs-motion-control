@@ -48,24 +48,34 @@ class WinUSBTransport:
         if backend is None:
             raise OSError("libusb backend unavailable")
         matches = []
-        for candidate in usb.core.find(
-            find_all=True, idVendor=0x0403, idProduct=0xFAF0, backend=backend
-        ):
-            remaining(deadline)
-            try:
-                if candidate.serial_number == serial:
+        pending = []
+        try:
+            for candidate in usb.core.find(
+                find_all=True, idVendor=0x0403, idProduct=0xFAF0, backend=backend
+            ):
+                pending.append(candidate)
+                remaining(deadline)
+                try:
+                    matched = candidate.serial_number == serial
+                except (usb.core.USBError, ValueError):
+                    matched = False
+                if matched:
                     matches.append(candidate)
                 else:
+                    pending.pop()
                     usb.util.dispose_resources(candidate)
-            except (usb.core.USBError, ValueError):
-                usb.util.dispose_resources(candidate)
-        if len(matches) != 1:
-            for candidate in matches:
-                usb.util.dispose_resources(candidate)
-            raise OSError(
-                f"Expected one accessible K10CR2 USB serial {serial}; found {len(matches)}. "
-                "Check the connection, WinUSB binding, and other device owners."
-            )
+            if len(matches) != 1:
+                raise OSError(
+                    f"Expected one accessible K10CR2 USB serial {serial}; found {len(matches)}. "
+                    "Check the connection, WinUSB binding, and other device owners."
+                )
+        except BaseException as original:
+            for candidate in pending:
+                try:
+                    usb.util.dispose_resources(candidate)
+                except Exception as cleanup_error:
+                    original.add_note(f"USB enumeration cleanup also failed: {cleanup_error}")
+            raise
         device = matches[0]
         claimed = False
         try:

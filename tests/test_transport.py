@@ -144,3 +144,33 @@ def test_open_exact_serial_initializes_only_uart_and_closes(monkeypatch, failure
     ]
     transport.close()
     assert released == [(target, 0)] and disposed == [wrong, target]
+
+
+@pytest.mark.parametrize("failure", ["deadline", "interrupt"])
+def test_enumeration_failure_disposes_current_and_previous_matches(monkeypatch, failure):
+    import libusb_package
+    import usb.core
+    import usb.util
+
+    import k10cr2.transport as module
+
+    clock = [0.0]
+    target = SimpleNamespace(serial_number="12345678")
+    current = SimpleNamespace(serial_number="87654321")
+
+    def candidates(**kwargs):
+        yield target
+        if failure == "deadline":
+            clock[0] = 2.0
+            yield current
+        else:
+            raise KeyboardInterrupt
+
+    disposed = []
+    monkeypatch.setattr(module.time, "monotonic", lambda: clock[0])
+    monkeypatch.setattr(libusb_package, "get_libusb1_backend", lambda: object())
+    monkeypatch.setattr(usb.core, "find", candidates)
+    monkeypatch.setattr(usb.util, "dispose_resources", lambda d: disposed.append(d))
+    with pytest.raises(TimeoutError if failure == "deadline" else KeyboardInterrupt):
+        WinUSBTransport.open("12345678", 1.0)
+    assert disposed == ([target, current] if failure == "deadline" else [target])
