@@ -128,7 +128,7 @@ class GuiController:
             if self._closing:
                 return "The GUI is shutting down."
             busy = self._state["busy"]
-            if command == "stop" and busy in MOTIONS:
+            if command == "stop" and busy and busy not in {"connect", "disconnect", "stop"}:
                 self._cancel.set()
                 self._state["message"] = "Stop requested; waiting for controller confirmation…"
                 self._event("Stop requested")
@@ -347,7 +347,11 @@ class GuiController:
             with self._condition:
                 # Stop acceptance and owner release share one lock. A Stop accepted
                 # before this boundary must be serviced before another owner starts.
-                pending_stop = command in MOTIONS and self._cancel.is_set() and not stop_handled
+                pending_stop = (
+                    command not in {"connect", "disconnect", "stop"}
+                    and self._cancel.is_set()
+                    and not stop_handled
+                )
                 if not pending_stop:
                     self._finish_operation()
             if pending_stop:
@@ -375,6 +379,8 @@ class GuiController:
         if isinstance(exc, MotionError) and exc.cleanup.stop is not None:
             self._readback(exc.cleanup.stop.status, exc.cleanup.stop.position)
         message = f"{type(exc).__name__}: {exc}"
+        if getattr(exc, "__notes__", None):
+            message += " " + " ".join(exc.__notes__)
         if command == "connect":
             try:
                 self._disconnect()

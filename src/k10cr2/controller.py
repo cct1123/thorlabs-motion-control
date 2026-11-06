@@ -377,6 +377,19 @@ class K10CR2:
             if state.busy or not state.homed or not state.enabled:
                 raise RuntimeError("Manual control requires an idle, enabled, homed mount")
             profile = self._setting("jog", deadline) if jog else None
+            if profile is not None:
+                if (
+                    profile["mode"] not in {1, 2}
+                    or profile["stop"] not in {1, 2}
+                    or profile["step"] <= 0
+                    or profile["maximum"] <= 0
+                    or profile["acceleration"] <= 0
+                ):
+                    raise ValueError("Unrecognized or invalid jog settings readback")
+                if profile["maximum"] > (20 if high_power else 10) * VELOCITY_SCALE:
+                    raise ValueError("Jog speed exceeds the selected USB supply rating")
+                if profile["acceleration"] > 20 * ACCELERATION_SCALE:
+                    raise ValueError("Jog acceleration exceeds the manual's 20 degree/s² limit")
             continuous = not jog or profile["mode"] == 1
             stop_mode = profile["stop"] if jog else 2
             old_velocity = self._setting("velocity", deadline) if continuous else None
@@ -402,6 +415,10 @@ class K10CR2:
                     self._write_setting("velocity", velocity, deadline)
                 while True:
                     before = self._position(deadline)
+                    if not position_counts(lower) <= before.counts <= position_counts(upper):
+                        raise ValueError(
+                            "Current counter is outside the selected range; home first"
+                        )
                     target = (
                         position_counts(upper if direction > 0 else lower)
                         if continuous
@@ -433,6 +450,10 @@ class K10CR2:
                                 )
                             state = self._status(deadline)
                             self._check_motion_status(state)
+                            if not state.homed or not state.enabled:
+                                raise RuntimeError(
+                                    "Manual motion lost home reference or motor enable"
+                                )
                             position = self._position(deadline)
                             if on_progress is not None:
                                 on_progress(state, position)
@@ -451,7 +472,13 @@ class K10CR2:
                             )
                         except BaseException as exc:
                             cleanup = CleanupResult(False, error=f"{type(exc).__name__}: {exc}")
-                        raise MotionError(original, cleanup) from original
+                        failure = MotionError(original, cleanup)
+                        if restore:
+                            failure.add_note(
+                                "Temporary manual-motion profile was not restored; "
+                                "reload and inspect velocity settings after recovery."
+                            )
+                        raise failure from original
             finally:
                 if restore and not self._needs_recovery:
                     self._write_setting(
@@ -504,8 +531,14 @@ class K10CR2:
             if name == "move" and not state.homed:
                 raise RuntimeError("Home the mount explicitly before an absolute move")
             before = self._position(deadline)
+            if name == "move" and abs(before.degrees) > MAX_ANGLE:
+                raise RuntimeError("Counted angle exceeds the manual's 43-turn bound; home first")
             if isinstance(target, tuple):
                 angle, mode, direction = target
+                if mode == "fixed" and not 0 <= before.degrees <= 360:
+                    raise ValueError(
+                        "Current counter is outside Fixed Range; home or use Total Angle"
+                    )
                 target = resolve_target(angle, before.degrees, mode, direction)
             if cancel is not None and cancel.is_set():
                 raise MotionCancelled("Cancelled before motion; no motion command sent")
