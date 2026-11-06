@@ -58,6 +58,9 @@ class FakeMount:
     def home(self, **kwargs):
         return self.move_absolute(0, **kwargs)
 
+    def move_to(self, angle, *, mode="fixed", direction="quickest", **kwargs):
+        return self.move_absolute(angle, **kwargs)
+
     def move_absolute(self, angle, *, cancel, on_progress):
         self.record(f"move:{angle:g}")
         on_progress(self.status(), self.position())
@@ -128,13 +131,13 @@ def test_home_and_move_use_background_owner(gui_owner):
     assert all(ident != threading.get_ident() for _, ident in mount.calls)
 
 
-@pytest.mark.parametrize("angle", [-1, 360, float("nan"), float("inf"), None, True])
+@pytest.mark.parametrize("angle", [-1, 360.1, float("nan"), float("inf"), None, True])
 def test_invalid_targets_never_reach_worker(gui_owner, angle):
     owner, mount = gui_owner
     mount.homed = True
     connect(owner)
     before = len(mount.calls)
-    assert "Angle" in owner.submit("move-to", target=angle)
+    assert "angle" in owner.submit("move-to", target=angle).lower()
     assert len(mount.calls) == before
 
 

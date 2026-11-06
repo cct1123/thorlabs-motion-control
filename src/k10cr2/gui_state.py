@@ -10,8 +10,11 @@ from datetime import datetime
 
 from .controller import K10CR2, MotionError
 from .protocol import angle_to_counts
+from .settings import SETTINGS, encode_changes, finite, resolve_target
 
 MOTIONS = {"home", "move-to", "step-minus", "step-plus"}
+MANUAL = {"jog-forward", "jog-reverse", "drive-forward", "drive-reverse"}
+MOTIONS |= MANUAL
 
 
 class GuiController:
@@ -21,6 +24,9 @@ class GuiController:
         self._mount = None
         self._cancel = threading.Event()
         self._closing = False
+        self._hold_token = None
+        self._hold_until = 0
+        self._released_tokens = deque(maxlen=64)
         self._events = deque(maxlen=100)
         self._state = dict(
             connected=False,
@@ -33,7 +39,70 @@ class GuiController:
             error="",
             unknown=False,
             message="Connect a mount to begin.",
+            settings={},
+            settings_revision=0,
+            ui=dict(
+                rotation_mode="fixed",
+                rotation_direction="quickest",
+                units="deg",
+                decimals=6,
+                high_power=False,
+                drives=[2.5, 5, 7.5, 10],
+            ),
         )
+
+    def set_display(self, values):
+        with self._condition:
+            if self._state["busy"] or self._closing:
+                return "Wait for the active operation before changing display/control options."
+            candidate = {**self._state["ui"], **values}
+            resolve_target(0, 0, candidate["rotation_mode"], candidate["rotation_direction"])
+            if candidate["units"] not in {"deg", "rad", "mrad", "urad", "counts"}:
+                raise ValueError("Unknown display units")
+            if isinstance(candidate["decimals"], bool) or candidate["decimals"] not in range(10):
+                raise ValueError("Decimal places must be an integer from 0 to 9")
+            candidate["decimals"] = int(candidate["decimals"])
+            if not isinstance(candidate["high_power"], bool) or len(candidate["drives"]) != 4:
+                raise ValueError("Invalid drive options")
+            for speed in candidate["drives"]:
+                finite(speed, "Drive velocity / °/s", 0.005, 20 if candidate["high_power"] else 10)
+            self._state["ui"] = candidate
+            self._event("Display, rotation and drive options applied for this server session.")
+            return "Display, rotation and drive options applied (session only)."
+
+    def hold(self, action, token, command=None, index=0):
+        """A short browser lease, tied to one token; releases cannot cancel another tab."""
+        if not isinstance(token, str) or not 1 <= len(token) <= 80:
+            raise ValueError("Invalid hold token")
+        with self._condition:
+            if action == "release":
+                self._released_tokens.append(token)
+                if token == self._hold_token:
+                    self._hold_until = 0
+                return "Control released."
+            if action == "heartbeat":
+                if (
+                    token != self._hold_token
+                    or token in self._released_tokens
+                    or time.monotonic() >= self._hold_until
+                    or self._state["busy"] not in MANUAL
+                ):
+                    return "Control is inactive."
+                self._hold_until = time.monotonic() + 0.8
+                return "Control renewed."
+            if action != "start" or command not in MANUAL or token in self._released_tokens:
+                return "Control request rejected."
+            if self._state["busy"] or self._closing:
+                return "Another operation owns the mount; request was not queued."
+            if isinstance(index, bool) or index not in range(4):
+                raise ValueError("Invalid drive division")
+            self._hold_token = token
+            self._hold_until = time.monotonic() + 0.8
+            return self.submit(command, target=self._state["ui"]["drives"][index])
+
+    def _held(self):
+        with self._condition:
+            return time.monotonic() < self._hold_until
 
     def snapshot(self):
         with self._condition:
@@ -54,7 +123,7 @@ class GuiController:
                 status=asdict(status), position=asdict(position), updated=time.time(), unknown=False
             )
 
-    def submit(self, command, *, serial=None, target=None, step=None):
+    def submit(self, command, *, serial=None, target=None, step=None, changes=None, persist=False):
         with self._condition:
             if self._closing:
                 return "The GUI is shutting down."
@@ -80,8 +149,22 @@ class GuiController:
                         raise ValueError("Enter the mount's eight-digit serial.")
                 elif self._mount is None:
                     raise ValueError("Connect a mount first.")
-                elif command not in {"disconnect", "refresh", "stop", *MOTIONS}:
+                elif command not in {
+                    "disconnect",
+                    "refresh",
+                    "stop",
+                    "enable",
+                    "disable",
+                    "identify",
+                    "load-settings",
+                    "configure",
+                    *MOTIONS,
+                }:
                     raise ValueError("Unknown command.")
+                elif self._state["unknown"] and command not in {"stop", "disconnect"}:
+                    raise ValueError(
+                        "Physical state UNKNOWN; use Stop, then disconnect and reconnect."
+                    )
                 elif self._state["recovery"] and command not in {"disconnect", "stop"}:
                     raise ValueError("Disconnect and explicitly reconnect before continuing.")
                 if command in MOTIONS:
@@ -91,7 +174,14 @@ class GuiController:
                     if command != "home":
                         if not status.get("homed"):
                             raise ValueError("Home the mount explicitly before moving.")
-                        if command.startswith("step-"):
+                        if command in MANUAL:
+                            if not status.get("enabled"):
+                                raise ValueError(
+                                    "Enable the motor explicitly before manual control."
+                                )
+                            if command.startswith("jog-") and "jog" not in self._state["settings"]:
+                                raise ValueError("Load Jog settings before jogging.")
+                        elif command.startswith("step-"):
                             if (
                                 isinstance(step, bool)
                                 or not isinstance(step, (int, float))
@@ -103,7 +193,28 @@ class GuiController:
                             target = self._state["position"]["degrees"] + (
                                 step if command == "step-plus" else -step
                             )
-                        angle_to_counts(target)
+                            angle_to_counts(target)
+                        else:
+                            resolve_target(
+                                target,
+                                self._state["position"]["degrees"],
+                                self._state["ui"]["rotation_mode"],
+                                self._state["ui"]["rotation_direction"],
+                            )
+                if command == "configure" or (command == "move-to" and changes):
+                    if not changes:
+                        raise ValueError("Select at least one settings group to apply.")
+                    for group, draft in changes.items():
+                        if group not in self._state["settings"]:
+                            raise ValueError(
+                                f"Load {group} settings from the device before editing."
+                            )
+                        encode_changes(
+                            group,
+                            draft,
+                            self._state["settings"][group],
+                            self._state["ui"]["high_power"],
+                        )
             except (ValueError, TypeError) as exc:
                 return str(exc)
             self._cancel.clear()
@@ -112,7 +223,7 @@ class GuiController:
                 self._state["message"] = f"{command} in progress…"
             thread = threading.Thread(
                 target=self._run,
-                args=(command, serial, target, step),
+                args=(command, serial, target, step, changes, persist),
                 name="k10cr2-gui-owner",
                 daemon=False,
             )
@@ -136,9 +247,11 @@ class GuiController:
                 position=None,
                 updated=None,
                 unknown=False,
+                settings={},
+                settings_revision=self._state["settings_revision"] + 1,
             )
 
-    def _run(self, command, serial, target, step):
+    def _run(self, command, serial, target, step, changes, persist):
         stop_handled = False
         try:
             if command == "connect":
@@ -160,7 +273,43 @@ class GuiController:
             elif command == "stop":
                 result = self._mount.stop()
                 self._readback(result.status, result.position)
+            elif command in {"enable", "disable"}:
+                status = self._mount.set_enabled(command == "enable")
+                self._readback(status, self._mount.position())
+            elif command == "identify":
+                self._mount.identify()
+            elif command == "load-settings":
+                settings = self._mount.query_settings(list(SETTINGS))
+                with self._condition:
+                    self._state["settings"] = settings
+                    self._state["settings_revision"] += 1
+            elif command == "configure":
+                actual = self._mount.configure(
+                    changes, high_power=self._state["ui"]["high_power"], persist=persist
+                )
+                with self._condition:
+                    self._state["settings"].update(actual)
+                    self._state["settings_revision"] += 1
+            elif command in MANUAL:
+                result = self._mount.manual_motion(
+                    1 if command.endswith("forward") else -1,
+                    jog=command.startswith("jog-"),
+                    speed=target,
+                    mode=self._state["ui"]["rotation_mode"],
+                    high_power=self._state["ui"]["high_power"],
+                    cancel=self._cancel,
+                    held=self._held,
+                    on_progress=self._readback,
+                )
+                self._readback(result.status, result.position)
             else:
+                if command == "move-to" and changes:
+                    actual = self._mount.configure(
+                        changes, high_power=self._state["ui"]["high_power"]
+                    )
+                    with self._condition:
+                        self._state["settings"].update(actual)
+                        self._state["settings_revision"] += 1
                 if command.startswith("step-"):
                     position = self._mount.position()
                     target = position.degrees + (step if command == "step-plus" else -step)
@@ -169,12 +318,26 @@ class GuiController:
                 result = (
                     self._mount.home(**kwargs)
                     if command == "home"
-                    else self._mount.move_absolute(target, **kwargs)
+                    else self._mount.move_to(
+                        target,
+                        mode=self._state["ui"]["rotation_mode"],
+                        direction=self._state["ui"]["rotation_direction"],
+                        **kwargs,
+                    )
                 )
                 self._readback(result.status, result.position)
             with self._condition:
                 if command != "refresh":
                     self._state.update(error="", message=f"{command} complete.")
+                    if command == "identify":
+                        self._state["message"] = (
+                            "Identify command sent (LED has no acknowledgement)."
+                        )
+                    elif command == "configure" and persist:
+                        self._state["message"] = (
+                            "Settings readback verified; EEPROM save requested. "
+                            "Power-cycle persistence is unverified."
+                        )
                     self._event(self._state["message"])
         except Exception as exc:
             # MotionError means cleanup was already attempted; never replay it.

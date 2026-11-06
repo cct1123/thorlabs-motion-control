@@ -192,4 +192,6 @@ def to_display(raw):
             button_position1=buttons["position1"] / COUNTS_PER_DEGREE,
             button_position2=buttons["position2"] / COUNTS_PER_DEGREE,
         )
-    return result
+    return {
+        key: round(value, 8) if isinstance(value, float) else value for key, value in result.items()
+    }
