@@ -148,6 +148,17 @@ def test_equivalent_route_uses_fresh_counter_and_preserves_total_turns(mount_fac
     assert result.position.counts == 50_517_333 and not fake.steps
 
 
+@pytest.mark.parametrize("direction", ["forward", "reverse", "quickest"])
+def test_repeated_equivalent_target_is_read_only_no_op(mount_factory, direction):
+    position_quarter = bytes.fromhex("12 04 06 00 81 50 01 00 55 85 00 00")
+    mount, fake = mount_factory([(STATUS_REQUEST, HOMED), (POSITION_REQUEST, position_quarter)])
+    before = len(fake.sent)
+    result = mount.move_absolute(0.25, mode="equivalent", direction=direction)
+    assert result.no_op and result.position.counts == 34133
+    assert fake.sent[before:] == [STATUS_REQUEST, POSITION_REQUEST]
+    assert not fake.steps
+
+
 @pytest.mark.parametrize("mode,direction", [("unknown", "quickest"), ("fixed", "invalid")])
 def test_invalid_rotation_options_do_not_query_or_move(mount_factory, mode, direction):
     mount, fake = mount_factory([])

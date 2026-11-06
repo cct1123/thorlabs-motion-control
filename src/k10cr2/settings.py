@@ -9,7 +9,7 @@ import math
 import struct
 from dataclasses import dataclass
 
-from .protocol import COUNTS_PER_DEGREE, DEVICE, HOST
+from .protocol import COUNTS_PER_DEGREE, COUNTS_PER_REVOLUTION, DEVICE, HOST
 
 VELOCITY_SCALE = 7_329_109
 ACCELERATION_SCALE = 1_502
@@ -108,13 +108,20 @@ def resolve_target(angle, current, mode="fixed", direction="quickest"):
         finite(angle, "Fixed-range angle", 0, 360)
     elif mode == "equivalent":
         finite(angle, "Equivalent angle", 0, 360)
-        phase = current % 360
-        delta = (angle % 360 - phase) % 360
+        # Compare realizable counter phases, not floating-point degree phases.
+        # Otherwise a repeated quantized target (e.g. 0.25° = 34,133 counts)
+        # can select an extra full turn in one forced direction.
+        current_counts = position_counts(current)
+        target_phase = position_counts(angle) % COUNTS_PER_REVOLUTION
+        delta = (target_phase - current_counts) % COUNTS_PER_REVOLUTION
         if direction == "reverse" and delta:
-            delta -= 360
-        elif direction == "quickest" and delta > 180:
-            delta -= 360
-        angle = current + delta
+            delta -= COUNTS_PER_REVOLUTION
+        elif direction == "quickest" and delta > COUNTS_PER_REVOLUTION // 2:
+            delta -= COUNTS_PER_REVOLUTION
+        target_counts = current_counts + delta
+        if abs(target_counts) > position_counts(MAX_ANGLE):
+            raise ValueError("Equivalent route exceeds the counted 43-turn bound; home first")
+        return target_counts
     return position_counts(angle)
 
 

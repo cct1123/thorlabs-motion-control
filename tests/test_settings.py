@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 from conftest import HOMED, POSITION_REQUEST, POSITION_ZERO, STATUS_REQUEST
 
-from k10cr2.protocol import FrameBuffer, ProtocolError
+from k10cr2.protocol import COUNTS_PER_DEGREE, COUNTS_PER_REVOLUTION, FrameBuffer, ProtocolError
 from k10cr2.settings import display_angle, resolve_target
 
 
@@ -179,6 +179,24 @@ def test_saved_actual_k10cr2_jog_settings_reply(mount_factory):
 )
 def test_manual_rotation_modes(target, current, mode, direction, expected):
     assert resolve_target(target, current, mode, direction) == round(expected * 409600 / 3)
+
+
+@pytest.mark.parametrize("direction", ["quickest", "forward", "reverse"])
+@pytest.mark.parametrize("turns", [-3, -1, 0, 1, 3])
+@pytest.mark.parametrize("phase,counts", [(0.25, 34133), (359.75, 49117867), (360, 0)])
+def test_equivalent_repeated_quantized_phase_never_adds_a_revolution(
+    direction, turns, phase, counts
+):
+    current_counts = turns * COUNTS_PER_REVOLUTION + counts
+    current = current_counts / COUNTS_PER_DEGREE
+    assert resolve_target(phase, current, "equivalent", direction) == current_counts
+
+
+def test_equivalent_half_turn_tie_and_counter_bounds():
+    assert resolve_target(180, 0, "equivalent", "quickest") == COUNTS_PER_REVOLUTION // 2
+    assert resolve_target(360, 15480, "equivalent", "forward") == 43 * COUNTS_PER_REVOLUTION
+    with pytest.raises(ValueError, match="43-turn"):
+        resolve_target(1, 15480, "equivalent", "forward")
 
 
 @pytest.mark.parametrize("target", [15481, -15481, float("nan"), float("inf"), True])
