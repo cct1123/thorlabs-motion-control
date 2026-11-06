@@ -909,8 +909,8 @@ def create_app(controller=None, *, serial=None):
                     html.Div(id="move-preview", className="hint"),
                     html.P(
                         "The selected rotation mode and direction determine the route. "
-                        "Blank profile fields preserve device settings; "
-                        "load readbacks before editing.",
+                        "Unedited profiles stay unchanged; "
+                        "clear both fields to use device settings.",
                         className="hint",
                     ),
                     html.Button(
@@ -1027,12 +1027,18 @@ def create_app(controller=None, *, serial=None):
                     if group in GROUP_FIELDS
                 }
                 message = owner.submit("configure", changes=changes, persist="yes" in persist)
-            elif name == "apply-move" or (
-                name == "move" and (move_velocity is not None or move_acceleration is not None)
-            ):
-                changes = {
-                    "velocity": {"velocity": move_velocity, "acceleration": move_acceleration}
-                }
+            elif name in {"apply-move", "move"}:
+                changes = None
+                if name == "apply-move" or (
+                    move_velocity is not None or move_acceleration is not None
+                ):
+                    draft = {"velocity": move_velocity, "acceleration": move_acceleration}
+                    current = to_display(owner.snapshot()["settings"]) if name == "move" else {}
+                    if name == "apply-move" or any(
+                        value is not None and value != current.get(key)
+                        for key, value in draft.items()
+                    ):
+                        changes = {"velocity": draft}
                 message = owner.submit(
                     "configure" if name == "apply-move" else "move",
                     target=target,

@@ -66,6 +66,48 @@ def test_dash_initial_render_and_command_roundtrip_without_usb():
     assert "eight-digit" in response.json["response"]["request-result"]["children"]
 
 
+@pytest.mark.parametrize(
+    "velocity,acceleration,changes",
+    [
+        (10.00132144, 10, None),
+        (None, None, None),
+        (None, 10, None),
+        (0.5, 1, {"velocity": {"velocity": 0.5, "acceleration": 1}}),
+        (10.00132144, 1, {"velocity": {"velocity": 10.00132144, "acceleration": 1}}),
+    ],
+)
+def test_move_only_applies_an_edited_profile(monkeypatch, velocity, acceleration, changes):
+    owner = GuiController(lambda serial: pytest.fail("Unexpected USB access"))
+    owner._state["settings"] = {
+        "velocity": dict(channel=1, minimum=0, maximum=73300775, acceleration=15020)
+    }
+    calls = []
+
+    def submit(command, **kwargs):
+        calls.append((command, kwargs))
+        return "move requested."
+
+    monkeypatch.setattr(owner, "submit", submit)
+    app = create_app(owner)
+    key = next(key for key in app.callback_map if "request-result.children" in key)
+    response = post_callback(
+        app,
+        key,
+        {
+            "target": 0,
+            "move_velocity": velocity,
+            "move_acceleration": acceleration,
+            "apply-groups": [],
+            "persist": [],
+            "panel": "move",
+        },
+        "move.n_clicks",
+    )
+    assert response.status_code == 200
+    assert calls == [("move", dict(target=0, changes=changes))]
+    assert response.json["response"]["panel"]["data"] is None
+
+
 def test_manual_is_served_from_the_repository():
     response = create_app().server.test_client().get("/manual", base_url="http://127.0.0.1")
     assert response.status_code == 200 and response.data.startswith(b"%PDF")
