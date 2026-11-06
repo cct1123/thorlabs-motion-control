@@ -7,3 +7,24 @@ dist/
 *.egg-info/
 .tmp/
 .ipynb_checkpoints/
+
+# Build and test output.
+build/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+
+# Local environment files; keep shareable examples available.
+.env
+.env.*
+!.env.example
+!.env.sample
+
+# OS metadata and temporary editor files.
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*.swo
+*~
