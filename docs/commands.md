@@ -44,7 +44,11 @@ occupy individual header bytes. In long payloads the channel is a 16-bit word.
 An absolute move to 90 degrees is the independent reference frame
 `53 04 06 00 D0 01 01 00 00 80 BB 00` (12,288,000 counts).
 
-The parser validates source/destination, known response size, and channel. Home
+The parser validates source/destination, known response size, and channel. The
+[GUI bench check](bench/gui-controls-20261106-211627Z.md) found firmware 2.0.1 sends
+`GET_JOGPARAMS` (`0418`) to host destination `80`; that specific reply accepts `80`
+in addition to `81`, with unchanged source/size/channel checks. Other messages
+retain the generic host addressing. Home
 completion is a **short** frame; movement/stopping completions are long frames.
 Long completion data begins with the channel word. Interleaved frames are consumed
 without losing partial data. Controller responses `0080` and `0081` are exposed as

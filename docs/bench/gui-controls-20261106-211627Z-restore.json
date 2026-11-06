@@ -1,0 +1,106 @@
+{
+  "started_utc": "2026-11-06T21:21:32.949591+00:00",
+  "serial": "55551174",
+  "method": "our WinUSB/APT, exact captured volatile bytes; no EEPROM or motion",
+  "identity": {
+    "model": "K10CR2",
+    "serial": "55551174",
+    "firmware": "2.0.1",
+    "hardware_revision": 4,
+    "modification_state": 112,
+    "channels": 1
+  },
+  "before": {
+    "velocity": {
+      "channel": 1,
+      "minimum": 0,
+      "acceleration": 1502,
+      "maximum": 3664554
+    },
+    "jog": {
+      "channel": 1,
+      "mode": 2,
+      "step": 34133,
+      "minimum": 0,
+      "acceleration": 1502,
+      "maximum": 3664554,
+      "stop": 2
+    },
+    "backlash": {
+      "channel": 1,
+      "distance": 0
+    },
+    "home": {
+      "channel": 1,
+      "direction": 2,
+      "switch": 1,
+      "velocity": 73300775,
+      "offset": 546133
+    },
+    "buttons": {
+      "channel": 1,
+      "mode": 1,
+      "position1": 136533,
+      "position2": 682667,
+      "timeout1": 500,
+      "timeout2": 500
+    }
+  },
+  "restored_groups": [
+    "velocity",
+    "jog",
+    "backlash"
+  ],
+  "after": {
+    "velocity": {
+      "channel": 1,
+      "minimum": 0,
+      "acceleration": 15020,
+      "maximum": 73300775
+    },
+    "jog": {
+      "channel": 1,
+      "mode": 2,
+      "step": 13653,
+      "minimum": 0,
+      "acceleration": 22530,
+      "maximum": 109951163,
+      "stop": 2
+    },
+    "backlash": {
+      "channel": 1,
+      "distance": 136533
+    },
+    "home": {
+      "channel": 1,
+      "direction": 2,
+      "switch": 1,
+      "velocity": 73300775,
+      "offset": 546133
+    },
+    "buttons": {
+      "channel": 1,
+      "mode": 1,
+      "position1": 136533,
+      "position2": 682667,
+      "timeout1": 500,
+      "timeout2": 500
+    }
+  },
+  "all_groups_match_original": true,
+  "final_status": {
+    "raw_bits": 2147484672,
+    "moving": false,
+    "homing": false,
+    "homed": true,
+    "enabled": true,
+    "motion_error": false
+  },
+  "final_position": {
+    "counts": 0,
+    "degrees": 0.0
+  },
+  "success": true,
+  "ended_utc": "2026-11-06T21:21:33.251404+00:00",
+  "forbidden_modules": []
+}

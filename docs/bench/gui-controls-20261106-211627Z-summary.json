@@ -1,0 +1,331 @@
+{
+  "serial": "55551174",
+  "identity": {
+    "model": "K10CR2",
+    "serial": "55551174",
+    "firmware": "2.0.1",
+    "hardware_revision": 4,
+    "modification_state": 112,
+    "channels": 1
+  },
+  "timestamp_timezone": "UTC; local report times are CST (UTC-06:00)",
+  "protocol_correction": "Only GET_JOGPARAMS 0418 may use observed destination 80, source50; full size/channel validation retained.",
+  "results": [
+    {
+      "name": "home",
+      "started_utc": "2026-11-06T21:18:23.417+00:00",
+      "request_hex": "43 04 01 00 50 01",
+      "start_counts": 0,
+      "end_counts": 0,
+      "start_degrees": 0.0,
+      "end_degrees": 0.0,
+      "delta_degrees": 0.0,
+      "duration_to_fresh_readback_s": 2.562,
+      "completion_or_stop_event": "0444",
+      "event_hex": "44 04 01 00 01 50",
+      "final_status": {
+        "raw_bits": 2147484672,
+        "moving": false,
+        "homing": false,
+        "homed": true,
+        "enabled": true,
+        "motion_error": false
+      },
+      "observed_counted_range": [
+        -1.7584130859375,
+        0.0
+      ],
+      "moving_or_homing_observed": true,
+      "passed": true
+    },
+    {
+      "name": "absolute_1_degree",
+      "started_utc": "2026-11-06T21:18:40.922+00:00",
+      "request_hex": "53 04 06 00 d0 01 01 00 55 15 02 00",
+      "start_counts": 0,
+      "end_counts": 136533,
+      "start_degrees": 0.0,
+      "end_degrees": 0.99999755859375,
+      "delta_degrees": 0.99999755859375,
+      "duration_to_fresh_readback_s": 2.563,
+      "completion_or_stop_event": "0464",
+      "event_hex": "64 04 0e 00 81 50 01 00 55 15 02 00 00 00 00 00 00 04 00 80",
+      "final_status": {
+        "raw_bits": 2147484672,
+        "moving": false,
+        "homing": false,
+        "homed": true,
+        "enabled": true,
+        "motion_error": false
+      },
+      "observed_counted_range": [
+        0.0,
+        0.99999755859375
+      ],
+      "moving_or_homing_observed": true,
+      "passed": true,
+      "native_target_counts": 136533,
+      "native_target_degrees": 0.99999755859375
+    },
+    {
+      "name": "jog_forward",
+      "started_utc": "2026-11-06T21:18:49.099+00:00",
+      "request_hex": "6a 04 01 01 50 01",
+      "start_counts": 136533,
+      "end_counts": 170666,
+      "start_degrees": 0.99999755859375,
+      "end_degrees": 1.2499951171875,
+      "delta_degrees": 0.24999755859375,
+      "duration_to_fresh_readback_s": 1.063,
+      "completion_or_stop_event": "0464",
+      "event_hex": "64 04 0e 00 81 50 01 00 aa 9a 02 00 00 00 00 00 00 04 00 80",
+      "final_status": {
+        "raw_bits": 2147484672,
+        "moving": false,
+        "homing": false,
+        "homed": true,
+        "enabled": true,
+        "motion_error": false
+      },
+      "observed_counted_range": [
+        0.99999755859375,
+        1.2499951171875
+      ],
+      "moving_or_homing_observed": true,
+      "passed": true
+    },
+    {
+      "name": "jog_reverse",
+      "started_utc": "2026-11-06T21:19:05.844+00:00",
+      "request_hex": "6a 04 01 02 50 01",
+      "start_counts": 170666,
+      "end_counts": 136533,
+      "start_degrees": 1.2499951171875,
+      "end_degrees": 0.99999755859375,
+      "delta_degrees": -0.24999755859375,
+      "duration_to_fresh_readback_s": 1.11,
+      "completion_or_stop_event": "0464",
+      "event_hex": "64 04 0e 00 81 50 01 00 55 15 02 00 00 00 00 00 00 04 00 80",
+      "final_status": {
+        "raw_bits": 2147484672,
+        "moving": false,
+        "homing": false,
+        "homed": true,
+        "enabled": true,
+        "motion_error": false
+      },
+      "observed_counted_range": [
+        0.99999755859375,
+        1.2499951171875
+      ],
+      "moving_or_homing_observed": true,
+      "passed": true
+    },
+    {
+      "name": "drive_forward_release",
+      "started_utc": "2026-11-06T21:19:23.332+00:00",
+      "request_hex": "53 04 06 00 d0 01 01 00 00 00 ee 02",
+      "start_counts": 136533,
+      "end_counts": 163177,
+      "start_degrees": 0.99999755859375,
+      "end_degrees": 1.19514404296875,
+      "delta_degrees": 0.195146484375,
+      "duration_to_fresh_readback_s": 0.656,
+      "completion_or_stop_event": "0466",
+      "event_hex": "66 04 0e 00 81 50 01 00 69 7d 02 00 00 00 00 00 00 04 00 80",
+      "final_status": {
+        "raw_bits": 2147484672,
+        "moving": false,
+        "homing": false,
+        "homed": true,
+        "enabled": true,
+        "motion_error": false
+      },
+      "observed_counted_range": [
+        0.99999755859375,
+        1.19514404296875
+      ],
+      "moving_or_homing_observed": true,
+      "passed": true,
+      "native_target_counts": 49152000,
+      "native_target_degrees": 360.0,
+      "stop_tx_to_ack_s": 0.0
+    },
+    {
+      "name": "drive_reverse_release",
+      "started_utc": "2026-11-06T21:19:50.975+00:00",
+      "request_hex": "53 04 06 00 d0 01 01 00 00 00 00 00",
+      "start_counts": 163177,
+      "end_counts": 138165,
+      "start_degrees": 1.19514404296875,
+      "end_degrees": 1.01195068359375,
+      "delta_degrees": -0.183193359375,
+      "duration_to_fresh_readback_s": 0.656,
+      "completion_or_stop_event": "0466",
+      "event_hex": "66 04 0e 00 81 50 01 00 b5 1b 02 00 00 00 00 00 00 04 00 80",
+      "final_status": {
+        "raw_bits": 2147484672,
+        "moving": false,
+        "homing": false,
+        "homed": true,
+        "enabled": true,
+        "motion_error": false
+      },
+      "observed_counted_range": [
+        1.01195068359375,
+        1.19514404296875
+      ],
+      "moving_or_homing_observed": true,
+      "passed": true,
+      "native_target_counts": 0,
+      "native_target_degrees": 0.0,
+      "stop_tx_to_ack_s": 0.0
+    },
+    {
+      "name": "explicit_stop",
+      "started_utc": "2026-11-06T21:20:05.057+00:00",
+      "request_hex": "53 04 06 00 d0 01 01 00 55 35 05 00",
+      "start_counts": 138165,
+      "end_counts": 168959,
+      "start_degrees": 1.01195068359375,
+      "end_degrees": 1.23749267578125,
+      "delta_degrees": 0.2255419921875,
+      "duration_to_fresh_readback_s": 0.719,
+      "completion_or_stop_event": "0466",
+      "event_hex": "66 04 0e 00 81 50 01 00 ff 93 02 00 00 00 00 00 00 04 00 80",
+      "final_status": {
+        "raw_bits": 2147484672,
+        "moving": false,
+        "homing": false,
+        "homed": true,
+        "enabled": true,
+        "motion_error": false
+      },
+      "observed_counted_range": [
+        1.01195068359375,
+        1.23749267578125
+      ],
+      "moving_or_homing_observed": true,
+      "passed": true,
+      "native_target_counts": 341333,
+      "native_target_degrees": 2.49999755859375,
+      "stop_tx_to_ack_s": 0.016
+    },
+    {
+      "name": "return_zero",
+      "started_utc": "2026-11-06T21:20:54.010+00:00",
+      "request_hex": "53 04 06 00 d0 01 01 00 00 00 00 00",
+      "start_counts": 168959,
+      "end_counts": 0,
+      "start_degrees": 1.23749267578125,
+      "end_degrees": 0.0,
+      "delta_degrees": -1.23749267578125,
+      "duration_to_fresh_readback_s": 3.266,
+      "completion_or_stop_event": "0464",
+      "event_hex": "64 04 0e 00 81 50 01 00 00 00 00 00 00 00 00 00 00 04 00 80",
+      "final_status": {
+        "raw_bits": 2147484672,
+        "moving": false,
+        "homing": false,
+        "homed": true,
+        "enabled": true,
+        "motion_error": false
+      },
+      "observed_counted_range": [
+        0.0,
+        1.23749267578125
+      ],
+      "moving_or_homing_observed": true,
+      "passed": true,
+      "native_target_counts": 0,
+      "native_target_degrees": 0.0
+    }
+  ],
+  "settings_readback_groups": [
+    "velocity",
+    "jog",
+    "backlash",
+    "home",
+    "buttons"
+  ],
+  "original_raw_settings": {
+    "velocity": {
+      "channel": 1,
+      "minimum": 0,
+      "acceleration": 15020,
+      "maximum": 73300775
+    },
+    "jog": {
+      "channel": 1,
+      "mode": 2,
+      "step": 13653,
+      "minimum": 0,
+      "acceleration": 22530,
+      "maximum": 109951163,
+      "stop": 2
+    },
+    "backlash": {
+      "channel": 1,
+      "distance": 136533
+    },
+    "home": {
+      "channel": 1,
+      "direction": 2,
+      "switch": 1,
+      "velocity": 73300775,
+      "offset": 546133
+    },
+    "buttons": {
+      "channel": 1,
+      "mode": 1,
+      "position1": 136533,
+      "position2": 682667,
+      "timeout1": 500,
+      "timeout2": 500
+    }
+  },
+  "restored_all_groups_exactly": true,
+  "final_position": {
+    "counts": 0,
+    "degrees": 0.0
+  },
+  "final_status": {
+    "raw_bits": 2147484672,
+    "moving": false,
+    "homing": false,
+    "homed": true,
+    "enabled": true,
+    "motion_error": false
+  },
+  "bench_guard_stops": 0,
+  "eeprom_writes": 0,
+  "gui_session_closed": true,
+  "forbidden_modules": [],
+  "gui_tx_message_counts": {
+    "0005": 6,
+    "0411": 643,
+    "0413": 5,
+    "0414": 12,
+    "0416": 1,
+    "0417": 6,
+    "0429": 648,
+    "043a": 1,
+    "043b": 4,
+    "0441": 2,
+    "0443": 1,
+    "0453": 5,
+    "0465": 3,
+    "046a": 2,
+    "04b7": 2
+  },
+  "validation_scope": "Real mount controller evidence; no independent angular/optical metrology or certified real-time stop timing.",
+  "assertions_passed": [
+    "expected home/move/jog endpoints",
+    "small drive displacements in both directions",
+    "explicit Stop before target",
+    "fresh busy transition and idle/homed status for every motion",
+    "all raw settings restored",
+    "no EEPROM or SDK modules",
+    "USB released"
+  ]
+}

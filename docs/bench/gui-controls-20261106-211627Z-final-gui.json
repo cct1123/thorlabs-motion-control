@@ -1,0 +1,172 @@
+{
+  "connected": true,
+  "busy": null,
+  "recovery": false,
+  "identity": {
+    "model": "K10CR2",
+    "serial": "55551174",
+    "firmware": "2.0.1",
+    "hardware_revision": 4,
+    "modification_state": 112,
+    "channels": 1
+  },
+  "status": {
+    "raw_bits": 2147484672,
+    "moving": false,
+    "homing": false,
+    "homed": true,
+    "enabled": true,
+    "motion_error": false
+  },
+  "position": {
+    "counts": 0,
+    "degrees": 0.0
+  },
+  "updated": 1794000109.5738883,
+  "error": "",
+  "unknown": false,
+  "message": "load-settings complete.",
+  "settings": {
+    "velocity": {
+      "channel": 1,
+      "minimum": 0,
+      "acceleration": 15020,
+      "maximum": 73300775
+    },
+    "jog": {
+      "channel": 1,
+      "mode": 2,
+      "step": 13653,
+      "minimum": 0,
+      "acceleration": 22530,
+      "maximum": 109951163,
+      "stop": 2
+    },
+    "backlash": {
+      "channel": 1,
+      "distance": 136533
+    },
+    "home": {
+      "channel": 1,
+      "direction": 2,
+      "switch": 1,
+      "velocity": 73300775,
+      "offset": 546133
+    },
+    "buttons": {
+      "channel": 1,
+      "mode": 1,
+      "position1": 136533,
+      "position2": 682667,
+      "timeout1": 500,
+      "timeout2": 500
+    }
+  },
+  "settings_revision": 7,
+  "ui": {
+    "rotation_mode": "fixed",
+    "rotation_direction": "quickest",
+    "units": "deg",
+    "decimals": 6,
+    "high_power": false,
+    "drives": [
+      0.5,
+      0.5,
+      0.5,
+      0.5
+    ]
+  },
+  "closing": false,
+  "events": [
+    {
+      "time": "2026-11-06T15:21:42-06:00",
+      "message": "load-settings complete.",
+      "level": "info"
+    },
+    {
+      "time": "2026-11-06T15:21:42-06:00",
+      "message": "connect complete.",
+      "level": "info"
+    },
+    {
+      "time": "2026-11-06T15:21:17-06:00",
+      "message": "disconnect complete.",
+      "level": "info"
+    },
+    {
+      "time": "2026-11-06T15:20:57-06:00",
+      "message": "move-to complete.",
+      "level": "info"
+    },
+    {
+      "time": "2026-11-06T15:20:31-06:00",
+      "message": "connect complete.",
+      "level": "info"
+    },
+    {
+      "time": "2026-11-06T15:20:25-06:00",
+      "message": "disconnect complete.",
+      "level": "info"
+    },
+    {
+      "time": "2026-11-06T15:20:05-06:00",
+      "message": "MotionError: MotionCancelled: Stop requested; stop confirmed by controller. Close and explicitly reconnect before another motion.",
+      "level": "error"
+    },
+    {
+      "time": "2026-11-06T15:20:05-06:00",
+      "message": "Stop requested",
+      "level": "info"
+    },
+    {
+      "time": "2026-11-06T15:19:51-06:00",
+      "message": "drive-reverse complete.",
+      "level": "info"
+    },
+    {
+      "time": "2026-11-06T15:19:23-06:00",
+      "message": "drive-forward complete.",
+      "level": "info"
+    },
+    {
+      "time": "2026-11-06T15:19:17-06:00",
+      "message": "Display, rotation and drive options applied for this server session.",
+      "level": "info"
+    },
+    {
+      "time": "2026-11-06T15:19:06-06:00",
+      "message": "jog-reverse complete.",
+      "level": "info"
+    },
+    {
+      "time": "2026-11-06T15:18:50-06:00",
+      "message": "jog-forward complete.",
+      "level": "info"
+    },
+    {
+      "time": "2026-11-06T15:18:43-06:00",
+      "message": "move-to complete.",
+      "level": "info"
+    },
+    {
+      "time": "2026-11-06T15:18:25-06:00",
+      "message": "home complete.",
+      "level": "info"
+    },
+    {
+      "time": "2026-11-06T15:17:45-06:00",
+      "message": "configure complete.",
+      "level": "info"
+    },
+    {
+      "time": "2026-11-06T15:16:53-06:00",
+      "message": "load-settings complete.",
+      "level": "info"
+    },
+    {
+      "time": "2026-11-06T15:16:47-06:00",
+      "message": "connect complete.",
+      "level": "info"
+    }
+  ]
+}

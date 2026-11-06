@@ -15,3 +15,6 @@
 *.zip binary
 *.whl binary
 *.gz binary
+
+# Bench records include byte-level SHA256 manifests; never normalize captures.
+docs/bench/** -text whitespace=cr-at-eol

@@ -1,4 +1,6 @@
 import math
+import struct
+from pathlib import Path
 
 import pytest
 from conftest import HOMED, POSITION_REQUEST, POSITION_ZERO, STATUS_REQUEST
@@ -96,6 +98,40 @@ def test_new_response_sizes_and_channel_are_checked():
         parser.feed(raw)
         with pytest.raises(ProtocolError):
             parser.pop()
+
+
+def test_k10cr2_zero_host_jog_reply_is_narrowly_accepted():
+    reply = bytes.fromhex(
+        "18 04 16 00 80 50 01 00 02 00 00 80 bb 00 00 00 00 00 de 05 00 00 55 d5 6f 00 02 00"
+    )
+    for split in range(len(reply) + 1):
+        parser = FrameBuffer()
+        parser.feed(reply[:split])
+        result = parser.pop()
+        if result is None:
+            parser.feed(reply[split:])
+            result = parser.pop()
+        assert result is not None and result.message_id == 0x0418
+    for bad in (
+        reply[:5] + b"\x51" + reply[6:],
+        reply[:6] + b"\x02\x00" + reply[8:],
+        VEL_REPLY[:4] + b"\x80" + VEL_REPLY[5:],
+    ):
+        parser = FrameBuffer()
+        parser.feed(bad)
+        with pytest.raises(ProtocolError):
+            parser.pop()
+
+
+def test_saved_actual_k10cr2_jog_settings_reply(mount_factory):
+    capture = Path(__file__).parent / "fixtures/gui-jog-settings-host-zero-20261106.hex"
+    reply = bytes.fromhex(capture.read_text())
+    assert reply[:6] == bytes.fromhex("18 04 16 00 80 50")
+    assert struct.unpack("<HHIIIIH", reply[6:]) == (1, 2, 13653, 0, 22530, 109951163, 2)
+    mount, fake = mount_factory([(bytes.fromhex("17 04 01 00 50 01"), reply)])
+    settings = mount.query_settings(["jog"])["jog"]
+    assert settings["step"] == 13653 and settings["mode"] == 2
+    assert not fake.steps
 
 
 @pytest.mark.parametrize(

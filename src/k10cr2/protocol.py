@@ -104,7 +104,11 @@ class FrameBuffer:
         if len(self.data) < 6:
             return None
         msg, p1, p2, dest, source = struct.unpack_from("<HBBBB", self.data)
-        if dest not in (HOST, HOST | 0x80) or source != DEVICE:
+        # K10CR2 firmware 2.0.1 returns GET_JOGPARAMS to host address zero.
+        # Observed on serial 55551174; retain size/source/channel validation and
+        # do not relax addressing for any other reply (protocol normally uses 01).
+        zero_host_jog = msg == 0x0418 and dest == 0x80
+        if (dest not in (HOST, HOST | 0x80) and not zero_host_jog) or source != DEVICE:
             raise ProtocolError(f"Unexpected APT addresses: {bytes(self.data[:6]).hex(' ')}")
         length = (p1 | p2 << 8) if dest & 0x80 else 0
         if length > 1024:
