@@ -106,7 +106,6 @@ summary { cursor: pointer; font-size: 12px; font-weight: 550; color: #52667d; }
 .event { display: grid; grid-template-columns: 210px 1fr; gap: 16px; border-top: 1px solid #eef2f6; padding: 9px 0; font: 11px/1.6 Consolas,monospace; overflow-wrap: anywhere; }
 .event time { color: #94a3b8; }
 .event.error { color: #be2940; }
-pre { overflow: auto; font: 11px/1.6 Consolas,monospace; color: var(--muted); }
 .backdrop { position: fixed; inset: 0; z-index: 30; background: #14253d55; }
 .dialog { position: fixed; left: 50%; top: 50%; transform: translate(-50%,-50%); z-index: 31; width: min(980px,calc(100vw - 40px)); max-height: calc(100vh - 40px); overflow: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 24px; }
 .move-dialog { width: min(440px,calc(100vw - 40px)); }

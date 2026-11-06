@@ -39,7 +39,7 @@ _owners_lock = threading.Lock()
 _owners: dict[str, "K10CR2"] = {}
 
 
-def _valid_timeout(value: float) -> float:
+def validate_timeout(value: float) -> float:
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         raise ValueError("Timeout must be finite and positive")
     if not math.isfinite(value) or value <= 0:
@@ -106,9 +106,9 @@ class K10CR2:
         ):
             raise ValueError("Serial must be an explicit eight-digit string")
         self.serial = serial
-        self.query_timeout = _valid_timeout(query_timeout)
-        self.motion_timeout = _valid_timeout(motion_timeout)
-        self.cleanup_timeout = _valid_timeout(cleanup_timeout)
+        self.query_timeout = validate_timeout(query_timeout)
+        self.motion_timeout = validate_timeout(motion_timeout)
+        self.cleanup_timeout = validate_timeout(cleanup_timeout)
         self._transport = None
         self._buffer = FrameBuffer()
         self._lock = threading.Lock()
@@ -133,7 +133,7 @@ class K10CR2:
             self._lock.release()
 
     def _deadline(self, timeout, default) -> float:
-        return time.monotonic() + _valid_timeout(default if timeout is None else timeout)
+        return time.monotonic() + validate_timeout(default if timeout is None else timeout)
 
     def connect(self, *, timeout: float | None = None):
         deadline = self._deadline(timeout, self.query_timeout)

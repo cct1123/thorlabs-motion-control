@@ -6,9 +6,10 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 from dash import Dash, Input, Output, State, ctx, dcc, html, no_update
-from flask import abort, jsonify, redirect, request, send_file
+from flask import abort, jsonify, request, send_file
 
 from .gui_state import MANUAL_COMMANDS, MOTION_COMMANDS, GuiController
+from .protocol import COUNTS_PER_DEGREE
 from .settings import UNIT_FACTORS, VELOCITY_SCALE, display_angle, resolve_target, to_display
 
 CONTROL_IDS = (
@@ -56,9 +57,6 @@ GROUP_FIELDS = {
     "buttons": DEVICE_FIELDS[8:],
 }
 UNAVAILABLE = "Unavailable: K10CR2 command mapping is not verified. No command will be sent."
-MANUAL_URL = (
-    "https://media.thorlabs.com/globalassets/items/k/k1/k10/k10cr2_m/etn064249-d02.pdf?v=0116115646"
-)
 
 
 def field(label, name, *, value=None, options=None, disabled=False, **kwargs):
@@ -673,13 +671,13 @@ def create_app(controller=None, *, serial=None):
     def manual():
         path = (
             Path(__file__).resolve().parents[2]
-            / "docs/hardware/K10CR2-user-guide-ETN064249-D02.pdf"
+            / "docs/references/k10cr2-user-guide-etn064249-d02.pdf"
         )
-        packaged = Path(__file__).parent / "manuals/K10CR2-user-guide-ETN064249-D02.pdf"
+        packaged = Path(__file__).parent / "manuals/k10cr2-user-guide-etn064249-d02.pdf"
         if packaged.is_file():
             path = packaged
         elif not path.is_file():
-            return redirect(MANUAL_URL)
+            abort(404, description="The bundled user guide is missing. Reinstall the package.")
         return send_file(path, mimetype="application/pdf")
 
     def drive(direction):
@@ -1108,6 +1106,8 @@ def create_app(controller=None, *, serial=None):
     @app.callback(
         *[Output(name, "value") for name in DEVICE_FIELDS + HOST_FIELDS],
         Output("settings-revision", "data"),
+        Output("apply-groups", "value"),
+        Output("persist", "value"),
         Input("refresh", "n_intervals"),
         Input("reset-settings", "n_clicks"),
         Input("cancel-settings", "n_clicks"),
@@ -1121,7 +1121,7 @@ def create_app(controller=None, *, serial=None):
             "cancel-settings",
             "settings-close",
         }:
-            return [no_update] * (len(DEVICE_FIELDS + HOST_FIELDS) + 1)
+            return [no_update] * (len(DEVICE_FIELDS + HOST_FIELDS) + 3)
         values = to_display(snap["settings"])
         ui = snap["ui"]
         values.update(
@@ -1130,7 +1130,9 @@ def create_app(controller=None, *, serial=None):
             **{f"drive{i}": speed for i, speed in enumerate(ui["drives"], 1)},
         )
         return [values.get(name) for name in DEVICE_FIELDS + HOST_FIELDS] + [
-            snap["settings_revision"]
+            snap["settings_revision"],
+            [],
+            [],
         ]
 
     @app.callback(
@@ -1234,7 +1236,7 @@ def create_app(controller=None, *, serial=None):
                 html.Dt("Direction / switch"),
                 html.Dd(f"{home['direction']} / {home['switch']}"),
                 html.Dt("Zero offset / °"),
-                html.Dd(f"{home['offset'] / (409600 / 3):.6f}"),
+                html.Dd(f"{home['offset'] / COUNTS_PER_DEGREE:.6f}"),
                 html.Dt("Velocity / °/s"),
                 html.Dd(f"{home['velocity'] / VELOCITY_SCALE:.6f}"),
             ]

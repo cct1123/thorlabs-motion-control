@@ -162,6 +162,8 @@ def test_closing_settings_discards_drafts_without_applying(button):
     assert response.status_code == 200
     assert response.json["response"]["units"]["value"] == "deg"
     assert response.json["response"]["decimals"]["value"] == 6
+    assert response.json["response"]["apply-groups"]["value"] == []
+    assert response.json["response"]["persist"]["value"] == []
 
 
 def test_completed_feedback_replaces_request_and_reaches_both_dialogs():

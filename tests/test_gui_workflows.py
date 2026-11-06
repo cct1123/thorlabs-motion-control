@@ -84,18 +84,25 @@ def test_move_request_closes_dialog_so_stop_is_accessible(monkeypatch):
     assert panel is None
 
 
-def test_manual_link_remains_usable_outside_the_source_checkout(monkeypatch):
+def test_manual_is_bundled_and_served_outside_the_source_checkout(monkeypatch, tmp_path):
     import k10cr2.gui_view as view
 
-    # An installed wheel has no repository-level docs/hardware directory.
-    installed = Path(__file__).resolve().parents[1] / ".tmp/review-installed-layout"
+    source = (
+        Path(__file__).resolve().parents[1] / "docs/references/k10cr2-user-guide-etn064249-d02.pdf"
+    )
+    expected = source.read_bytes()
+    installed = tmp_path / "installed"
+    packaged = installed / "site-packages/k10cr2/manuals/k10cr2-user-guide-etn064249-d02.pdf"
+    packaged.parent.mkdir(parents=True)
+    packaged.write_bytes(expected)
     monkeypatch.setattr(view, "__file__", str(installed / "site-packages/k10cr2/gui_view.py"))
     app = create_app()
     response = app.server.test_client().get("/manual", base_url="http://127.0.0.1")
-    assert response.status_code in {200, 302}
-    if response.status_code == 302:
-        assert response.location.startswith("https://media.thorlabs.com/")
-        assert "etn064249-d02.pdf" in response.location
+    assert response.status_code == 200 and response.data == expected
+    response.close()
+    packaged.unlink()
+    response = app.server.test_client().get("/manual", base_url="http://127.0.0.1")
+    assert response.status_code == 404 and "Location" not in response.headers
 
 
 @pytest.mark.parametrize(

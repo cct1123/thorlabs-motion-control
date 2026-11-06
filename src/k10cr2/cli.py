@@ -38,9 +38,9 @@ def main(argv=None) -> int:
         if args.command == "move":
             resolve_target(args.angle, 0, args.mode, args.direction)
         if args.command in ("home", "move", "stop") and args.timeout is not None:
-            from .controller import _valid_timeout
+            from .controller import validate_timeout
 
-            _valid_timeout(args.timeout)
+            validate_timeout(args.timeout)
         with K10CR2(args.serial) as mount:
             if args.command == "move":
                 result = mount.move_absolute(

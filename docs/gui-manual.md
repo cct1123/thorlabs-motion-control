@@ -1,6 +1,6 @@
 # GUI contract: K10CR2 manufacturer manual
 
-Source of truth: [ETN064249-D02](hardware/K10CR2-user-guide-ETN064249-D02.pdf),
+Source of truth: [ETN064249-D02](references/k10cr2-user-guide-etn064249-d02.pdf),
 Rev A, August 2024, Figure 16 and printed pp14-24 (PDF pp17-27).
 The GUI uses our own WinUSB/APT implementation exclusively. No Kinesis application,
 SDK, pythonnet, or manufacturer runtime is used or invoked. Connecting never loads
@@ -85,6 +85,8 @@ physical velocity or acceleration. Speeds above 10°/s require explicit confirma
 of a ≥900 mA USB supply; the manual limits speed to 20°/s and acceleration to 20°/s².
 
 EEPROM persistence is opt-in and limited to explicitly selected mapped groups.
+Closing/resetting the form or loading a new readback clears group/persistence
+selections so an earlier EEPROM selection cannot carry into the next edit.
 After verified volatile readback, the GUI reports **EEPROM save requested**;
 the packet has no acknowledgement and persistence is not claimed as proven.
 Display units, rotation rules, USB rating and drive-array speeds are session values,
@@ -116,4 +118,4 @@ with reasons and cannot emit a command:
 
 Unavailable readbacks are blank, not presented as factory or current values. No
 firmware, unverified command, driver replacement, Kinesis backend, or SDK fallback
-is included. The original PDFs and source hashes are in [hardware/README.md](hardware/README.md).
+is included. The original PDFs and source hashes are in [references/README.md](references/README.md).

@@ -6,8 +6,8 @@ import socket
 
 from werkzeug.serving import ThreadedWSGIServer
 
+from . import gui_view
 from .gui_state import GuiController
-from .gui_view import create_app
 
 
 class LocalServer(ThreadedWSGIServer):
@@ -34,7 +34,7 @@ def main(argv=None):
         parser.error("Serial must be eight ASCII digits")
     logging.getLogger("werkzeug").setLevel(logging.WARNING)
     controller = GuiController()
-    app = create_app(controller, serial=args.serial)
+    app = gui_view.create_app(controller, serial=args.serial)
     server = LocalServer("127.0.0.1", args.port, app.server)
     app.server.config["GUI_SHUTDOWN"] = server.shutdown
     print(f"K10CR2 GUI: http://127.0.0.1:{server.server_port}", flush=True)

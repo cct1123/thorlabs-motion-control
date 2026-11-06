@@ -1,14 +1,15 @@
 # K10CR2 controller
 
 A small synchronous Python library and CLI for one Thorlabs K10CR2 rotation mount on
-Windows, using WinUSB, PyUSB, and libusb. Supports identity, status, position, home,
-absolute movement, and profiled stop. No Kinesis, APT application, pythonnet, or
-Thorlabs SDK DLL is required.
+Windows, using our WinUSB/PyUSB/libusb/APT communication. Includes a flat web UI,
+identity/status/position queries, Home/Move/Jog/Drive/Stop and verified settings
+readback/editing. No Kinesis application, SDK, pythonnet or manufacturer runtime
+is used.
 
 ## Local graphical interface
 
 The GUI follows the Thorlabs K10CR2 panel (Figure 16) and settings in the
-[manufacturer manual](docs/hardware/K10CR2-user-guide-ETN064249-D02.pdf).
+[manufacturer manual](docs/references/k10cr2-user-guide-etn064249-d02.pdf).
 All communication is our own WinUSB/APT implementation; no Kinesis or SDK is used.
 The [migration guide](docs/migration.md) records the consolidated API, removed
 development interfaces and shared angle contract.
@@ -27,8 +28,8 @@ Enable/Disable, Identify, serial/position/status and limit indicators. Settings
 include display units, Fixed/Equivalent/Total rotation modes, forward/reverse/
 quickest routing, velocity/jog/backlash and hardware-button parameters. **Connect**
 reads all five device settings groups; **Refresh readbacks** reloads them and shows
-the read time. Setting writes require fresh
-readback, validation and verification. Persistence is opt-in; an EEPROM write is
+the read time. Setting writes require fresh readback, validation and verification.
+Persistence is opt-in; an EEPROM write is
 reported as requested, not power-cycle proven. Session display and drive options
 have a separate **Apply session options** button. **Close**, × and Escape discard
 unapplied settings edits. Dialog feedback stays visible beside the actions.
@@ -36,7 +37,7 @@ unapplied settings edits. Dialog feedback stays visible beside the actions.
 Unverified S-curve, power, trigger and factory-reset controls are visibly unavailable;
 stage-specific settings remain locked as instructed by the manual. See the full
 [GUI mapping, packet references and limitations](docs/gui-manual.md). The original
-[manual and protocol PDFs](docs/hardware/README.md) are retained in the repository.
+[manual and protocol PDFs](docs/references/README.md) are retained in the repository.
 
 One worker owns USB; motions are not queued. Release, lost focus or an expired
 browser heartbeat requests a stop for held controls. Software Stop is not hard
@@ -132,6 +133,12 @@ Each accepts a positive finite `timeout` in seconds. Constructor defaults are
 `query_timeout=3`, `motion_timeout=120`, and `cleanup_timeout=5`.
 Construction alone does not connect; `connect()` / `close()` are also available.
 Close releases the USB handle and leaves motor enable/holding state unchanged.
+
+`query_settings()` reads velocity, jog, backlash, home and hardware buttons.
+`configure(changes, high_power=False, persist=False)` validates all selected groups
+before writing and verifies each changed group. Home edits and unverified mappings
+remain unavailable. Confirmation flags require actual booleans; see the
+[settings contract](docs/gui-manual.md#settings-and-wire-support).
 
 `home()` and `move_absolute()` also accept an optional `threading.Event` as
 `cancel`, plus `on_progress(status, position)`. Setting the event requests

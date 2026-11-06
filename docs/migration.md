@@ -57,3 +57,18 @@ The prior [motion bench record](bench/gui-controls-20261106-211627Z.md) and
 names and source hashes as historical evidence. New rotation modes and boundary
 cases have offline tests; those records do not establish physical calibration or
 bench validation of every mode.
+
+## Reference paths
+
+Manufacturer PDFs now have one canonical copy in `docs/references/`:
+
+| Earlier path/name | Canonical path |
+| --- | --- |
+| `docs/hardware/K10CR2-user-guide-ETN064249-D02.pdf` or `docs/references/K10CR2-User-Guide-ETN064249-D02.pdf` | [`docs/references/k10cr2-user-guide-etn064249-d02.pdf`](references/k10cr2-user-guide-etn064249-d02.pdf) |
+| `docs/hardware/APT-communications-protocol-issue48.pdf` or `docs/references/APT_Communications_Protocol-Issue-48.pdf` | [`docs/references/apt-communications-protocol-issue48.pdf`](references/apt-communications-protocol-issue48.pdf) |
+
+The duplicate files were SHA256-identical. The packaged user guide retains the
+same bytes and is served locally. Historical audit JSON and immutable bench
+records keep their original path strings and source hashes; use this table to
+locate the current copies. Current code, documentation links and wheel metadata
+use the canonical names.

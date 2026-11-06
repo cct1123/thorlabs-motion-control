@@ -1,5 +1,9 @@
 # Protocol and bench-record review: 6 November 2026
 
+This is a historical checkpoint. Reference PDFs were subsequently deduplicated
+and renamed; [the migration map](../migration.md#reference-paths) locates their
+current copies without changing the recorded hashes or historical JSON.
+
 The committed controller/protocol checkpoint **`eda8ede0a4bf42f2e70ca49e217bebfbdeef5cf8`**
 passes 142 offline tests, Ruff lint/format checks, and the offline uv lockfile check.
 This review independently checked the saved bench traffic and protocol catalogue.

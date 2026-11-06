@@ -1,8 +1,7 @@
 # K10CR2 commands and queries: documented capabilities and package coverage
 
-> The tables below retain the earlier core-controller audit. The current GUI
-> extension, additional setting/action packets, unavailable mappings and validation
-> limits are documented in [gui-manual.md](gui-manual.md).
+The table includes the current controller and GUI mappings. Detailed settings
+behavior and validation limits are documented in [gui-manual.md](gui-manual.md).
 
 Reviewed 6 November 2026 against **DOC-103274 issue 48** and the **K10CR2(/M) User
 Guide ETN064249-D02, Rev A, August 2024**. This is a capability/coverage catalogue,
@@ -26,29 +25,29 @@ extension and must not be silently advertised as verified K10CR2 raw commands.
 
 | Function | Set/action | Request -> reply / event | K10CR2 evidence and current package | Issue 48 pages |
 | --- | --- | --- | --- | --- |
-| Identify / flash LED | 0223 | No reply | Manual p16 confirms identify; not implemented | 51 |
-| Motor enable/disable | 0210 | 0211 -> 0212 | Enable helper only; queries use enabled status bit. Disable and direct enable-state query absent. Enable-from-disabled still untested | 52-53 |
+| Identify / flash LED | 0223 | No reply | Implemented; command has no acknowledgement or optical readback | 51 |
+| Motor enable/disable | 0210 | 0211 -> 0212 | Set enable/disable implemented; verify with status bit. Direct 0211 query absent; enable-from-disabled remains untested | 52-53 |
 | Automatic status updates | Start 0011; stop 0012 | Unsolicited update messages | Shared index; not enabled or exposed by package | 57 |
 | Hardware identity | - | 0005 -> 0006 | Implemented; firmware, model, serial and revision checked against captures | 59-60 |
 | Position counter | 0410 | 0411 -> 0412 | Query implemented and bench-tested; setter absent | 73-74 |
 | Encoder counter | 0409 | 040A -> 040B | Definition is for encoded stages. No independent encoder support established for this mount; not implemented | 75-76 |
-| Move velocity/acceleration | 0413 | 0414 -> 0415 | Manual p18 describes parameters; package preserves existing settings | 77-78 |
-| Jog parameters | 0416 | 0417 -> 0418 | Manual pp17-18 describes modes/step/profile; not implemented | 79-80 |
-| General move / backlash | 043A | 043B -> 043C | Manual p18 describes backlash; not implemented | 84 |
+| Move velocity/acceleration | 0413 | 0414 -> 0415 | Read/write and readback verification implemented; volatile writes/restoration bench-tested on the recorded unit | 77-78 |
+| Jog parameters | 0416 | 0417 -> 0418 | Read/write implemented; single-step profile writes/readbacks bench-tested. Firmware host-zero reply exception retained | 79-80 |
+| General move / backlash | 043A | 043B -> 043C | Read/write and readback verification implemented; volatile write/restoration bench-tested | 84 |
 | Stored relative target | 0445 | 0446 -> 0447 | Shared index; not implemented | 85 |
 | Stored absolute target | 0450 | 0451 -> 0452 | Not implemented; long-form 0453 carries the target directly | 86 |
-| Homing parameters | 0440 | 0441 -> 0442 | Manual pp20-21 describes homing settings; package preserves them | 87-88 |
+| Homing parameters | 0440 | 0441 -> 0442 | Readback implemented and bench-tested; setter deliberately locked per manual p21 | 87-88 |
 | Limit-switch parameters | 0423 | 0424 -> 0425 | Shared family; K10CR2 applicability of configurable limits not established; not implemented | 89-90 |
 | Home | 0443 | Event 0444 | Implemented; short completion frame bench-tested | 91 |
 | Relative move | 0448 | Event 0464 | Manual supports relative movement; not implemented | 92-94 |
 | Absolute move | 0453 | Event 0464 | Long form implemented; 90-degree and zero moves/completions bench-tested | 94-96 |
-| Jog | 046A | Event 0464 | Manual supports jogging; not implemented | 97 |
+| Jog | 046A | Event 0464 | Native single-step jog implemented and bench-tested in both directions; continuous/repeated modes have offline coverage only | 97 |
 | Continuous velocity move | 0457 | Stop with 0465 | Manual describes continuous motion; raw command not implemented | 98 |
-| Stop | 0465 | Event 0466 | Mode 2 profiled stop implemented; explicit stop and real Ctrl+C cleanup bench-tested. Mode 1 abrupt stop absent | 99-100 |
+| Stop | 0465 | Event 0466 | Profiled public Stop and Ctrl+C cleanup bench-tested. Jog-selected immediate stop is implemented but not bench-tested | 99-100 |
 | LED/AV modes | 04B3 | 04B4 -> 04B5 | **Explicitly not applicable to K10CR1 or K10CR2**, despite shared index listing | 106-107 |
 | Potentiometer / drive velocities | 04B0 | 04B1 -> 04B2 | Manual p23 describes drive-array velocities; exact K10CR2 raw mapping not verified; absent | 108-110 |
-| Front-panel buttons | 04B6 | 04B7 -> 04B8 | Manual pp22-23 describes jog/absolute button modes; not implemented | 111-112 |
-| Persist parameters to EEPROM | 04B9 | No direct reply | Manual p22 describes persistence; package deliberately has no EEPROM command | 113 |
+| Front-panel buttons | 04B6 | 04B7 -> 04B8 | Read/write implemented; readback bench-tested. Button writes and physical button behavior not bench-tested | 111-112 |
+| Persist parameters to EEPROM | 04B9 | No direct reply | Explicit opt-in for selected mapped groups after volatile verification. No acknowledgement; power-cycle persistence unverified | 113 |
 | Status bits | - | 0429 -> 042A | Implemented; raw bits, moving, homing, homed, enabled and motion-error fields bench-tested | 148 |
 
 ## Related definitions, restrictions and unresolved mappings
@@ -68,8 +67,8 @@ extension and must not be silently advertised as verified K10CR2 raw commands.
 
 No firmware-programming command or automatic actuation is added by this catalogue.
 The manual's hardware/GUI capabilities and the low-level protocol's applicability
-tables are different kinds of evidence. The existing seven request forms are
-audited; this is not a claim to implement every message in the 494-page protocol.
+tables are different kinds of evidence. The core requests and supported settings
+are mapped separately; this is not a claim to implement every message in the 494-page protocol.
 
 ## Audit result for the implemented subset
 

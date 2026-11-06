@@ -26,7 +26,7 @@ unavailable mappings remain outside this bench check.
 
 The panel and settings now follow Figure 16 and chapter 7 of the manufacturer's
 ETN064249-D02 manual. Unmodified manual and protocol PDFs with SHA256 provenance
-are retained under [hardware](hardware/README.md). The current implementation
+are retained under [references](references/README.md). The current implementation
 contract and unavailable mappings are in [gui-manual.md](gui-manual.md).
 
 The full offline suite covers literal parameter packets, strict response layouts,

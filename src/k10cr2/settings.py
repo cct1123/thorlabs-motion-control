@@ -2,7 +2,7 @@
 
 Sources: ETN064249-D02 pp2,17-24; DOC-103274 issue48 pp44-45,77-88,111-113.
 The generic wire layouts still name K10CR1. K10CR2 readbacks are required before
-editing, and remain software-tested rather than bench-verified in this release.
+editing; docs/validation.md separates the tested unit/subset from unverified modes.
 """
 
 import math
@@ -98,8 +98,11 @@ def position_counts(angle):
 
 
 def resolve_target(angle, current, mode="fixed", direction="quickest"):
-    integer_mode = mode in {"fixed", "equivalent", "total"}
-    if not integer_mode or direction not in {"forward", "reverse", "quickest"}:
+    if mode not in {"fixed", "equivalent", "total"} or direction not in {
+        "forward",
+        "reverse",
+        "quickest",
+    }:
         raise ValueError("Invalid rotation mode or direction")
     if mode == "fixed":
         finite(angle, "Fixed-range angle", 0, 360)

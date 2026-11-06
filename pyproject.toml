@@ -21,7 +21,7 @@ k10cr2-gui = "k10cr2.gui:main"
 packages = ["src/k10cr2"]
 
 [tool.hatch.build.targets.wheel.force-include]
-"docs/hardware/K10CR2-user-guide-ETN064249-D02.pdf" = "k10cr2/manuals/K10CR2-user-guide-ETN064249-D02.pdf"
+"docs/references/k10cr2-user-guide-etn064249-d02.pdf" = "k10cr2/manuals/k10cr2-user-guide-etn064249-d02.pdf"
 
 [dependency-groups]
 dev = ["pytest>=8.3,<10", "ruff>=0.11,<1"]

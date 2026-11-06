@@ -36,7 +36,7 @@ user kernelspec. Repeat it if the repository or environment is moved or recreate
 | [02 - Device discovery](02_device_discovery.ipynb) | VID/PID candidates, USB descriptors, serial selection, resource release | Read USB descriptors |
 | [03 - Connection](03_connection.ipynb) | Context manager, identity verification, explicit connect/close | Bridge setup and identity queries |
 | [04 - Status and position](04_status_and_position.ipynb) | Status flags, raw bits, counter units, bounded polling | Status/position queries |
-| [05 - Settings and units](05_settings_and_units.ipynb) | Software timeouts, logging, angle quantization, unsupported settings | None |
+| [05 - Settings and units](05_settings_and_units.ipynb) | Software timeouts, logging, angle quantization, settings API scope | None |
 | [06 - Homing](06_homing.ipynb) | Preflight, explicit home, completion and cleanup records | Physical homing; may enable motor |
 | [07 - Absolute motion](07_absolute_motion.ipynb) | Target preview, progress callback, no-op and completion results | Physical absolute move; may enable motor |
 | [08 - Stop and recovery](08_stop_and_recovery.ipynb) | Failure records, interruption, standalone stop, explicit reconnect | Profiled stop and recovery queries |
@@ -57,10 +57,12 @@ Code cells have no stored outputs or execution counts.
 - Use one owner per device, including across notebook kernels and external programs.
   All connection examples close their handles within the same cell.
 
-Only settings implemented by the public API are shown. Velocity, acceleration,
-backlash, direction, persistent parameters, and firmware writes are unsupported.
-The controller's existing motion settings determine the route; these notebooks do
-not assume the shortest path. Closing a connection leaves holding state unchanged.
+These tutorials leave device parameters unchanged. The library and GUI support
+verified velocity, jog, backlash and button edits, with explicit optional EEPROM
+persistence; unverified mappings and homing edits remain unavailable. The tutorials
+use the shared Fixed Range motion contract, including the 360° endpoint. See the
+[migration guide](../../docs/migration.md) for equivalent/total routing and removed
+interfaces. Closing a connection leaves holding state unchanged.
 
 While a home/move is blocking, interrupt its own cell to let that owner attempt stop
 cleanup. A queued cell or a second notebook is not a live stop control. Forced kernel

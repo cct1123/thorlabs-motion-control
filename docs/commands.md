@@ -1,8 +1,9 @@
 # K10CR2 command reference
 
-> The tables below retain the earlier core-controller audit. The current GUI
-> extension, additional setting/action packets, unavailable mappings and validation
-> limits are documented in [gui-manual.md](gui-manual.md).
+The core wire table below and the additional settings/action mappings in
+[gui-manual.md](gui-manual.md) describe the current implementation. The complete
+capability table, including deliberately unavailable commands, is in
+[command-catalog.md](command-catalog.md).
 
 Audited 6 November 2026 against protocol issue 48 and the current K10CR2 manual.
 The full documented capability/coverage table is in [command-catalog.md](command-catalog.md).
@@ -71,8 +72,11 @@ Long-session acknowledgement behavior has not been validated on this mount.
 The manufacturer-derived scale is `200 * 2048 * 120 = 49,152,000` counts per output
 revolution, or exactly `409600 / 3` counts per degree. Avoid rounding the conversion
 constant to the protocol table's displayed integer 136533. The `position` reply is
-a signed step counter, not an independently measured optical angle. Velocity and
-acceleration conversion constants are not used; existing factory settings remain.
+a signed step counter, not an independently measured optical angle. Motion target
+resolution uses the shared [rotation contract](migration.md#shared-angle-contract).
+Velocity and acceleration use the protocol's K10CR1 constants 7,329,109 and 1,502;
+their physical calibration on K10CR2 remains unverified. Settings change only on
+explicit Apply/configure; Drive temporarily changes and restores a verified profile.
 
 | Field | Mask | Meaning when set |
 | --- | --- | --- |
@@ -92,7 +96,7 @@ Sources: issue 48 status descriptions and status-bit command definition.
 The tested bridge uses `bcdDevice=1000`, interface 0, two 64-byte bulk endpoints,
 115200 baud, 8N1, RTS/CTS. The setup matches the successful bench helpers and the
 libftdi vendor-request convention. No USB device reset, `set_configuration`, driver
-installation, EEPROM write, or stage-parameter write is performed.
+installation, EEPROM write, or stage-parameter write is performed by bridge setup.
 
 | Vendor request | Value | Index | Purpose |
 | --- | --- | --- | --- |
@@ -117,5 +121,6 @@ zero. Home and both moves returned completion messages. The exact received move
 completion frames are regression fixtures. Enable was sent during an earlier helper
 home with an already-enabled motor. Public profiled stop and public move interrupted
 by real console Ctrl+C passed during motion; both 0466 stop replies are regression
-fixtures. Standalone enable from disabled remains untested. No firmware or
-persistent-parameter command is implemented.
+fixtures. Standalone enable from disabled remains untested. Firmware commands are
+not implemented. Supported settings groups can request EEPROM persistence, which
+has no acknowledgement and is not power-cycle verified; see the GUI contract.
