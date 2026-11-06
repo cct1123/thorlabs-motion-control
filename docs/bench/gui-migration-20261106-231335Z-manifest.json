@@ -1,0 +1,22 @@
+{
+  "docs/bench/gui-migration-20261106-230830Z-baseline.json": "8852482817fde3c7db12e6de79234a510fa859e06382ed62cd1aa14008b472a3",
+  "docs/bench/gui-migration-20261106-230830Z-equivalent.jpg": "54c714b7ac6aee9a88846b7a489457452b1c3d68509755ddb7e9fd1b27b6ae83",
+  "docs/bench/gui-migration-20261106-230830Z-stop.jpg": "a64cd2e5246f4f7b29a783c0206ef8d56406a9c5abe78b6e387fd244a0780adb",
+  "docs/bench/gui-migration-20261106-230830Z-total.jpg": "23b57cc0929f79ed40d5b04b3fd2b64da1235014dc1a2d4489c731a13b74d965",
+  "docs/bench/gui-migration-20261106-230830Z.jsonl": "4a6fb58e811a38ab24bcadcc0a0a23dc738ef95fd6dd58c70e1abf7e8fb96806",
+  "docs/bench/gui-migration-20261106-230830Z.log": "f288e64efb0723066be92948b185971d4ffccfdc70a770d166c4205dc63f2272",
+  "docs/bench/gui-migration-20261106-231335Z-final-gui.json": "d75e1185368a50c021b198019fd9b335f782eda2e5aba4ce910d1792689af77d",
+  "docs/bench/gui-migration-20261106-231335Z-final-zero.jpg": "7e52c21f684911871ad9c0c4b094a07865023497ac0421aa46c9d2c2349e6a64",
+  "docs/bench/gui-migration-20261106-231335Z-profile-error.jpg": "cdfa8b7f28aa7468d1e4dd1265fc27cbfbaa310f563a9cdafe799027e170345a",
+  "docs/bench/gui-migration-20261106-231335Z-restore.json": "1f513aafd5bec4cfa65ab70f5d724d5e99251edc4229f7c27f6a8fb31d735795",
+  "docs/bench/gui-migration-20261106-231335Z-restore.log": "d191d04e98c7bd1315fa15e1fe986767970cdffed00ce37c54b39e5e0a061443",
+  "docs/bench/gui-migration-20261106-231335Z-summary.json": "496edcc5e115e86782e028a19b95fe63cf33aee8213fc2cdd9b2992a3dd82f10",
+  "docs/bench/gui-migration-20261106-231335Z-test-end.json": "25675f246327bb7986a760e499a3285685acb62bfa22935acd4bdd31994bcd27",
+  "docs/bench/gui-migration-20261106-231335Z.jsonl": "e8874c8a4bb761a0a60d8c3958603325011ad3579321bd1efdb9bd17303fef6b",
+  "docs/bench/gui-migration-20261106-231335Z.log": "898893da56e2053707bcffc0b4edff86b4cf5f123d6a3d6eb028df034642d40b",
+  "docs/bench/gui-migration-20261106-231335Z.md": "b0fdc1526ac2527df5baf99034f3fd23d9f1204bd58ea21b461f9695ebe43c53",
+  "docs/bench/gui-migration-20261106-232359Z-final-gui.json": "0f65eef865b025c284c631881974e0848fea7a360c0f0894384c937e435c60a0",
+  "docs/bench/gui-migration-20261106-232359Z-final-zero.jpg": "a1a84b5526ae74ad38b5cb1021c4df632a43081314f9da80010aca06a8f92b23",
+  "docs/bench/gui-migration-20261106-232359Z.jsonl": "78e81344a73bd89ff2260515ce83bfc0fc6dd8a576d4b932cb084ddd31385f93",
+  "docs/bench/gui-migration-20261106-232359Z.log": "70b2a0d263cbe5c9442d0c7ea2f26d36ca1ce26e05b04f96b7182c303aeab89d"
+}

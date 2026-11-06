@@ -30,6 +30,9 @@ The controller resolves routes while it owns USB. A GUI preview or earlier
 readback is never used as a substitute for that fresh position. All motion
 requires explicit intent and a home reference; imports, help and server startup
 perform no USB access. Existing controller backlash parameters remain in effect.
+Equivalent routes compare quantized integer counter phases, so repeating an
+already-reached phase is a no-op in every direction. Unedited Move dialog profiles
+preserve current device settings; actual profile edits still require validation.
 
 ```python
 mount.move_absolute(90)  # Fixed Range, degrees
@@ -57,6 +60,10 @@ The prior [motion bench record](bench/gui-controls-20261106-211627Z.md) and
 names and source hashes as historical evidence. New rotation modes and boundary
 cases have offline tests; those records do not establish physical calibration or
 bench validation of every mode.
+
+Subsequent [migration hardware acceptance](bench/gui-migration-20261106-231335Z.md)
+verified small signed/phase-wrapped moves and both forced-direction repeated-phase
+no-ops. Full/multi-turn physical travel and independent calibration remain untested.
 
 ## Reference paths
 

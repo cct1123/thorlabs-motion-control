@@ -1,5 +1,25 @@
 # Validation record
 
+## Migrated GUI actual-mount acceptance: 6 November 2026, 17:08–17:24 CST
+
+The [migration bench record](bench/gui-migration-20261106-231335Z.md) verifies small
+Fixed/Total/Equivalent moves, shortest/forward/reverse Equivalent routing, native
+single-step Jog both ways, brief Drive/release both ways, explicit Stop while moving,
+and all five settings readbacks. The mount returned to zero and its original raw
+settings were restored exactly, using only our WinUSB/APT commands and no EEPROM.
+
+Two defects were fixed and retested: equivalent phase comparisons now use integer
+counts to prevent an extra revolution on a repeated quantized target; unedited
+loaded Move profiles are preserved instead of implicitly revalidated/applied.
+Both forced-direction repeated phases and a restored-profile zero Move produced
+no motion packet. The final suite passed **282 offline tests**, Ruff lint/format
+checks and JavaScript syntax checks. Raw journals/logs, source hashes, restoration,
+screenshots and an artifact hash manifest are retained in the record.
+
+The observed counted movement stayed within roughly ±0.5°. Full/multi-turn physical
+travel, independent angle/rate calibration, untested modes and fault scenarios
+remain open. Earlier records below describe their own historical checkpoints.
+
 ## Holistic migration review: 6 November 2026
 
 The [current holistic review](reviews/holistic-review-20261106.md) records **228

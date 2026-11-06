@@ -44,6 +44,14 @@ resolver and fresh-counter routing. The earlier `move_to()` API and unused
 
 ## Settings and wire support
 
+The [migrated-GUI actual-mount test](bench/gui-migration-20261106-231335Z.md) also
+verified small Fixed/Total/Equivalent routes and repeated quantized phase targets.
+Equivalent routing now compares integer counter phases; repeating the reached
+phase never adds a turn merely because its degree display is rounded. Loaded,
+unedited Move profiles are preserved; explicit profile edits/Apply retain normal
+write validation. The test found and retested both fixes and restored all raw
+settings exactly.
+
 The [actual-mount GUI check on 6 November 2026](bench/gui-controls-20261106-211627Z.md)
 passed on serial 55551174, firmware 2.0.1: Home, small Move, single-step Jog in both
 directions, held Drive/release in both directions, explicit Stop, and readback of

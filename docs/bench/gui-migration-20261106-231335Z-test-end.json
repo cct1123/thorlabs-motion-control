@@ -1,0 +1,148 @@
+{
+  "busy": null,
+  "closing": false,
+  "connected": true,
+  "error": "",
+  "events": [
+    {
+      "level": "info",
+      "message": "load-settings complete.",
+      "time": "2026-11-06T17:16:47-06:00"
+    },
+    {
+      "level": "info",
+      "message": "move complete.",
+      "time": "2026-11-06T17:16:31-06:00"
+    },
+    {
+      "level": "info",
+      "message": "move complete.",
+      "time": "2026-11-06T17:16:22-06:00"
+    },
+    {
+      "level": "info",
+      "message": "Display, rotation and drive options applied for this server session.",
+      "time": "2026-11-06T17:16:21-06:00"
+    },
+    {
+      "level": "info",
+      "message": "move complete.",
+      "time": "2026-11-06T17:16:10-06:00"
+    },
+    {
+      "level": "info",
+      "message": "move complete.",
+      "time": "2026-11-06T17:15:51-06:00"
+    },
+    {
+      "level": "info",
+      "message": "Display, rotation and drive options applied for this server session.",
+      "time": "2026-11-06T17:15:50-06:00"
+    },
+    {
+      "level": "info",
+      "message": "move complete.",
+      "time": "2026-11-06T17:15:38-06:00"
+    },
+    {
+      "level": "info",
+      "message": "Display, rotation and drive options applied for this server session.",
+      "time": "2026-11-06T17:15:35-06:00"
+    },
+    {
+      "level": "info",
+      "message": "move complete.",
+      "time": "2026-11-06T17:15:06-06:00"
+    },
+    {
+      "level": "info",
+      "message": "Display, rotation and drive options applied for this server session.",
+      "time": "2026-11-06T17:14:53-06:00"
+    },
+    {
+      "level": "info",
+      "message": "move complete.",
+      "time": "2026-11-06T17:14:36-06:00"
+    },
+    {
+      "level": "info",
+      "message": "connect complete.",
+      "time": "2026-11-06T17:14:15-06:00"
+    }
+  ],
+  "identity": {
+    "channels": 1,
+    "firmware": "2.0.1",
+    "hardware_revision": 4,
+    "model": "K10CR2",
+    "modification_state": 112,
+    "serial": "55551174"
+  },
+  "message": "load-settings complete.",
+  "position": {
+    "counts": 0,
+    "degrees": 0.0
+  },
+  "recovery": false,
+  "settings": {
+    "backlash": {
+      "channel": 1,
+      "distance": 0
+    },
+    "buttons": {
+      "channel": 1,
+      "mode": 1,
+      "position1": 136533,
+      "position2": 682667,
+      "timeout1": 500,
+      "timeout2": 500
+    },
+    "home": {
+      "channel": 1,
+      "direction": 2,
+      "offset": 546133,
+      "switch": 1,
+      "velocity": 73300775
+    },
+    "jog": {
+      "acceleration": 1502,
+      "channel": 1,
+      "maximum": 3664554,
+      "minimum": 0,
+      "mode": 2,
+      "step": 34133,
+      "stop": 2
+    },
+    "velocity": {
+      "acceleration": 1502,
+      "channel": 1,
+      "maximum": 3664554,
+      "minimum": 0
+    }
+  },
+  "settings_revision": 9,
+  "settings_updated": 1794007007.5984237,
+  "status": {
+    "enabled": true,
+    "homed": true,
+    "homing": false,
+    "motion_error": false,
+    "moving": false,
+    "raw_bits": 2147484672
+  },
+  "ui": {
+    "decimals": 6,
+    "drives": [
+      2.5,
+      5,
+      7.5,
+      10
+    ],
+    "high_power": false,
+    "rotation_direction": "forward",
+    "rotation_mode": "equivalent",
+    "units": "deg"
+  },
+  "unknown": false,
+  "updated": 1794007014.8777611
+}

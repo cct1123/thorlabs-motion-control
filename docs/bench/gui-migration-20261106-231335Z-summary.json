@@ -1,0 +1,936 @@
+{
+  "serial": "55551174",
+  "firmware": "2.0.1",
+  "sessions": [
+    {
+      "record": "gui-migration-20261106-230830Z",
+      "started": "2026-11-06T23:08:30.485+00:00",
+      "ended": "2026-11-06T23:12:50.580+00:00",
+      "source_hashes": {
+        "src\\k10cr2\\cli.py": "cc91d03604194e247a563fd5d7a47bc06fd17157e5e36df32355cfa2431c695c",
+        "src\\k10cr2\\controller.py": "654c4bbd6a4cec3c11ecf07cde682168f8e9639d67b10ea6cb450edd411752f0",
+        "src\\k10cr2\\gui.py": "80b9b224b1e3e5ee18cc127468e6145de3526fcdacadc48a4a6d52543e9606fd",
+        "src\\k10cr2\\gui_state.py": "8b64673e6cbed0e71a29578d5be34e75d89d52b805a284d784939113b3875f41",
+        "src\\k10cr2\\gui_view.py": "4680e2fe52799b0c8e134bbf4084f18c89ed77d4ea71050fbc27a9773275475a",
+        "src\\k10cr2\\protocol.py": "622f02321ee07913a9c00c71ac6014415e3a970e9d1e80be4d4a90cb4e8dbec1",
+        "src\\k10cr2\\settings.py": "76c14f25f49bed8e1ee1a4ed7dae69955daf6cd8e001b10c3c45404c64d7877c",
+        "src\\k10cr2\\transport.py": "7cd62fe985a153b7cd5b2859373a5e50bc7a106cf7d6cc65cde512667d265fe5",
+        "src\\k10cr2\\__init__.py": "56f1e09e89ca1f777096dd8f327c9b518847647fe8231da995f2a8ef94d7fe59",
+        "src\\k10cr2\\__main__.py": "935a1c1166b0c1ea35a82256345000bf2c73ded718d77773bc27a71ecce28f7d",
+        "src\\k10cr2\\assets\\dialogs.js": "d006b733a0689b66590f015c510bc2fbdf368007c22f42ab6da3a179839a4ba4",
+        "src\\k10cr2\\assets\\hold.js": "eff3dfc5a24d239f7a2f0249c7d2c5f58485d9a776222e6f9eb6878eff5a7d9c",
+        "src\\k10cr2\\assets\\rotation.css": "ffd6b3613fe13874b45ae2f38b60b7a0cd4485c047e7e56a958ad242ffb8eec9",
+        "tools\\bench\\record_gui.py": "aecb08a872bbe433f4f1dcc2c4e322e339ce82750ef2a23576b42c741ba31b99"
+      },
+      "operations": [
+        {
+          "command": "move",
+          "mode": "fixed",
+          "direction": "quickest",
+          "target": 0.5,
+          "start": {
+            "counts": 0,
+            "degrees": 0.0
+          },
+          "end": {
+            "counts": 68267,
+            "degrees": 0.50000244140625
+          },
+          "duration_s": 1.547,
+          "final_status": {
+            "raw_bits": 2147484672,
+            "moving": false,
+            "homing": false,
+            "homed": true,
+            "enabled": true,
+            "motion_error": false
+          },
+          "error": "",
+          "recovery": false,
+          "unknown": false,
+          "moving_observed": true,
+          "motion_packets": [
+            {
+              "time": 70.172,
+              "direction": "TX",
+              "message_id": 1107,
+              "raw": "53 04 06 00 d0 01 01 00 ab 0a 01 00"
+            }
+          ],
+          "stop_packets": [],
+          "completion_ids": [
+            "0464"
+          ],
+          "delta_degrees": 0.50000244140625,
+          "read_only_no_op": false
+        },
+        {
+          "command": "move",
+          "mode": "total",
+          "direction": "quickest",
+          "target": -0.5,
+          "start": {
+            "counts": 68267,
+            "degrees": 0.50000244140625
+          },
+          "end": {
+            "counts": -68267,
+            "degrees": -0.50000244140625
+          },
+          "duration_s": 2.718,
+          "final_status": {
+            "raw_bits": 2147484672,
+            "moving": false,
+            "homing": false,
+            "homed": true,
+            "enabled": true,
+            "motion_error": false
+          },
+          "error": "",
+          "recovery": false,
+          "unknown": false,
+          "moving_observed": true,
+          "motion_packets": [
+            {
+              "time": 98.031,
+              "direction": "TX",
+              "message_id": 1107,
+              "raw": "53 04 06 00 d0 01 01 00 55 f5 fe ff"
+            }
+          ],
+          "stop_packets": [],
+          "completion_ids": [
+            "0464"
+          ],
+          "delta_degrees": -1.0000048828125,
+          "read_only_no_op": false
+        },
+        {
+          "command": "move",
+          "mode": "equivalent",
+          "direction": "quickest",
+          "target": 0.25,
+          "start": {
+            "counts": -68267,
+            "degrees": -0.50000244140625
+          },
+          "end": {
+            "counts": 34133,
+            "degrees": 0.24999755859375
+          },
+          "duration_s": 2.062,
+          "final_status": {
+            "raw_bits": 2147484672,
+            "moving": false,
+            "homing": false,
+            "homed": true,
+            "enabled": true,
+            "motion_error": false
+          },
+          "error": "",
+          "recovery": false,
+          "unknown": false,
+          "moving_observed": true,
+          "motion_packets": [
+            {
+              "time": 130.781,
+              "direction": "TX",
+              "message_id": 1107,
+              "raw": "53 04 06 00 d0 01 01 00 55 85 00 00"
+            }
+          ],
+          "stop_packets": [],
+          "completion_ids": [
+            "0464"
+          ],
+          "delta_degrees": 0.75,
+          "read_only_no_op": false
+        },
+        {
+          "command": "move",
+          "mode": "equivalent",
+          "direction": "reverse",
+          "target": 359.75,
+          "start": {
+            "counts": 34133,
+            "degrees": 0.24999755859375
+          },
+          "end": {
+            "counts": -34133,
+            "degrees": -0.24999755859375
+          },
+          "duration_s": 1.672,
+          "final_status": {
+            "raw_bits": 2147484672,
+            "moving": false,
+            "homing": false,
+            "homed": true,
+            "enabled": true,
+            "motion_error": false
+          },
+          "error": "",
+          "recovery": false,
+          "unknown": false,
+          "moving_observed": true,
+          "motion_packets": [
+            {
+              "time": 148.437,
+              "direction": "TX",
+              "message_id": 1107,
+              "raw": "53 04 06 00 d0 01 01 00 ab 7a ff ff"
+            }
+          ],
+          "stop_packets": [],
+          "completion_ids": [
+            "0464"
+          ],
+          "delta_degrees": -0.4999951171875,
+          "read_only_no_op": false
+        },
+        {
+          "command": "move",
+          "mode": "equivalent",
+          "direction": "forward",
+          "target": 0,
+          "start": {
+            "counts": -34133,
+            "degrees": -0.24999755859375
+          },
+          "end": {
+            "counts": 0,
+            "degrees": 0.0
+          },
+          "duration_s": 1.093,
+          "final_status": {
+            "raw_bits": 2147484672,
+            "moving": false,
+            "homing": false,
+            "homed": true,
+            "enabled": true,
+            "motion_error": false
+          },
+          "error": "",
+          "recovery": false,
+          "unknown": false,
+          "moving_observed": true,
+          "motion_packets": [
+            {
+              "time": 165.547,
+              "direction": "TX",
+              "message_id": 1107,
+              "raw": "53 04 06 00 d0 01 01 00 00 00 00 00"
+            }
+          ],
+          "stop_packets": [],
+          "completion_ids": [
+            "0464"
+          ],
+          "delta_degrees": 0.24999755859375,
+          "read_only_no_op": false
+        },
+        {
+          "command": "jog-forward",
+          "mode": "equivalent",
+          "direction": "forward",
+          "target": 0.5,
+          "start": {
+            "counts": 0,
+            "degrees": 0.0
+          },
+          "end": {
+            "counts": 34133,
+            "degrees": 0.24999755859375
+          },
+          "duration_s": 1.078,
+          "final_status": {
+            "raw_bits": 2147484672,
+            "moving": false,
+            "homing": false,
+            "homed": true,
+            "enabled": true,
+            "motion_error": false
+          },
+          "error": "",
+          "recovery": false,
+          "unknown": false,
+          "moving_observed": true,
+          "motion_packets": [
+            {
+              "time": 194.812,
+              "direction": "TX",
+              "message_id": 1130,
+              "raw": "6a 04 01 01 50 01"
+            }
+          ],
+          "stop_packets": [],
+          "completion_ids": [
+            "0464"
+          ],
+          "delta_degrees": 0.24999755859375,
+          "read_only_no_op": false
+        },
+        {
+          "command": "jog-reverse",
+          "mode": "equivalent",
+          "direction": "forward",
+          "target": 0.5,
+          "start": {
+            "counts": 34133,
+            "degrees": 0.24999755859375
+          },
+          "end": {
+            "counts": 0,
+            "degrees": 0.0
+          },
+          "duration_s": 1.125,
+          "final_status": {
+            "raw_bits": 2147484672,
+            "moving": false,
+            "homing": false,
+            "homed": true,
+            "enabled": true,
+            "motion_error": false
+          },
+          "error": "",
+          "recovery": false,
+          "unknown": false,
+          "moving_observed": true,
+          "motion_packets": [
+            {
+              "time": 201.0,
+              "direction": "TX",
+              "message_id": 1130,
+              "raw": "6a 04 01 02 50 01"
+            }
+          ],
+          "stop_packets": [],
+          "completion_ids": [
+            "0464"
+          ],
+          "delta_degrees": -0.24999755859375,
+          "read_only_no_op": false
+        },
+        {
+          "command": "drive-forward",
+          "mode": "equivalent",
+          "direction": "forward",
+          "target": 0.5,
+          "start": {
+            "counts": 0,
+            "degrees": 0.0
+          },
+          "end": {
+            "counts": 26623,
+            "degrees": 0.19499267578125
+          },
+          "duration_s": 0.672,
+          "final_status": {
+            "raw_bits": 2147484672,
+            "moving": false,
+            "homing": false,
+            "homed": true,
+            "enabled": true,
+            "motion_error": false
+          },
+          "error": "",
+          "recovery": false,
+          "unknown": false,
+          "moving_observed": true,
+          "motion_packets": [
+            {
+              "time": 209.312,
+              "direction": "TX",
+              "message_id": 1107,
+              "raw": "53 04 06 00 d0 01 01 00 00 00 fa 7d"
+            }
+          ],
+          "stop_packets": [
+            {
+              "time": 209.953,
+              "direction": "TX",
+              "message_id": 1125,
+              "raw": "65 04 01 02 50 01"
+            }
+          ],
+          "completion_ids": [
+            "0466",
+            "0464"
+          ],
+          "delta_degrees": 0.19499267578125,
+          "read_only_no_op": false
+        },
+        {
+          "command": "drive-reverse",
+          "mode": "equivalent",
+          "direction": "forward",
+          "target": 0.5,
+          "start": {
+            "counts": 26623,
+            "degrees": 0.19499267578125
+          },
+          "end": {
+            "counts": 676,
+            "degrees": 0.004951171875
+          },
+          "duration_s": 0.687,
+          "final_status": {
+            "raw_bits": 2147484672,
+            "moving": false,
+            "homing": false,
+            "homed": true,
+            "enabled": true,
+            "motion_error": false
+          },
+          "error": "",
+          "recovery": false,
+          "unknown": false,
+          "moving_observed": true,
+          "motion_packets": [
+            {
+              "time": 215.531,
+              "direction": "TX",
+              "message_id": 1107,
+              "raw": "53 04 06 00 d0 01 01 00 00 00 06 82"
+            }
+          ],
+          "stop_packets": [
+            {
+              "time": 216.172,
+              "direction": "TX",
+              "message_id": 1125,
+              "raw": "65 04 01 02 50 01"
+            }
+          ],
+          "completion_ids": [
+            "0466",
+            "0464"
+          ],
+          "delta_degrees": -0.19004150390625002,
+          "read_only_no_op": false
+        },
+        {
+          "command": "move",
+          "mode": "equivalent",
+          "direction": "forward",
+          "target": 2,
+          "start": {
+            "counts": 676,
+            "degrees": 0.004951171875
+          },
+          "end": {
+            "counts": 6357,
+            "degrees": 0.04656005859375
+          },
+          "duration_s": 0.328,
+          "final_status": {
+            "raw_bits": 2147484672,
+            "moving": false,
+            "homing": false,
+            "homed": true,
+            "enabled": true,
+            "motion_error": false
+          },
+          "error": "MotionError: MotionCancelled: Stop requested; stop confirmed by controller. Close and explicitly reconnect before another motion.",
+          "recovery": true,
+          "unknown": false,
+          "moving_observed": true,
+          "motion_packets": [
+            {
+              "time": 232.156,
+              "direction": "TX",
+              "message_id": 1107,
+              "raw": "53 04 06 00 d0 01 01 00 ab 2a 04 00"
+            }
+          ],
+          "stop_packets": [
+            {
+              "time": 232.453,
+              "direction": "TX",
+              "message_id": 1125,
+              "raw": "65 04 01 02 50 01"
+            }
+          ],
+          "completion_ids": [
+            "0466",
+            "0464"
+          ],
+          "delta_degrees": 0.04160888671875,
+          "read_only_no_op": false
+        }
+      ],
+      "observed_counted_range": [
+        -0.50000244140625,
+        0.50000244140625
+      ],
+      "guard_fired": false,
+      "forbidden_modules": [],
+      "tx_counts": {
+        "0005": 2,
+        "0411": 571,
+        "0413": 5,
+        "0414": 15,
+        "0416": 1,
+        "0417": 5,
+        "0429": 578,
+        "043a": 1,
+        "043b": 3,
+        "0441": 1,
+        "0453": 8,
+        "0465": 3,
+        "046a": 2,
+        "04b7": 1
+      },
+      "rx_counts": {
+        "0006": 2,
+        "0412": 571,
+        "0415": 15,
+        "0418": 5,
+        "042a": 578,
+        "043c": 3,
+        "0442": 1,
+        "0464": 10,
+        "0466": 3,
+        "04b8": 1
+      },
+      "product_checkpoint": "99a381e"
+    },
+    {
+      "record": "gui-migration-20261106-231335Z",
+      "started": "2026-11-06T23:13:35.388+00:00",
+      "ended": "2026-11-06T23:16:58.649+00:00",
+      "source_hashes": {
+        "src\\k10cr2\\cli.py": "cc91d03604194e247a563fd5d7a47bc06fd17157e5e36df32355cfa2431c695c",
+        "src\\k10cr2\\controller.py": "654c4bbd6a4cec3c11ecf07cde682168f8e9639d67b10ea6cb450edd411752f0",
+        "src\\k10cr2\\gui.py": "80b9b224b1e3e5ee18cc127468e6145de3526fcdacadc48a4a6d52543e9606fd",
+        "src\\k10cr2\\gui_state.py": "8b64673e6cbed0e71a29578d5be34e75d89d52b805a284d784939113b3875f41",
+        "src\\k10cr2\\gui_view.py": "4680e2fe52799b0c8e134bbf4084f18c89ed77d4ea71050fbc27a9773275475a",
+        "src\\k10cr2\\protocol.py": "622f02321ee07913a9c00c71ac6014415e3a970e9d1e80be4d4a90cb4e8dbec1",
+        "src\\k10cr2\\settings.py": "5ec2c1d76967ae74b4309a10404405a259d56a1e2d8053f74c2c7fafc04efd51",
+        "src\\k10cr2\\transport.py": "7cd62fe985a153b7cd5b2859373a5e50bc7a106cf7d6cc65cde512667d265fe5",
+        "src\\k10cr2\\__init__.py": "56f1e09e89ca1f777096dd8f327c9b518847647fe8231da995f2a8ef94d7fe59",
+        "src\\k10cr2\\__main__.py": "935a1c1166b0c1ea35a82256345000bf2c73ded718d77773bc27a71ecce28f7d",
+        "src\\k10cr2\\assets\\dialogs.js": "d006b733a0689b66590f015c510bc2fbdf368007c22f42ab6da3a179839a4ba4",
+        "src\\k10cr2\\assets\\hold.js": "eff3dfc5a24d239f7a2f0249c7d2c5f58485d9a776222e6f9eb6878eff5a7d9c",
+        "src\\k10cr2\\assets\\rotation.css": "ffd6b3613fe13874b45ae2f38b60b7a0cd4485c047e7e56a958ad242ffb8eec9",
+        "tools\\bench\\record_gui.py": "aecb08a872bbe433f4f1dcc2c4e322e339ce82750ef2a23576b42c741ba31b99"
+      },
+      "operations": [
+        {
+          "command": "move",
+          "mode": "fixed",
+          "direction": "quickest",
+          "target": 0,
+          "start": {
+            "counts": 6357,
+            "degrees": 0.04656005859375
+          },
+          "end": {
+            "counts": 0,
+            "degrees": 0.0
+          },
+          "duration_s": 0.5,
+          "final_status": {
+            "raw_bits": 2147484672,
+            "moving": false,
+            "homing": false,
+            "homed": true,
+            "enabled": true,
+            "motion_error": false
+          },
+          "error": "",
+          "recovery": false,
+          "unknown": false,
+          "moving_observed": true,
+          "motion_packets": [
+            {
+              "time": 60.813,
+              "direction": "TX",
+              "message_id": 1107,
+              "raw": "53 04 06 00 d0 01 01 00 00 00 00 00"
+            }
+          ],
+          "stop_packets": [],
+          "completion_ids": [
+            "0464"
+          ],
+          "delta_degrees": -0.04656005859375,
+          "read_only_no_op": false
+        },
+        {
+          "command": "move",
+          "mode": "total",
+          "direction": "quickest",
+          "target": -0.25,
+          "start": {
+            "counts": 0,
+            "degrees": 0.0
+          },
+          "end": {
+            "counts": -34133,
+            "degrees": -0.24999755859375
+          },
+          "duration_s": 1.125,
+          "final_status": {
+            "raw_bits": 2147484672,
+            "moving": false,
+            "homing": false,
+            "homed": true,
+            "enabled": true,
+            "motion_error": false
+          },
+          "error": "",
+          "recovery": false,
+          "unknown": false,
+          "moving_observed": true,
+          "motion_packets": [
+            {
+              "time": 90.391,
+              "direction": "TX",
+              "message_id": 1107,
+              "raw": "53 04 06 00 d0 01 01 00 ab 7a ff ff"
+            }
+          ],
+          "stop_packets": [],
+          "completion_ids": [
+            "0464"
+          ],
+          "delta_degrees": -0.24999755859375,
+          "read_only_no_op": false
+        },
+        {
+          "command": "move",
+          "mode": "equivalent",
+          "direction": "quickest",
+          "target": 0.25,
+          "start": {
+            "counts": -34133,
+            "degrees": -0.24999755859375
+          },
+          "end": {
+            "counts": 34133,
+            "degrees": 0.24999755859375
+          },
+          "duration_s": 1.563,
+          "final_status": {
+            "raw_bits": 2147484672,
+            "moving": false,
+            "homing": false,
+            "homed": true,
+            "enabled": true,
+            "motion_error": false
+          },
+          "error": "",
+          "recovery": false,
+          "unknown": false,
+          "moving_observed": true,
+          "motion_packets": [
+            {
+              "time": 121.172,
+              "direction": "TX",
+              "message_id": 1107,
+              "raw": "53 04 06 00 d0 01 01 00 55 85 00 00"
+            }
+          ],
+          "stop_packets": [],
+          "completion_ids": [
+            "0464"
+          ],
+          "delta_degrees": 0.4999951171875,
+          "read_only_no_op": false
+        },
+        {
+          "command": "move",
+          "mode": "equivalent",
+          "direction": "reverse",
+          "target": 0.25,
+          "start": {
+            "counts": 34133,
+            "degrees": 0.24999755859375
+          },
+          "end": {
+            "counts": 34133,
+            "degrees": 0.24999755859375
+          },
+          "duration_s": 0.032,
+          "final_status": {
+            "raw_bits": 2147484672,
+            "moving": false,
+            "homing": false,
+            "homed": true,
+            "enabled": true,
+            "motion_error": false
+          },
+          "error": "",
+          "recovery": false,
+          "unknown": false,
+          "moving_observed": false,
+          "motion_packets": [],
+          "stop_packets": [],
+          "completion_ids": [],
+          "delta_degrees": 0.0,
+          "read_only_no_op": true
+        },
+        {
+          "command": "move",
+          "mode": "equivalent",
+          "direction": "reverse",
+          "target": 359.75,
+          "start": {
+            "counts": 34133,
+            "degrees": 0.24999755859375
+          },
+          "end": {
+            "counts": -34133,
+            "degrees": -0.24999755859375
+          },
+          "duration_s": 1.672,
+          "final_status": {
+            "raw_bits": 2147484672,
+            "moving": false,
+            "homing": false,
+            "homed": true,
+            "enabled": true,
+            "motion_error": false
+          },
+          "error": "",
+          "recovery": false,
+          "unknown": false,
+          "moving_observed": true,
+          "motion_packets": [
+            {
+              "time": 153.485,
+              "direction": "TX",
+              "message_id": 1107,
+              "raw": "53 04 06 00 d0 01 01 00 ab 7a ff ff"
+            }
+          ],
+          "stop_packets": [],
+          "completion_ids": [
+            "0464"
+          ],
+          "delta_degrees": -0.4999951171875,
+          "read_only_no_op": false
+        },
+        {
+          "command": "move",
+          "mode": "equivalent",
+          "direction": "forward",
+          "target": 359.75,
+          "start": {
+            "counts": -34133,
+            "degrees": -0.24999755859375
+          },
+          "end": {
+            "counts": -34133,
+            "degrees": -0.24999755859375
+          },
+          "duration_s": 0.016,
+          "final_status": {
+            "raw_bits": 2147484672,
+            "moving": false,
+            "homing": false,
+            "homed": true,
+            "enabled": true,
+            "motion_error": false
+          },
+          "error": "",
+          "recovery": false,
+          "unknown": false,
+          "moving_observed": false,
+          "motion_packets": [],
+          "stop_packets": [],
+          "completion_ids": [],
+          "delta_degrees": 0.0,
+          "read_only_no_op": true
+        },
+        {
+          "command": "move",
+          "mode": "equivalent",
+          "direction": "forward",
+          "target": 0,
+          "start": {
+            "counts": -34133,
+            "degrees": -0.24999755859375
+          },
+          "end": {
+            "counts": 0,
+            "degrees": 0.0
+          },
+          "duration_s": 1.078,
+          "final_status": {
+            "raw_bits": 2147484672,
+            "moving": false,
+            "homing": false,
+            "homed": true,
+            "enabled": true,
+            "motion_error": false
+          },
+          "error": "",
+          "recovery": false,
+          "unknown": false,
+          "moving_observed": true,
+          "motion_packets": [
+            {
+              "time": 174.985,
+              "direction": "TX",
+              "message_id": 1107,
+              "raw": "53 04 06 00 d0 01 01 00 00 00 00 00"
+            }
+          ],
+          "stop_packets": [],
+          "completion_ids": [
+            "0464"
+          ],
+          "delta_degrees": 0.24999755859375,
+          "read_only_no_op": false
+        }
+      ],
+      "observed_counted_range": [
+        -0.24999755859375,
+        0.24999755859375
+      ],
+      "guard_fired": false,
+      "forbidden_modules": [],
+      "tx_counts": {
+        "0005": 2,
+        "0411": 369,
+        "0414": 9,
+        "0417": 2,
+        "0429": 377,
+        "043b": 2,
+        "0441": 2,
+        "0453": 5,
+        "04b7": 2
+      },
+      "rx_counts": {
+        "0006": 2,
+        "0412": 369,
+        "0415": 9,
+        "0418": 2,
+        "042a": 377,
+        "043c": 2,
+        "0442": 2,
+        "0464": 5,
+        "04b8": 2
+      },
+      "product_checkpoint": "ee4b3ea"
+    },
+    {
+      "record": "gui-migration-20261106-232359Z",
+      "started": "2026-11-06T23:23:59.085+00:00",
+      "ended": "2026-11-06T23:24:36.610+00:00",
+      "source_hashes": {
+        "src\\k10cr2\\cli.py": "cc91d03604194e247a563fd5d7a47bc06fd17157e5e36df32355cfa2431c695c",
+        "src\\k10cr2\\controller.py": "654c4bbd6a4cec3c11ecf07cde682168f8e9639d67b10ea6cb450edd411752f0",
+        "src\\k10cr2\\gui.py": "80b9b224b1e3e5ee18cc127468e6145de3526fcdacadc48a4a6d52543e9606fd",
+        "src\\k10cr2\\gui_state.py": "8b64673e6cbed0e71a29578d5be34e75d89d52b805a284d784939113b3875f41",
+        "src\\k10cr2\\gui_view.py": "f13e1246ebfc98256985ff64aff9f21e3f8c4e2e662afd34ea712c20d391dcd6",
+        "src\\k10cr2\\protocol.py": "622f02321ee07913a9c00c71ac6014415e3a970e9d1e80be4d4a90cb4e8dbec1",
+        "src\\k10cr2\\settings.py": "5ec2c1d76967ae74b4309a10404405a259d56a1e2d8053f74c2c7fafc04efd51",
+        "src\\k10cr2\\transport.py": "7cd62fe985a153b7cd5b2859373a5e50bc7a106cf7d6cc65cde512667d265fe5",
+        "src\\k10cr2\\__init__.py": "56f1e09e89ca1f777096dd8f327c9b518847647fe8231da995f2a8ef94d7fe59",
+        "src\\k10cr2\\__main__.py": "935a1c1166b0c1ea35a82256345000bf2c73ded718d77773bc27a71ecce28f7d",
+        "src\\k10cr2\\assets\\dialogs.js": "d006b733a0689b66590f015c510bc2fbdf368007c22f42ab6da3a179839a4ba4",
+        "src\\k10cr2\\assets\\hold.js": "eff3dfc5a24d239f7a2f0249c7d2c5f58485d9a776222e6f9eb6878eff5a7d9c",
+        "src\\k10cr2\\assets\\rotation.css": "ffd6b3613fe13874b45ae2f38b60b7a0cd4485c047e7e56a958ad242ffb8eec9",
+        "tools\\bench\\record_gui.py": "aecb08a872bbe433f4f1dcc2c4e322e339ce82750ef2a23576b42c741ba31b99"
+      },
+      "operations": [
+        {
+          "command": "move",
+          "mode": "fixed",
+          "direction": "quickest",
+          "target": 0,
+          "start": {
+            "counts": 0,
+            "degrees": 0.0
+          },
+          "end": {
+            "counts": 0,
+            "degrees": 0.0
+          },
+          "duration_s": 0.015,
+          "final_status": {
+            "raw_bits": 2147484672,
+            "moving": false,
+            "homing": false,
+            "homed": true,
+            "enabled": true,
+            "motion_error": false
+          },
+          "error": "",
+          "recovery": false,
+          "unknown": false,
+          "moving_observed": false,
+          "motion_packets": [],
+          "stop_packets": [],
+          "completion_ids": [],
+          "delta_degrees": 0.0,
+          "read_only_no_op": true
+        }
+      ],
+      "observed_counted_range": [
+        0.0,
+        0.0
+      ],
+      "guard_fired": false,
+      "forbidden_modules": [],
+      "tx_counts": {
+        "0005": 2,
+        "0411": 40,
+        "0414": 1,
+        "0417": 1,
+        "0429": 41,
+        "043b": 1,
+        "0441": 1,
+        "04b7": 1
+      },
+      "rx_counts": {
+        "0006": 2,
+        "0412": 40,
+        "0415": 1,
+        "0418": 1,
+        "042a": 41,
+        "043c": 1,
+        "0442": 1,
+        "04b8": 1
+      },
+      "product_checkpoint": "4c526ef"
+    }
+  ],
+  "no_op_cases": 3,
+  "exact_settings_restored": true,
+  "final_position": {
+    "counts": 0,
+    "degrees": 0.0
+  },
+  "final_status": {
+    "enabled": true,
+    "homed": true,
+    "homing": false,
+    "motion_error": false,
+    "moving": false,
+    "raw_bits": 2147484672
+  },
+  "offline_tests_passed": 282,
+  "restored_profile_no_op_sent_no_setting_or_motion_packets": true,
+  "final_source_hashes_match_tested_files": true,
+  "restoration_tx_ids": [
+    "0005",
+    "0411",
+    "0413",
+    "0414",
+    "0416",
+    "0417",
+    "0429",
+    "043a",
+    "043b",
+    "0441",
+    "04b7"
+  ],
+  "restoration_no_motion_or_eeprom": true,
+  "fixes": {
+    "equivalent_phase_rounding": "ee4b3ea",
+    "unchanged_move_profile": "4c526ef"
+  }
+}

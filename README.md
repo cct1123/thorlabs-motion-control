@@ -47,11 +47,14 @@ for the owner before releasing USB. Closing a tab alone leaves the server runnin
 finite moves continue, while held controls expire. All tabs share the controller.
 The server binds only to loopback and rejects foreign-host/cross-origin writes.
 
-An [actual-mount GUI test](docs/bench/gui-controls-20261106-211627Z.md) passed Home,
-small Move/Jog/Drive, Stop, settings readback and exact restoration on serial
-55551174, firmware 2.0.1. Independent angular accuracy, other modes and fault
-scenarios remain unverified. Install the `gui` extra for GUI tests; core library/CLI
-use does not require Dash.
+The [migrated-GUI hardware test](docs/bench/gui-migration-20261106-231335Z.md) passed
+small Fixed/Total/Equivalent moves, all three Equivalent directions, repeated-phase
+no-ops, Jog, Drive/release, Stop and all five settings readbacks on serial 55551174,
+firmware 2.0.1. Two defects were fixed and retested; original raw settings were
+restored exactly. The [earlier test](docs/bench/gui-controls-20261106-211627Z.md)
+also covers Home. Independent accuracy, full/multi-turn travel and fault scenarios
+remain unverified. Install the `gui` extra for GUI tests; core library/CLI use does
+not require Dash.
 
 ## Setup
 
