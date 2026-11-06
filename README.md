@@ -7,47 +7,44 @@ Thorlabs SDK DLL is required.
 
 ## Local graphical interface
 
-The optional Dash GUI follows the layout and palette of the `rotation_mount`
-reference interface: a counted-position dial, target and finite-step controls,
-Stop, expandable device details, and an activity history.
+The GUI follows the Thorlabs K10CR2 panel (Figure 16) and settings in the
+[manufacturer manual](docs/hardware/K10CR2-user-guide-ETN064249-D02.pdf).
+All communication is our own WinUSB/APT implementation; no Kinesis or SDK is used.
 
 ```powershell
 uv sync --locked --extra gui
 uv run --locked --extra gui k10cr2-gui --serial 55551174
 ```
 
-Open **http://127.0.0.1:8050**. Use `--port 8051` if that port is occupied.
-`--serial` only prefills the field; startup and page refresh do not discover,
-connect, enable, home, or move hardware. Enter the mount's actual eight-digit
-serial and click **Connect** for identity, status, and position readback.
-Close other software that owns the mount first.
+Open **http://127.0.0.1:8050**; use `--port 8051` if that port is occupied.
+Startup only shows the UI; click **Connect** for readback and **Home** explicitly
+before positioning. Close other software that owns the mount first.
 
-Expand **Device actions & details** to explicitly **Home mount**, then use
-**Move to angle** or **− Step / + Step**. Targets remain in `0 <= angle < 360`
-degrees and do not wrap. Steps read a fresh position before calculating the
-absolute target. Speed, acceleration, direction, backlash, and persistent device
-settings retain their existing controller values. This GUI does not expose
-configuration, LED identification, continuous jogging, or motor-disable commands.
+The panel provides Move/profile editing, Home, Stop, held Drive/Jog controls,
+Enable/Disable, Identify, serial/position/status and limit indicators. Settings
+include display units, Fixed/Equivalent/Total rotation modes, forward/reverse/
+quickest routing, velocity/jog/backlash and hardware-button parameters. Click
+**Load from device** before editing device groups. Setting writes require fresh
+readback, validation and verification. Persistence is opt-in; an EEPROM write is
+reported as requested, not power-cycle proven. Session display and drive options
+have a separate Apply button.
 
-USB work runs outside web callbacks, with one operation at a time and no motion
-queue. Idle status refreshes approximately twice per second while a browser is
-open; the active motion owner reads progress itself. The dial displays controller
-counts, not independent encoder measurements. **Stop** signals that active owner,
-which attempts a profiled stop and reports its readback. Response time is bounded
-by the in-flight USB/query operation and cleanup deadlines, not hard real time.
-An interrupted or failed motion requires **Disconnect**, then explicit **Connect**
-before another move. An unconfirmed stop is reported as **physical state UNKNOWN**.
+Unverified S-curve, power, trigger and factory-reset controls are visibly unavailable;
+stage-specific settings remain locked as instructed by the manual. See the full
+[GUI mapping, packet references and limitations](docs/gui-manual.md). The original
+[manual and protocol PDFs](docs/hardware/README.md) are retained in the repository.
 
-**Disconnect** releases USB without changing motor holding state; active movement
-must finish or be stopped first. **Close web UI** or console **Ctrl+C** requests
-cancellation, waits for the owner, and releases USB. If stop or shutdown cannot be
-confirmed, the server keeps controls available for inspection and an explicit retry.
-Closing a browser tab alone leaves the server and any active operation running.
-All tabs share the same controller and activity state. The server binds only to
-`127.0.0.1`, uses no debugger/reloader, and rejects foreign-host/cross-origin writes.
+One worker owns USB; motions are not queued. Release, lost focus or an expired
+browser heartbeat requests a stop for held controls. Software Stop is not hard
+real time. Query/motion faults require explicit recovery; an unconfirmed stop
+retains **physical state UNKNOWN**. **Close web UI** or console **Ctrl+C** waits
+for the owner before releasing USB. Closing a tab alone leaves the server running;
+finite moves continue, while held controls expire. All tabs share the controller.
+The server binds only to loopback and rejects foreign-host/cross-origin writes.
 
-For GUI development and tests, install the `gui` extra before running pytest.
-Core library and CLI use do not require Dash.
+New GUI communication paths have offline/simulated validation; the earlier bench
+records do not validate their physical behavior. Install the `gui` extra to run GUI
+tests. Core library/CLI use does not require Dash.
 
 ## Setup
 
@@ -153,7 +150,7 @@ proof of mechanical rest or optical safety.
 ## Development and evidence
 
 ```powershell
-uv run --locked pytest
+uv run --locked --extra gui pytest
 uv run --locked ruff check .
 uv run --locked ruff format --check .
 uv build --no-sources
@@ -162,7 +159,8 @@ uv build --no-sources
 See [command reference](docs/commands.md) and [validation record](docs/validation.md).
 The [full capability/coverage catalogue](docs/command-catalog.md) distinguishes
 implemented commands, additional documented queries/settings, explicit exclusions,
-and unresolved K10CR2 applicability. The current API scope remains unchanged.
+and unresolved K10CR2 applicability. Current settings and manual-motion extensions
+are mapped separately in [the GUI contract](docs/gui-manual.md).
 The tests use independent literal frames, saved device traffic, scripted controller
 responses, and mocked USB calls. They do not move real hardware.
 

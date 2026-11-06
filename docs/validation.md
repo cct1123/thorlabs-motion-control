@@ -1,6 +1,35 @@
 # Validation record
 
-## GUI software validation: 6 November 2026
+## Manufacturer GUI revision: 6 November 2026
+
+The panel and settings now follow Figure 16 and chapter 7 of the manufacturer's
+ETN064249-D02 manual. Unmodified manual and protocol PDFs with SHA256 provenance
+are retained under [hardware](hardware/README.md). The current implementation
+contract and unavailable mappings are in [gui-manual.md](gui-manual.md).
+
+The full offline suite covers literal parameter packets, strict response layouts,
+read/validate/write/readback/persist ordering, whole-draft validation before writes,
+explicit enable/disable/identify, native jog, finite held-drive targets and profile
+restore, rotation/display units, browser lease expiry and cross-tab ownership,
+Stop at completion and during a query, unknown-state gating, shutdown, modal Stop
+access, packaged manual fallback, and all prior tests. Ruff and package checks
+are included. These tests do not validate K10CR2 firmware acceptance, physical
+profile scales, resting/trigger electrical behavior, EEPROM retention, or timing.
+
+A browser check using a simulated APT transport verified explicit connection/home,
+parameter readbacks, a velocity edit with readback, native single-step jog, and held
+drive followed by release and confirmed idle. The real GUI was opened disconnected.
+No real USB device was accessed, enabled, configured or moved by these checks.
+Earlier bench records below apply to the core controller, not these new GUI paths.
+
+The final repository review passed **189 offline tests**, Ruff lint and formatting,
+JavaScript syntax checking, lockfile validation, and wheel/source-distribution
+builds. An isolated installed wheel serves the GUI assets and local manufacturer
+manual without importing USB. One third-party Dash pytest-plugin deprecation
+warning remains. Findings, staged commits, and software/hardware limits are in
+[the repository review](review-2026-11-06.md).
+
+## Initial reference GUI validation: 6 November 2026
 
 The optional Dash GUI is adapted from
 `C:\Users\HFNV\Dev\rotation_mount\src\rotation_mount\gui.py` and its stylesheet,
@@ -54,10 +83,10 @@ added. Subsequent tests cover home/move/stop, fresh transitions and target count
 partial writes, deadlines, Ctrl+C, cleanup failure, single ownership, and captured
 hardware traffic. The motion/stop milestone passed **87 offline tests** on Python
 3.12.7. The issue-48 audit added seven fault-layout/decoding and source-catalogue
-test cases. The current focused controller/protocol suite passed **97 tests**;
-the full repository suite, including concurrent GUI/notebook additions, passed
-**131 tests**. Ruff checks and the distribution build also passed. The Dash
-pytest plugin emitted one third-party deprecation warning.
+test cases. That historical protocol-audit record reported **97 focused tests**
+and **131 full-repository tests** with concurrent GUI/notebook additions. Current
+review counts are recorded above. Ruff checks and the distribution build also
+passed. The Dash pytest plugin emitted one third-party deprecation warning.
 
 Locked uv installation and lockfile validation, pytest, Ruff lint/format checks,
 and wheel/sdist build all passed. The built wheel was also installed into an isolated

@@ -1,5 +1,9 @@
 # K10CR2 command reference
 
+> The tables below retain the earlier core-controller audit. The current GUI
+> extension, additional setting/action packets, unavailable mappings and validation
+> limits are documented in [gui-manual.md](gui-manual.md).
+
 Audited 6 November 2026 against protocol issue 48 and the current K10CR2 manual.
 The full documented capability/coverage table is in [command-catalog.md](command-catalog.md).
 Requests are binary APT bytes, with no text terminator.

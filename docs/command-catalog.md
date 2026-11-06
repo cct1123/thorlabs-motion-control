@@ -1,5 +1,9 @@
 # K10CR2 commands and queries: documented capabilities and package coverage
 
+> The tables below retain the earlier core-controller audit. The current GUI
+> extension, additional setting/action packets, unavailable mappings and validation
+> limits are documented in [gui-manual.md](gui-manual.md).
+
 Reviewed 6 November 2026 against **DOC-103274 issue 48** and the **K10CR2(/M) User
 Guide ETN064249-D02, Rev A, August 2024**. This is a capability/coverage catalogue,
 not a claim that every shared-family command is supported by K10CR2 firmware 2.0.1.
