@@ -144,6 +144,18 @@ def test_gui_help_and_import_do_not_import_usb():
     assert result.returncode == 0, result.stderr
 
 
+def test_server_refuses_to_share_an_occupied_port():
+    import socket
+
+    from k10cr2.gui import LocalServer
+
+    with socket.socket() as occupied:
+        occupied.bind(("127.0.0.1", 0))
+        occupied.listen()
+        with pytest.raises(SystemExit):
+            LocalServer("127.0.0.1", occupied.getsockname()[1], create_app().server)
+
+
 def test_unknown_physical_state_keeps_stop_available_and_blocks_disconnect():
     snapshot = GuiController().snapshot()
     snapshot.update(

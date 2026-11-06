@@ -2,11 +2,23 @@
 
 import argparse
 import logging
+import socket
 
-from werkzeug.serving import make_server
+from werkzeug.serving import ThreadedWSGIServer
 
 from .gui_state import GuiController
 from .gui_view import COMMANDS, controls, create_app  # noqa: F401
+
+
+class LocalServer(ThreadedWSGIServer):
+    """Reject occupied ports, including Windows SO_REUSEADDR double binds."""
+
+    allow_reuse_address = False
+
+    def server_bind(self):
+        if hasattr(socket, "SO_EXCLUSIVEADDRUSE"):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_EXCLUSIVEADDRUSE, 1)
+        super().server_bind()
 
 
 def main(argv=None):
@@ -23,7 +35,7 @@ def main(argv=None):
     logging.getLogger("werkzeug").setLevel(logging.WARNING)
     controller = GuiController()
     app = create_app(controller, serial=args.serial)
-    server = make_server("127.0.0.1", args.port, app.server, threaded=True)
+    server = LocalServer("127.0.0.1", args.port, app.server)
     app.server.config["GUI_SHUTDOWN"] = server.shutdown
     print(f"K10CR2 GUI: http://127.0.0.1:{server.server_port}", flush=True)
     print(
