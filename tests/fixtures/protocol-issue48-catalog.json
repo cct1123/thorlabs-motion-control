@@ -1,0 +1,380 @@
+{
+  "reviewed": "2026-11-06",
+  "protocol": {
+    "document": "DOC-103274",
+    "issue": "48",
+    "pages": 494,
+    "url": "https://media.thorlabs.com/globalassets/family-pages/sharedassets/a/ap/apt_communications_protocol.pdf?v=0812022816",
+    "sha256": "911bdd8cc6a445f959a5fae3f44456ebf345c65d5103f3f7d5c5fd547d6e523f"
+  },
+  "manual": {
+    "document": "ETN064249-D02",
+    "revision": "A, August 2024",
+    "pages": 33,
+    "url": "https://media.thorlabs.com/globalassets/items/k/k1/k10/k10cr2_m/etn064249-d02.pdf?v=0116115646",
+    "sha256": "e0c3a77232005cfca12381493ed8ea6907e0cfdc7fa406b8c7c02a6bd04dbeab"
+  },
+  "shared_index_heading": "Messages Applicable to TST001, TST101, KST101 and K10CR1",
+  "shared_index_pages": [
+    12,
+    13
+  ],
+  "shared_index_entries": [
+    {
+      "name": "MGMSG_MOD_IDENTIFY",
+      "id": "0x0223",
+      "page": 51,
+      "applicability": "shared family index; K10CR2 applicability must be assessed separately"
+    },
+    {
+      "name": "MGMSG_MOD_SET_CHANENABLESTATE",
+      "id": "0x0210",
+      "page": 52,
+      "applicability": "shared family index; K10CR2 applicability must be assessed separately"
+    },
+    {
+      "name": "MGMSG_MOD_REQ_CHANENABLESTATE",
+      "id": "0x0211",
+      "page": 52,
+      "applicability": "shared family index; K10CR2 applicability must be assessed separately"
+    },
+    {
+      "name": "MGMSG_MOD_GET_CHANENABLESTATE",
+      "id": "0x0212",
+      "page": 52,
+      "applicability": "shared family index; K10CR2 applicability must be assessed separately"
+    },
+    {
+      "name": "MGMSG_HW_START_UPDATEMSGS",
+      "id": "0x0011",
+      "page": 57,
+      "applicability": "shared family index; K10CR2 applicability must be assessed separately"
+    },
+    {
+      "name": "MGMSG_HW_STOP_UPDATEMSGS",
+      "id": "0x0012",
+      "page": 57,
+      "applicability": "shared family index; K10CR2 applicability must be assessed separately"
+    },
+    {
+      "name": "MGMSG_HW_REQ_INFO",
+      "id": "0x0005",
+      "page": 59,
+      "applicability": "shared family index; K10CR2 applicability must be assessed separately"
+    },
+    {
+      "name": "MGMSG_HW_GET_INFO",
+      "id": "0x0006",
+      "page": 59,
+      "applicability": "shared family index; K10CR2 applicability must be assessed separately"
+    },
+    {
+      "name": "MGMSG_MOT_SET_POSCOUNTER",
+      "id": "0x0410",
+      "page": 73,
+      "applicability": "shared family index; K10CR2 applicability must be assessed separately"
+    },
+    {
+      "name": "MGMSG_MOT_REQ_POSCOUNTER",
+      "id": "0x0411",
+      "page": 73,
+      "applicability": "shared family index; K10CR2 applicability must be assessed separately"
+    },
+    {
+      "name": "MGMSG_MOT_GET_POSCOUNTER",
+      "id": "0x0412",
+      "page": 73,
+      "applicability": "shared family index; K10CR2 applicability must be assessed separately"
+    },
+    {
+      "name": "MGMSG_MOT_SET_ENCCOUNTER",
+      "id": "0x0409",
+      "page": 75,
+      "applicability": "shared family index; K10CR2 applicability must be assessed separately"
+    },
+    {
+      "name": "MGMSG_MOT_REQ_ENCCOUNTER",
+      "id": "0x040A",
+      "page": 75,
+      "applicability": "shared family index; K10CR2 applicability must be assessed separately"
+    },
+    {
+      "name": "MGMSG_MOT_GET_ENCCOUNTER",
+      "id": "0x040B",
+      "page": 75,
+      "applicability": "shared family index; K10CR2 applicability must be assessed separately"
+    },
+    {
+      "name": "MGMSG_MOT_SET_VELPARAMS",
+      "id": "0x0413",
+      "page": 77,
+      "applicability": "shared family index; K10CR2 applicability must be assessed separately"
+    },
+    {
+      "name": "MGMSG_MOT_REQ_VELPARAMS",
+      "id": "0x0414",
+      "page": 77,
+      "applicability": "shared family index; K10CR2 applicability must be assessed separately"
+    },
+    {
+      "name": "MGMSG_MOT_GET_VELPARAMS",
+      "id": "0x0415",
+      "page": 77,
+      "applicability": "shared family index; K10CR2 applicability must be assessed separately"
+    },
+    {
+      "name": "MGMSG_MOT_SET_JOGPARAMS",
+      "id": "0x0416",
+      "page": 79,
+      "applicability": "shared family index; K10CR2 applicability must be assessed separately"
+    },
+    {
+      "name": "MGMSG_MOT_REQ_JOGPARAMS",
+      "id": "0x0417",
+      "page": 79,
+      "applicability": "shared family index; K10CR2 applicability must be assessed separately"
+    },
+    {
+      "name": "MGMSG_MOT_GET_JOGPARAMS",
+      "id": "0x0418",
+      "page": 79,
+      "applicability": "shared family index; K10CR2 applicability must be assessed separately"
+    },
+    {
+      "name": "MGMSG_MOT_SET_GENMOVEPARAMS",
+      "id": "0x043A",
+      "page": 84,
+      "applicability": "shared family index; K10CR2 applicability must be assessed separately"
+    },
+    {
+      "name": "MGMSG_MOT_REQ_GENMOVEPARAMS",
+      "id": "0x043B",
+      "page": 84,
+      "applicability": "shared family index; K10CR2 applicability must be assessed separately"
+    },
+    {
+      "name": "MGMSG_MOT_GET_GENMOVEPARAMS",
+      "id": "0x043C",
+      "page": 84,
+      "applicability": "shared family index; K10CR2 applicability must be assessed separately"
+    },
+    {
+      "name": "MGMSG_MOT_SET_MOVERELPARAMS",
+      "id": "0x0445",
+      "page": 85,
+      "applicability": "shared family index; K10CR2 applicability must be assessed separately"
+    },
+    {
+      "name": "MGMSG_MOT_REQ_MOVERELPARAMS",
+      "id": "0x0446",
+      "page": 85,
+      "applicability": "shared family index; K10CR2 applicability must be assessed separately"
+    },
+    {
+      "name": "MGMSG_MOT_GET_MOVERELPARAMS",
+      "id": "0x0447",
+      "page": 85,
+      "applicability": "shared family index; K10CR2 applicability must be assessed separately"
+    },
+    {
+      "name": "MGMSG_MOT_SET_MOVEABSPARAMS",
+      "id": "0x0450",
+      "page": 86,
+      "applicability": "shared family index; K10CR2 applicability must be assessed separately"
+    },
+    {
+      "name": "MGMSG_MOT_REQ_MOVEABSPARAMS",
+      "id": "0x0451",
+      "page": 86,
+      "applicability": "shared family index; K10CR2 applicability must be assessed separately"
+    },
+    {
+      "name": "MGMSG_MOT_GET_MOVEABSPARAMS",
+      "id": "0x0452",
+      "page": 86,
+      "applicability": "shared family index; K10CR2 applicability must be assessed separately"
+    },
+    {
+      "name": "MGMSG_MOT_SET_HOMEPARAMS",
+      "id": "0x0440",
+      "page": 87,
+      "applicability": "shared family index; K10CR2 applicability must be assessed separately"
+    },
+    {
+      "name": "MGMSG_MOT_REQ_HOMEPARAMS",
+      "id": "0x0441",
+      "page": 87,
+      "applicability": "shared family index; K10CR2 applicability must be assessed separately"
+    },
+    {
+      "name": "MGMSG_MOT_GET_HOMEPARAMS",
+      "id": "0x0442",
+      "page": 87,
+      "applicability": "shared family index; K10CR2 applicability must be assessed separately"
+    },
+    {
+      "name": "MGMSG_MOT_SET_LIMSWITCHPARAMS",
+      "id": "0x0423",
+      "page": 89,
+      "applicability": "shared family index; K10CR2 applicability must be assessed separately"
+    },
+    {
+      "name": "MGMSG_MOT_REQ_LIMSWITCHPARAMS",
+      "id": "0x0424",
+      "page": 89,
+      "applicability": "shared family index; K10CR2 applicability must be assessed separately"
+    },
+    {
+      "name": "MGMSG_MOT_GET_LIMSWITCHPARAMS",
+      "id": "0x0425",
+      "page": 89,
+      "applicability": "shared family index; K10CR2 applicability must be assessed separately"
+    },
+    {
+      "name": "MGMSG_MOT_MOVE_HOME",
+      "id": "0x0443",
+      "page": 91,
+      "applicability": "shared family index; K10CR2 applicability must be assessed separately"
+    },
+    {
+      "name": "MGMSG_MOT_MOVE_HOMED",
+      "id": "0x0444",
+      "page": 91,
+      "applicability": "shared family index; K10CR2 applicability must be assessed separately"
+    },
+    {
+      "name": "MGMSG_MOT_MOVE_RELATIVE",
+      "id": "0x0448",
+      "page": 92,
+      "applicability": "shared family index; K10CR2 applicability must be assessed separately"
+    },
+    {
+      "name": "MGMSG_MOT_MOVE_COMPLETED",
+      "id": "0x0464",
+      "page": 94,
+      "applicability": "shared family index; K10CR2 applicability must be assessed separately"
+    },
+    {
+      "name": "MGMSG_MOT_MOVE_ABSOLUTE",
+      "id": "0x0453",
+      "page": 95,
+      "applicability": "shared family index; K10CR2 applicability must be assessed separately"
+    },
+    {
+      "name": "MGMSG_MOT_MOVE_JOG",
+      "id": "0x046A",
+      "page": 97,
+      "applicability": "shared family index; K10CR2 applicability must be assessed separately"
+    },
+    {
+      "name": "MGMSG_MOT_MOVE_VELOCITY",
+      "id": "0x0457",
+      "page": 98,
+      "applicability": "shared family index; K10CR2 applicability must be assessed separately"
+    },
+    {
+      "name": "MGMSG_MOT_MOVE_STOP",
+      "id": "0x0465",
+      "page": 99,
+      "applicability": "shared family index; K10CR2 applicability must be assessed separately"
+    },
+    {
+      "name": "MGMSG_MOT_MOVE_STOPPED",
+      "id": "0x0466",
+      "page": 100,
+      "applicability": "shared family index; K10CR2 applicability must be assessed separately"
+    },
+    {
+      "name": "MGMSG_MOT_SET_AVMODES",
+      "id": "0x04B3",
+      "page": 106,
+      "applicability": "explicitly excluded for K10CR1/K10CR2 on p106"
+    },
+    {
+      "name": "MGMSG_MOT_REQ_AVMODES",
+      "id": "0x04B4",
+      "page": 106,
+      "applicability": "explicitly excluded for K10CR1/K10CR2 on p106"
+    },
+    {
+      "name": "MGMSG_MOT_GET_AVMODES",
+      "id": "0x04B5",
+      "page": 106,
+      "applicability": "explicitly excluded for K10CR1/K10CR2 on p106"
+    },
+    {
+      "name": "MGMSG_MOT_SET_POTPARAMS",
+      "id": "0x04B0",
+      "page": 108,
+      "applicability": "shared family index; K10CR2 applicability must be assessed separately"
+    },
+    {
+      "name": "MGMSG_MOT_REQ_POTPARAMS",
+      "id": "0x04B1",
+      "page": 108,
+      "applicability": "shared family index; K10CR2 applicability must be assessed separately"
+    },
+    {
+      "name": "MGMSG_MOT_GET_POTPARAMS",
+      "id": "0x04B2",
+      "page": 108,
+      "applicability": "shared family index; K10CR2 applicability must be assessed separately"
+    },
+    {
+      "name": "MGMSG_MOT_SET_BUTTONPARAMS",
+      "id": "0x04B6",
+      "page": 111,
+      "applicability": "shared family index; K10CR2 applicability must be assessed separately"
+    },
+    {
+      "name": "MGMSG_MOT_REQ_BUTTONPARAMS",
+      "id": "0x04B7",
+      "page": 111,
+      "applicability": "shared family index; K10CR2 applicability must be assessed separately"
+    },
+    {
+      "name": "MGMSG_MOT_GET_BUTTONPARAMS",
+      "id": "0x04B8",
+      "page": 111,
+      "applicability": "shared family index; K10CR2 applicability must be assessed separately"
+    },
+    {
+      "name": "MGMSG_MOT_SET_EEPROMPARAMS",
+      "id": "0x04B9",
+      "page": 113,
+      "applicability": "shared family index; K10CR2 applicability must be assessed separately"
+    },
+    {
+      "name": "MGMSG_MOT_REQ_STATUSBITS",
+      "id": "0x0429",
+      "page": 148,
+      "applicability": "shared family index; K10CR2 applicability must be assessed separately"
+    },
+    {
+      "name": "MGMSG_MOT_GET_STATUSBITS",
+      "id": "0x042A",
+      "page": 148,
+      "applicability": "shared family index; K10CR2 applicability must be assessed separately"
+    }
+  ],
+  "related_trigger_entries": [
+    {
+      "name": "MGMSG_MOT_SET_TRIGGER",
+      "id": "0x0500",
+      "page": 157,
+      "applicability": "K10CR1-only index heading; K10CR2 manual supports triggering, raw mapping unverified"
+    },
+    {
+      "name": "MGMSG_MOT_REQ_TRIGGER",
+      "id": "0x0501",
+      "page": 157,
+      "applicability": "K10CR1-only index heading; K10CR2 manual supports triggering, raw mapping unverified"
+    },
+    {
+      "name": "MGMSG_MOT_GET_TRIGGER",
+      "id": "0x0502",
+      "page": 157,
+      "applicability": "K10CR1-only index heading; K10CR2 manual supports triggering, raw mapping unverified"
+    }
+  ]
+}

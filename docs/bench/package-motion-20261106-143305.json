@@ -1,0 +1,174 @@
+{
+  "started": "2026-11-06T14:33:05.400552-06:00",
+  "target_serial": "55551174",
+  "authorized_sequence": [
+    "home",
+    "move_absolute(90)",
+    "position/status",
+    "move_absolute(0)"
+  ],
+  "success": true,
+  "steps": [
+    {
+      "name": "identity",
+      "started": "2026-11-06T14:33:05.590143-06:00",
+      "result": {
+        "model": "K10CR2",
+        "serial": "55551174",
+        "firmware": "2.0.1",
+        "hardware_revision": 4,
+        "modification_state": 112,
+        "channels": 1
+      },
+      "finished": "2026-11-06T14:33:05.602132-06:00",
+      "elapsed_seconds": 0.015
+    },
+    {
+      "name": "initial_status",
+      "started": "2026-11-06T14:33:05.602132-06:00",
+      "result": {
+        "raw_bits": 2147484672,
+        "moving": false,
+        "homing": false,
+        "homed": true,
+        "enabled": true,
+        "motion_error": false
+      },
+      "finished": "2026-11-06T14:33:05.607145-06:00",
+      "elapsed_seconds": 0.0
+    },
+    {
+      "name": "initial_position",
+      "started": "2026-11-06T14:33:05.607145-06:00",
+      "result": {
+        "counts": 0,
+        "degrees": 0.0
+      },
+      "finished": "2026-11-06T14:33:05.612132-06:00",
+      "elapsed_seconds": 0.016
+    },
+    {
+      "name": "home",
+      "started": "2026-11-06T14:33:05.612132-06:00",
+      "result": {
+        "status": {
+          "raw_bits": 2147484672,
+          "moving": false,
+          "homing": false,
+          "homed": true,
+          "enabled": true,
+          "motion_error": false
+        },
+        "position": {
+          "counts": 0,
+          "degrees": 0.0
+        },
+        "completion_received": true,
+        "no_op": false
+      },
+      "finished": "2026-11-06T14:33:08.178011-06:00",
+      "elapsed_seconds": 2.562
+    },
+    {
+      "name": "move_90",
+      "started": "2026-11-06T14:33:08.178011-06:00",
+      "result": {
+        "status": {
+          "raw_bits": 2147484672,
+          "moving": false,
+          "homing": false,
+          "homed": true,
+          "enabled": true,
+          "motion_error": false
+        },
+        "position": {
+          "counts": 12288000,
+          "degrees": 90.0
+        },
+        "completion_received": true,
+        "no_op": false
+      },
+      "finished": "2026-11-06T14:33:18.237231-06:00",
+      "elapsed_seconds": 10.063
+    },
+    {
+      "name": "position_at_90",
+      "started": "2026-11-06T14:33:18.238229-06:00",
+      "result": {
+        "counts": 12288000,
+        "degrees": 90.0
+      },
+      "finished": "2026-11-06T14:33:18.242733-06:00",
+      "elapsed_seconds": 0.0
+    },
+    {
+      "name": "status_at_90",
+      "started": "2026-11-06T14:33:18.242733-06:00",
+      "result": {
+        "raw_bits": 2147484672,
+        "moving": false,
+        "homing": false,
+        "homed": true,
+        "enabled": true,
+        "motion_error": false
+      },
+      "finished": "2026-11-06T14:33:18.247734-06:00",
+      "elapsed_seconds": 0.0
+    },
+    {
+      "name": "return_zero",
+      "started": "2026-11-06T14:33:18.247734-06:00",
+      "result": {
+        "status": {
+          "raw_bits": 2147484672,
+          "moving": false,
+          "homing": false,
+          "homed": true,
+          "enabled": true,
+          "motion_error": false
+        },
+        "position": {
+          "counts": 0,
+          "degrees": 0.0
+        },
+        "completion_received": true,
+        "no_op": false
+      },
+      "finished": "2026-11-06T14:33:29.831328-06:00",
+      "elapsed_seconds": 11.594
+    },
+    {
+      "name": "final_position",
+      "started": "2026-11-06T14:33:29.832335-06:00",
+      "result": {
+        "counts": 0,
+        "degrees": 0.0
+      },
+      "finished": "2026-11-06T14:33:29.836327-06:00",
+      "elapsed_seconds": 0.0
+    },
+    {
+      "name": "final_status",
+      "started": "2026-11-06T14:33:29.837327-06:00",
+      "result": {
+        "raw_bits": 2147484672,
+        "moving": false,
+        "homing": false,
+        "homed": true,
+        "enabled": true,
+        "motion_error": false
+      },
+      "finished": "2026-11-06T14:33:29.841338-06:00",
+      "elapsed_seconds": 0.0
+    }
+  ],
+  "source_sha256": {
+    "src\\k10cr2\\__init__.py": "4cbebcff1ea32a1b0d2c4434dbd486475f8d43e8124369e3a51c9335e77e5604",
+    "src\\k10cr2\\__main__.py": "935a1c1166b0c1ea35a82256345000bf2c73ded718d77773bc27a71ecce28f7d",
+    "src\\k10cr2\\cli.py": "fd7dab1ac490c53413b24c860769c27b11b4e78ea361dce9d3589e00e20456b1",
+    "src\\k10cr2\\controller.py": "057248e6317e412935298017456678d3545cb421e62433678846e71613544691",
+    "src\\k10cr2\\protocol.py": "e11e2b93ba7563415daba3023a5fa5bd59531072f90775f7c47383512c7d7196",
+    "src\\k10cr2\\transport.py": "cb246d89100930d4dd5a3b9c43029d5bb5e3f3e193f51e712829a13bb31f9ad3"
+  },
+  "finished": "2026-11-06T14:33:29.842337-06:00"
+}

@@ -1,0 +1,181 @@
+{
+  "started": "2026-11-06T14:35:22.744251-06:00",
+  "target_serial": "55551174",
+  "authorized_sequence": [
+    "home",
+    "move_absolute(90)",
+    "position/status",
+    "move_absolute(0)"
+  ],
+  "success": true,
+  "steps": [
+    {
+      "name": "identity",
+      "started": "2026-11-06T14:35:22.910950-06:00",
+      "result": {
+        "model": "K10CR2",
+        "serial": "55551174",
+        "firmware": "2.0.1",
+        "hardware_revision": 4,
+        "modification_state": 112,
+        "channels": 1
+      },
+      "finished": "2026-11-06T14:35:22.921950-06:00",
+      "elapsed_seconds": 0.015
+    },
+    {
+      "name": "initial_status",
+      "started": "2026-11-06T14:35:22.921950-06:00",
+      "result": {
+        "raw_bits": 2147484672,
+        "moving": false,
+        "homing": false,
+        "homed": true,
+        "enabled": true,
+        "motion_error": false
+      },
+      "finished": "2026-11-06T14:35:22.924953-06:00",
+      "elapsed_seconds": 0.0
+    },
+    {
+      "name": "initial_position",
+      "started": "2026-11-06T14:35:22.925951-06:00",
+      "result": {
+        "counts": 0,
+        "degrees": 0.0
+      },
+      "finished": "2026-11-06T14:35:22.929952-06:00",
+      "elapsed_seconds": 0.0
+    },
+    {
+      "name": "home",
+      "started": "2026-11-06T14:35:22.929952-06:00",
+      "result": {
+        "status": {
+          "raw_bits": 2147484672,
+          "moving": false,
+          "homing": false,
+          "homed": true,
+          "enabled": true,
+          "motion_error": false
+        },
+        "position": {
+          "counts": 0,
+          "degrees": 0.0
+        },
+        "completion_received": true,
+        "no_op": false
+      },
+      "finished": "2026-11-06T14:35:25.503385-06:00",
+      "elapsed_seconds": 2.578
+    },
+    {
+      "name": "move_90",
+      "started": "2026-11-06T14:35:25.503385-06:00",
+      "result": {
+        "status": {
+          "raw_bits": 2147484672,
+          "moving": false,
+          "homing": false,
+          "homed": true,
+          "enabled": true,
+          "motion_error": false
+        },
+        "position": {
+          "counts": 12288000,
+          "degrees": 90.0
+        },
+        "completion_received": true,
+        "no_op": false
+      },
+      "finished": "2026-11-06T14:35:35.571156-06:00",
+      "elapsed_seconds": 10.063
+    },
+    {
+      "name": "position_at_90",
+      "started": "2026-11-06T14:35:35.572170-06:00",
+      "result": {
+        "counts": 12288000,
+        "degrees": 90.0
+      },
+      "finished": "2026-11-06T14:35:35.576174-06:00",
+      "elapsed_seconds": 0.0
+    },
+    {
+      "name": "status_at_90",
+      "started": "2026-11-06T14:35:35.576174-06:00",
+      "result": {
+        "raw_bits": 2147484672,
+        "moving": false,
+        "homing": false,
+        "homed": true,
+        "enabled": true,
+        "motion_error": false
+      },
+      "finished": "2026-11-06T14:35:35.580977-06:00",
+      "elapsed_seconds": 0.016
+    },
+    {
+      "name": "watch_at_90",
+      "started": "2026-11-06T14:35:35.581978-06:00",
+      "seconds": 5.0,
+      "finished": "2026-11-06T14:35:40.583306-06:00"
+    },
+    {
+      "name": "return_zero",
+      "started": "2026-11-06T14:35:40.583306-06:00",
+      "result": {
+        "status": {
+          "raw_bits": 2147484672,
+          "moving": false,
+          "homing": false,
+          "homed": true,
+          "enabled": true,
+          "motion_error": false
+        },
+        "position": {
+          "counts": 0,
+          "degrees": 0.0
+        },
+        "completion_received": true,
+        "no_op": false
+      },
+      "finished": "2026-11-06T14:35:52.210355-06:00",
+      "elapsed_seconds": 11.625
+    },
+    {
+      "name": "final_position",
+      "started": "2026-11-06T14:35:52.211355-06:00",
+      "result": {
+        "counts": 0,
+        "degrees": 0.0
+      },
+      "finished": "2026-11-06T14:35:52.214356-06:00",
+      "elapsed_seconds": 0.0
+    },
+    {
+      "name": "final_status",
+      "started": "2026-11-06T14:35:52.215358-06:00",
+      "result": {
+        "raw_bits": 2147484672,
+        "moving": false,
+        "homing": false,
+        "homed": true,
+        "enabled": true,
+        "motion_error": false
+      },
+      "finished": "2026-11-06T14:35:52.219539-06:00",
+      "elapsed_seconds": 0.015
+    }
+  ],
+  "watch_pause_seconds": 5.0,
+  "source_sha256": {
+    "src\\k10cr2\\__init__.py": "4cbebcff1ea32a1b0d2c4434dbd486475f8d43e8124369e3a51c9335e77e5604",
+    "src\\k10cr2\\__main__.py": "935a1c1166b0c1ea35a82256345000bf2c73ded718d77773bc27a71ecce28f7d",
+    "src\\k10cr2\\cli.py": "fd7dab1ac490c53413b24c860769c27b11b4e78ea361dce9d3589e00e20456b1",
+    "src\\k10cr2\\controller.py": "057248e6317e412935298017456678d3545cb421e62433678846e71613544691",
+    "src\\k10cr2\\protocol.py": "e11e2b93ba7563415daba3023a5fa5bd59531072f90775f7c47383512c7d7196",
+    "src\\k10cr2\\transport.py": "cb246d89100930d4dd5a3b9c43029d5bb5e3f3e193f51e712829a13bb31f9ad3"
+  },
+  "finished": "2026-11-06T14:35:52.219539-06:00"
+}
