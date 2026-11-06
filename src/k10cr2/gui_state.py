@@ -41,6 +41,7 @@ class GuiController:
             message="Connect a mount to begin.",
             settings={},
             settings_revision=0,
+            settings_updated=None,
             ui=dict(
                 rotation_mode="fixed",
                 rotation_direction="quickest",
@@ -53,7 +54,12 @@ class GuiController:
 
     def set_display(self, values):
         with self._condition:
-            if self._state["busy"] or self._closing:
+            if (
+                self._state["busy"] not in {None, "refresh"}
+                or self._closing
+                or self._state["status"].get("moving")
+                or self._state["status"].get("homing")
+            ):
                 return "Wait for the active operation before changing display/control options."
             candidate = {**self._state["ui"], **values}
             resolve_target(0, 0, candidate["rotation_mode"], candidate["rotation_direction"])
@@ -249,6 +255,7 @@ class GuiController:
                 unknown=False,
                 settings={},
                 settings_revision=self._state["settings_revision"] + 1,
+                settings_updated=None,
             )
 
     def _run(self, command, serial, target, step, changes, persist):
@@ -259,8 +266,15 @@ class GuiController:
                 self._mount.connect()
                 identity = self._mount.info()
                 self._readback(self._mount.status(), self._mount.position())
+                settings = self._mount.query_settings(list(SETTINGS))
                 with self._condition:
-                    self._state.update(connected=True, identity=asdict(identity))
+                    self._state.update(
+                        connected=True,
+                        identity=asdict(identity),
+                        settings=settings,
+                        settings_updated=time.time(),
+                    )
+                    self._state["settings_revision"] += 1
             elif command == "disconnect":
                 if self._state["unknown"]:
                     raise ValueError("Physical state UNKNOWN; use Stop before disconnecting.")
@@ -279,9 +293,11 @@ class GuiController:
             elif command == "identify":
                 self._mount.identify()
             elif command == "load-settings":
+                self._readback(self._mount.status(), self._mount.position())
                 settings = self._mount.query_settings(list(SETTINGS))
                 with self._condition:
                     self._state["settings"] = settings
+                    self._state["settings_updated"] = time.time()
                     self._state["settings_revision"] += 1
             elif command == "configure":
                 actual = self._mount.configure(
@@ -289,6 +305,7 @@ class GuiController:
                 )
                 with self._condition:
                     self._state["settings"].update(actual)
+                    self._state["settings_updated"] = time.time()
                     self._state["settings_revision"] += 1
             elif command in MANUAL:
                 result = self._mount.manual_motion(
@@ -309,6 +326,7 @@ class GuiController:
                     )
                     with self._condition:
                         self._state["settings"].update(actual)
+                        self._state["settings_updated"] = time.time()
                         self._state["settings_revision"] += 1
                 if command.startswith("step-"):
                     position = self._mount.position()

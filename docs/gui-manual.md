@@ -11,7 +11,7 @@ an SDK startup profile or automatically homes, enables, configures, or moves a m
 | Manual control | Behavior in this application | Printed pages |
 | --- | --- | --- |
 | Position / Move | Six decimal places initially; click readout or Move to open target/profile dialog. Degrees, radians, mrad, μrad or device counts are display options; motion entries are explicitly degrees | 14,16-17 |
-| Travel / Vel / Acc / Jog Step | Continuous mechanical travel; current parameters appear only after explicit device readback | 16 |
+| Travel / Vel / Acc / Jog Step | Continuous mechanical travel; parameters are read on explicit Connect, then refreshed on request | 16 |
 | Home / Homed indicator | Explicit home; indicator flashes while homing and shows fresh homed state afterwards | 13,16 |
 | Forward / Reverse Limit | Fresh raw status masks 0x1 / 0x2; unknown when disconnected/stale. A rotary home switch is not a mechanical travel stop | 16,27 |
 | Enable / Disable | Exactly one is visible for known enabled state; output state is checked after the short command. Disable is refused during motion | 16 |
@@ -20,7 +20,7 @@ an SDK startup profile or automatically homes, enables, configures, or moves a m
 | Drive bar graph | Four session-configured speeds per direction; hold to move, release to stop. A temporary move profile is readback-verified and restored after normal stop | 16,23 |
 | Jog arrows | Native single-step jog command, one step per click; holding repeats completed steps. Continuous jog uses the jog profile and stops on release; immediate/profiled stop choice is honored | 14,16,18 |
 | Status strip | Idle, Moving, Homing, or Unverified, together with stage model and serial | 16 |
-| Settings | Moves/Jogs, Rotation, Stage/Axis, Advanced, Defaults. Reset/Cancel discard unapplied edits; applying device groups and session display rules are explicit separate actions | 17-24 |
+| Settings | Moves/Jogs, Rotation, Stage/Axis, Advanced, Defaults. Reset/Close/×/Escape discard unapplied edits; device groups and session options have separate Apply actions. Scrollable form, fixed feedback/actions and keyboard focus containment | 17-24 |
 
 Held controls use pointer capture and support Space/Enter. Release, pointer cancel,
 hidden tab, blur and page unload end the browser lease. Heartbeats run every 200 ms;
@@ -42,7 +42,18 @@ The new GUI `move_to()` resolves the manual's rotation modes.
 
 ## Settings and wire support
 
-`Load from device` explicitly reads velocity, jog, backlash, home and button groups.
+The [actual-mount GUI check on 6 November 2026](bench/gui-controls-20261106-211627Z.md)
+passed on serial 55551174, firmware 2.0.1: Home, small Move, single-step Jog in both
+directions, held Drive/release in both directions, explicit Stop, and readback of
+all five groups. Velocity/jog/backlash writes and exact restoration also passed.
+Hardware-button writes, EEPROM persistence, other modes/fault scenarios, physical
+profile calibration and the unavailable mappings are not established by that test.
+
+`Connect` reads velocity, jog, backlash, home and button groups before publishing a
+successful connection. `Refresh readbacks` (or the main Refresh button) reads them
+again, together with fresh status and counted position. Settings show a read time;
+position and status continue polling independently. A settings read failure during
+Connect closes the connection and reports the error for explicit retry.
 An edit requires a previous readback and a new read immediately before writing.
 Every requested group is validated before the first setting write; only changed
 groups are written, then compared with readback. A partial application is possible
@@ -63,7 +74,8 @@ preserve unedited fields, including hardware-button hold timeouts.
 
 The shared protocol applicability index still names K10CR1, not K10CR2. These
 extensions use its documented layouts for capabilities confirmed by the K10CR2
-manual; actual K10CR2 acceptance remains a bench-validation requirement. Velocity
+manual; acceptance beyond the recorded unit and tested subset still needs bench
+validation. Velocity
 and acceleration use the protocol p44 K10CR1 scale factors 7,329,109 and 1,502.
 Those factors are separately identified from the established K10CR2 position scale
 of 409600/3 counts/degree. Offline fixtures verify encoding and conversion, not
@@ -77,6 +89,12 @@ Display units, rotation rules, USB rating and drive-array speeds are session val
 not device EEPROM or automatic startup settings. A failed temporary drive-profile
 restore requires recovery. If motion cleanup itself fails, profile restoration is
 skipped; inspect/reload the device parameters after explicit recovery.
+
+Observed firmware exception: this unit's `GET_JOGPARAMS` reply (`0418`) uses host
+destination byte `80`, whereas the generic protocol specifies `81`. Only that
+message gains zero-host acceptance; device source, exact length and channel are
+still validated. The bench record retains the original rejection and corrected
+readback, and the saved actual reply is an offline regression fixture.
 
 ## Visible unavailable and locked controls
 

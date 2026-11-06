@@ -1,5 +1,27 @@
 # Validation record
 
+## Actual mount GUI controls: 6 November 2026, 15:14–15:22 CST
+
+The requested GUI Home, small absolute Move, positive/negative single-step Jog,
+momentary forward/reverse Drive, explicit Stop during motion, and all five settings
+readback groups passed on serial **55551174**, firmware **2.0.1**, using only our
+WinUSB/APT implementation. [Full results and raw evidence](bench/gui-controls-20261106-211627Z.md)
+record exact counts, status, packets, timing scope and tested limits.
+
+The first read-only attempt exposed a firmware exception: `GET_JOGPARAMS` (`0418`)
+uses destination `80`, not `81`. A narrowly scoped parser allowance preserves
+source, size and channel checks. The original failure is retained; the complete
+actual frame is a regression fixture. After the correction, temporary low-speed
+settings were applied and verified without EEPROM writes. The mount returned to
+zero, all original raw settings were restored exactly, and a final GUI readback
+confirmed every group matched. Final status was `0x80000400`; USB disconnected
+cleanly. No Kinesis or SDK was loaded or used.
+
+The updated suite passed **191 offline tests** and Ruff. These results establish
+controller-level behavior on this unit; physical angular accuracy, certified stop
+timing, continuous jog, held-jog repetition, EEPROM retention, untested actions and
+unavailable mappings remain outside this bench check.
+
 ## Manufacturer GUI revision: 6 November 2026
 
 The panel and settings now follow Figure 16 and chapter 7 of the manufacturer's
@@ -184,6 +206,12 @@ hardware fault. Generic heartbeat/streaming applicability to K10CR2 and extended
 sessions remain unresolved; this audit does not claim full-device API coverage.
 
 ## Remaining bench acceptance
+
+The [live redesigned-GUI review](bench/gui-live-review-20261106.md) connected the
+actual mount, loaded all five settings groups and exercised read-only user flows,
+session display edits, validation and keyboard/dialog behavior. It records the
+issues fixed, screenshots, final raw state and 198 passing offline tests. No motion
+or device-setting write was performed in that review.
 
 - Packaged identity/status/position queries: passed as recorded above.
 - Packaged home, 90-degree move, position/status query, and return to zero: passed

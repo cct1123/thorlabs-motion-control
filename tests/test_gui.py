@@ -115,6 +115,63 @@ def test_settings_tabs_and_display_apply_do_not_access_usb():
     assert not owner.snapshot()["connected"]
 
 
+@pytest.mark.parametrize("button", ["settings-close", "cancel-settings"])
+def test_closing_settings_discards_drafts_without_applying(button):
+    owner = GuiController(lambda serial: pytest.fail("Unexpected USB access"))
+    app = create_app(owner)
+    key = next(key for key in app.callback_map if "request-result.children" in key)
+    response = post_callback(
+        app,
+        key,
+        {
+            "panel": "settings",
+            "units": "rad",
+            "decimals": 3,
+            "apply-groups": ["velocity"],
+            "persist": ["yes"],
+        },
+        f"{button}.n_clicks",
+    )
+    assert response.status_code == 200
+    assert response.json["response"]["panel"]["data"] is None
+    assert owner.snapshot()["ui"]["units"] == "deg"
+    reset_key = next(key for key in app.callback_map if "settings-revision.data" in key)
+    response = post_callback(app, reset_key, {"settings-revision": 0}, f"{button}.n_clicks")
+    assert response.status_code == 200
+    assert response.json["response"]["units"]["value"] == "deg"
+    assert response.json["response"]["decimals"]["value"] == 6
+
+
+def test_completed_feedback_replaces_request_and_reaches_both_dialogs():
+    from k10cr2.gui_view import visible_feedback
+
+    owner = GuiController(lambda serial: pytest.fail("Unexpected USB access"))
+    owner._state["message"] = "load-settings complete."
+    assert (
+        visible_feedback(owner.snapshot(), "load-settings requested.")
+        == "Device readbacks updated."
+    )
+    validation = "Decimal places must be an integer from 0 to 9"
+    assert visible_feedback(owner.snapshot(), validation) == validation
+    app = create_app(owner)
+    key = next(key for key in app.callback_map if "angle.children" in key)
+    response = post_callback(app, key, {"request-result": validation}, "request-result.children")
+    rendered = response.json["response"]
+    assert rendered["settings-feedback"]["children"] == validation
+    assert rendered["move-feedback"]["children"] == validation
+
+
+@pytest.mark.parametrize("button,panel", [("reset-settings", "settings"), ("reset-move", "move")])
+def test_reset_replaces_stale_validation_without_closing_or_accessing_usb(button, panel):
+    owner = GuiController(lambda serial: pytest.fail("Unexpected USB access"))
+    app = create_app(owner)
+    key = next(key for key in app.callback_map if "request-result.children" in key)
+    response = post_callback(app, key, {"panel": panel}, f"{button}.n_clicks")
+    rendered = response.json["response"]
+    assert rendered["panel"]["data"] == panel
+    assert rendered["request-result"]["children"].startswith("Edits reset")
+
+
 def test_local_server_rejects_foreign_hosts_and_cross_origin_commands():
     app = create_app()
     client = app.server.test_client()

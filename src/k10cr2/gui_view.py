@@ -64,7 +64,14 @@ MANUAL_URL = (
 def field(label, name, *, value=None, options=None, disabled=False, **kwargs):
     kwargs.setdefault("step", "any")
     control = (
-        dcc.Dropdown(id=name, options=options, value=value, clearable=False, disabled=disabled)
+        dcc.Dropdown(
+            id=name,
+            options=options,
+            value=value,
+            clearable=False,
+            disabled=disabled,
+            placeholder="Unavailable" if disabled else "Select…",
+        )
         if options is not None
         else dcc.Input(id=name, type="number", value=value, disabled=disabled, **kwargs)
     )
@@ -89,6 +96,21 @@ def action(label, name, glyph, *, disabled=True, cls="", **kwargs):
     )
 
 
+def visible_feedback(snapshot, request_message):
+    """Keep validation feedback, but replace queued-request text with its actual outcome."""
+    if request_message and not (
+        request_message.endswith(" requested.") or request_message.startswith("Stop requested;")
+    ):
+        return request_message
+    message = snapshot["message"]
+    return {
+        "connect complete.": "Connected. Position and device settings are ready.",
+        "load-settings complete.": "Device readbacks updated.",
+        "configure complete.": "Device settings verified.",
+        "disconnect complete.": "Disconnected.",
+    }.get(message, message)
+
+
 def settings_panel():
     result = [
         html.Div(
@@ -107,7 +129,7 @@ def settings_panel():
         html.Div(
             [
                 html.Button(
-                    "Load from device",
+                    "Refresh readbacks",
                     id="load-settings",
                     n_clicks=0,
                     disabled=True,
@@ -456,12 +478,9 @@ def settings_panel():
                                 "Startup settings",
                                 [
                                     html.P(
-                                        "This application reads existing device state. "
-                                        "It does not load an SDK profile "
-                                        "or automatically overwrite startup settings. "
-                                        "Use the explicit persistence "
-                                        "checkbox to request EEPROM storage for "
-                                        "supported settings groups."
+                                        "Device settings are read on connection. Select the "
+                                        "persistence checkbox to save supported settings groups "
+                                        "to the device."
                                     )
                                 ],
                             ),
@@ -513,21 +532,17 @@ def settings_panel():
             className="apply-options",
         ),
         html.P(
-            "Load readbacks before editing device settings. New command paths require bench "
-            "validation. Unavailable controls do not access hardware.",
+            "Apply only the selected device groups. Unavailable controls do not send commands.",
             className="hint",
         ),
         html.Div(
             [
-                html.A("Manual · chapter 7 ↗", href="/manual#page=18", target="_blank"),
-                html.Button(
-                    "Apply display / rotation / drive", id="apply-display", className="button"
-                ),
+                html.Button("Apply session options", id="apply-display", className="button"),
                 html.Button("Reset edits", id="reset-settings", className="button"),
                 html.Button(
                     "Apply device settings", id="apply-settings", className="button primary"
                 ),
-                html.Button("OK", id="settings-ok", className="button"),
+                html.Button("Close", id="settings-close", className="button"),
             ],
             className="dialog-actions",
         ),
@@ -545,8 +560,18 @@ def settings_panel():
                 style={} if tab.value == "moves" else {"display": "none"},
             )
         )
-    result[4:4] = panels
-    return result
+    # Scroll only the settings body; feedback and actions stay visible.
+    return [
+        *result[:3],
+        html.Div([tabs, *panels, *result[4:-1]], className="settings-body"),
+        html.Div(
+            [
+                html.Div(id="settings-feedback", role="status", className="dialog-feedback"),
+                result[-1],
+            ],
+            className="settings-footer",
+        ),
+    ]
 
 
 def controls(snapshot, target, _step=None):
@@ -721,13 +746,6 @@ def create_app(controller=None, *, serial=None):
                 [
                     html.Div(
                         [
-                            html.A(
-                                "i",
-                                href="/manual#page=18",
-                                target="_blank",
-                                className="info-icon",
-                                title="Open the manufacturer manual",
-                            ),
                             html.Strong("Cage Rotator"),
                             html.Span("S/N —", id="instrument-serial"),
                         ],
@@ -849,17 +867,13 @@ def create_app(controller=None, *, serial=None):
                 className="readback-meta",
             ),
             html.Div(id="error", role="alert", className="error-box", style={"display": "none"}),
-            html.Div(
-                "Ready. Connect reads state; Home and motion require explicit actions.",
-                id="request-result",
-                role="status",
-                className="request-result",
-            ),
+            # Carries immediate callback / held-control feedback to the single renderer.
+            html.Div(id="request-result", style={"display": "none"}),
+            html.Div(id="user-feedback", role="status", className="request-result"),
             html.P(
-                "Counted position, not encoder measured. Hold controls require a live "
-                "browser heartbeat; "
-                "release, loss of focus, or heartbeat expiry requests Stop. USB latency "
-                "still applies.",
+                "Counted position · Hold Drive/Jog to move; release to stop.",
+                title="Position is not encoder measured. Loss of focus or an expired browser "
+                "heartbeat requests Stop; USB latency still applies.",
                 className="hint control-note",
             ),
             html.Details(
@@ -869,11 +883,6 @@ def create_app(controller=None, *, serial=None):
                     html.Div(id="activity", className="activity"),
                 ],
                 className="activity-panel",
-            ),
-            html.Footer(
-                "Our WinUSB / APT communication · No Kinesis or SDK · "
-                "GUI source: Thorlabs ETN064249-D02, chapter 7",
-                className="page-footer",
             ),
             html.Div(id="backdrop", className="backdrop", style={"display": "none"}),
             html.Section(
@@ -914,6 +923,7 @@ def create_app(controller=None, *, serial=None):
                     ),
                     html.Button("Apply profile", id="apply-move", className="button"),
                     html.Button("Reset", id="reset-move", className="button"),
+                    html.Div(id="move-feedback", role="status", className="dialog-feedback"),
                 ],
                 id="move-dialog",
                 role="dialog",
@@ -953,8 +963,10 @@ def create_app(controller=None, *, serial=None):
         "jog-open",
         "cancel-move",
         "cancel-settings",
+        "reset-settings",
+        "reset-move",
         "apply-settings",
-        "settings-ok",
+        "settings-close",
         "apply-display",
         "apply-move",
         "settings-dialog-stop",
@@ -998,17 +1010,19 @@ def create_app(controller=None, *, serial=None):
             return no_update, "move", no_update
         if name in {"settings-open", "jog-open", "drive-open"}:
             return no_update, "settings", "advanced" if name == "drive-open" else "moves"
-        if name in {"cancel-move", "cancel-settings"}:
-            return no_update, None, no_update
+        if name in {"cancel-move", "cancel-settings", "settings-close"}:
+            return "", None, no_update
+        if name in {"reset-settings", "reset-move"}:
+            return "Edits reset to the last readback and applied session options.", panel, no_update
         try:
-            if name == "apply-display" or (name == "settings-ok" and not groups):
+            if name == "apply-display":
                 ui = {key: fields[key] for key in HOST_FIELDS[:4]}
                 ui.update(
                     high_power="yes" in fields["high_power"],
                     drives=[fields[f"drive{i}"] for i in range(1, 5)],
                 )
                 message = owner.set_display(ui)
-            elif name in {"apply-settings", "settings-ok"}:
+            elif name == "apply-settings":
                 changes = {
                     group: {key: fields[key] for key in GROUP_FIELDS[group]}
                     for group in groups
@@ -1040,7 +1054,7 @@ def create_app(controller=None, *, serial=None):
                     message = "Closing web UI; waiting for the USB owner. Then close this tab."
             else:
                 command = (
-                    "refresh"
+                    "load-settings"
                     if name == "refresh-state"
                     else "stop"
                     if name in {"settings-dialog-stop", "move-dialog-stop"}
@@ -1097,13 +1111,15 @@ def create_app(controller=None, *, serial=None):
         Input("refresh", "n_intervals"),
         Input("reset-settings", "n_clicks"),
         Input("cancel-settings", "n_clicks"),
+        Input("settings-close", "n_clicks"),
         State("settings-revision", "data"),
     )
-    def settings_values(_ticks, _reset, _cancel, revision):
+    def settings_values(_ticks, _reset, _cancel, _close, revision):
         snap = owner.snapshot()
         if revision == snap["settings_revision"] and ctx.triggered_id not in {
             "reset-settings",
             "cancel-settings",
+            "settings-close",
         }:
             return [no_update] * (len(DEVICE_FIELDS + HOST_FIELDS) + 1)
         values = to_display(snap["settings"])
@@ -1144,6 +1160,9 @@ def create_app(controller=None, *, serial=None):
         Output("display-factor", "children"),
         Output("settings-dialog-stop", "disabled"),
         Output("move-dialog-stop", "disabled"),
+        Output("user-feedback", "children"),
+        Output("settings-feedback", "children"),
+        Output("move-feedback", "children"),
         *[Output(name, "disabled") for name in COMMANDS],
         *[
             Output(f"{direction}-{i}", "disabled")
@@ -1152,8 +1171,9 @@ def create_app(controller=None, *, serial=None):
         ],
         Input("refresh", "n_intervals"),
         Input("target", "value"),
+        Input("request-result", "children"),
     )
-    def render(_ticks, target):
+    def render(_ticks, target, request_message):
         snap = owner.snapshot()
         owner.refresh()
         disabled, target_error = controls(snap, target)
@@ -1174,6 +1194,13 @@ def create_app(controller=None, *, serial=None):
             if not snap["connected"]
             else "Unverified"
         )
+        if snap["busy"] not in {None, "refresh", *MOTIONS}:
+            operation = {
+                "connect": "Connecting…",
+                "load-settings": "Reading settings…",
+                "configure": "Applying settings…",
+                "disconnect": "Disconnecting…",
+            }.get(snap["busy"], operation)
         label = (
             "Physical state UNKNOWN"
             if snap["unknown"]
@@ -1192,7 +1219,7 @@ def create_app(controller=None, *, serial=None):
         settings = to_display(snap["settings"])
 
         def summary(prefix, key, suffix):
-            return f"{prefix}: {settings[key]:.4g}{suffix}" if key in settings else f"{prefix}: —"
+            return f"{prefix}: {settings[key]:.6g}{suffix}" if key in settings else f"{prefix}: —"
 
         events = [
             html.Div(
@@ -1215,10 +1242,11 @@ def create_app(controller=None, *, serial=None):
             else [html.Dd("Load from device to read homing settings.")]
         )
         read_status = (
-            "Readbacks loaded. Device edits require an explicit group selection."
-            if snap["settings"]
-            else "No settings readbacks loaded."
+            "Read at " + time.strftime("%H:%M:%S", time.localtime(snap["settings_updated"]))
+            if snap.get("settings_updated")
+            else "Connect to read device settings."
         )
+        feedback = visible_feedback(snap, request_message)
         return (
             display_angle(angle, ui["rotation_mode"], ui["units"], ui["decimals"]),
             {"deg": "°", "rad": " rad", "mrad": " mrad", "urad": " μrad", "counts": " cts"}[
@@ -1228,7 +1256,13 @@ def create_app(controller=None, *, serial=None):
             operation,
             label,
             "No readback" if age is None else f"Last counted readback: {age:.1f} s ago",
-            "Homing" if state.get("homing") else "Homed" if state.get("homed") else "Not Homed",
+            "Home reference —"
+            if not snap["connected"]
+            else "Homing"
+            if state.get("homing")
+            else "Homed"
+            if state.get("homed")
+            else "Not Homed",
             "lamp homing" if state.get("homing") and fresh else lamp(state.get("homed")),
             lamp(bits & 1),
             lamp(bits & 2),
@@ -1238,14 +1272,18 @@ def create_app(controller=None, *, serial=None):
             snap["error"],
             {} if snap["error"] else {"display": "none"},
             events,
-            html.Pre(
-                str(
-                    {
-                        **snap["identity"],
-                        "status_bits": f"{bits:#010x}",
-                        "raw_counts": position["counts"] if position else None,
-                    }
-                )
+            html.Dl(
+                [
+                    item
+                    for label, value in (
+                        ("Model", snap["identity"].get("model", "—")),
+                        ("Firmware", snap["identity"].get("firmware", "—")),
+                        ("Raw counts", position["counts"] if position else "—"),
+                        ("Status bits", f"{bits:#010x}" if snap["status"] else "—"),
+                    )
+                    for item in (html.Dt(label), html.Dd(str(value)))
+                ],
+                className="device-facts",
             ),
             target_error
             or f"Rotation: {ui['rotation_mode']} · Direction: {ui['rotation_direction']}",
@@ -1257,6 +1295,9 @@ def create_app(controller=None, *, serial=None):
             f"Factor: {UNIT_FACTORS[ui['units']]:.12g} per degree (applied display units).",
             disabled["stop"],
             disabled["stop"],
+            "" if snap["error"] else feedback,
+            snap["error"] or feedback,
+            snap["error"] or feedback,
             *[disabled[name] for name in COMMANDS],
             *[
                 disabled[f"drive-{direction}"]

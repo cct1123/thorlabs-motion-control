@@ -23,11 +23,13 @@ before positioning. Close other software that owns the mount first.
 The panel provides Move/profile editing, Home, Stop, held Drive/Jog controls,
 Enable/Disable, Identify, serial/position/status and limit indicators. Settings
 include display units, Fixed/Equivalent/Total rotation modes, forward/reverse/
-quickest routing, velocity/jog/backlash and hardware-button parameters. Click
-**Load from device** before editing device groups. Setting writes require fresh
+quickest routing, velocity/jog/backlash and hardware-button parameters. **Connect**
+reads all five device settings groups; **Refresh readbacks** reloads them and shows
+the read time. Setting writes require fresh
 readback, validation and verification. Persistence is opt-in; an EEPROM write is
 reported as requested, not power-cycle proven. Session display and drive options
-have a separate Apply button.
+have a separate **Apply session options** button. **Close**, × and Escape discard
+unapplied settings edits. Dialog feedback stays visible beside the actions.
 
 Unverified S-curve, power, trigger and factory-reset controls are visibly unavailable;
 stage-specific settings remain locked as instructed by the manual. See the full
@@ -42,9 +44,11 @@ for the owner before releasing USB. Closing a tab alone leaves the server runnin
 finite moves continue, while held controls expire. All tabs share the controller.
 The server binds only to loopback and rejects foreign-host/cross-origin writes.
 
-New GUI communication paths have offline/simulated validation; the earlier bench
-records do not validate their physical behavior. Install the `gui` extra to run GUI
-tests. Core library/CLI use does not require Dash.
+An [actual-mount GUI test](docs/bench/gui-controls-20261106-211627Z.md) passed Home,
+small Move/Jog/Drive, Stop, settings readback and exact restoration on serial
+55551174, firmware 2.0.1. Independent angular accuracy, other modes and fault
+scenarios remain unverified. Install the `gui` extra for GUI tests; core library/CLI
+use does not require Dash.
 
 ## Setup
 

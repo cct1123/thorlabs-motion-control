@@ -48,6 +48,26 @@ class FakeMount:
         self.record("position")
         return Position(angle_to_counts(self.angle), self.angle)
 
+    def query_settings(self, groups):
+        self.record("settings")
+        return {
+            "velocity": dict(channel=1, minimum=0, acceleration=15020, maximum=73300775),
+            "jog": dict(
+                channel=1,
+                mode=2,
+                step=13653,
+                minimum=0,
+                acceleration=22530,
+                maximum=109951163,
+                stop=2,
+            ),
+            "backlash": dict(channel=1, distance=136533),
+            "home": dict(channel=1, direction=2, switch=1, velocity=73300775, offset=546133),
+            "buttons": dict(
+                channel=1, mode=1, position1=136533, position2=682667, timeout1=500, timeout2=500
+            ),
+        }
+
     def stop(self):
         self.record("stop")
         if self.fail_stop:
@@ -115,10 +135,18 @@ def test_startup_and_connect_are_read_only(gui_owner):
     assert "eight-digit" in owner.submit("connect", serial="123")
     assert not mount.calls
     connect(owner)
-    assert [name for name, _ in mount.calls] == ["connect", "info", "status", "position"]
+    assert [name for name, _ in mount.calls] == [
+        "connect",
+        "info",
+        "status",
+        "position",
+        "settings",
+    ]
+    assert set(owner.snapshot()["settings"]) == {"velocity", "jog", "backlash", "home", "buttons"}
+    assert owner.snapshot()["settings_updated"] is not None
     assert "Home" in owner.submit("move-to", target=90)
     assert "Home" in owner.submit("step-plus", step=1)
-    assert len(mount.calls) == 4
+    assert len(mount.calls) == 5
 
 
 def test_home_and_move_use_background_owner(gui_owner):
@@ -129,6 +157,60 @@ def test_home_and_move_use_background_owner(gui_owner):
     owner.submit("move-to", target=90)
     assert wait_idle(owner)["position"]["degrees"] == 90
     assert all(ident != threading.get_ident() for _, ident in mount.calls)
+
+
+def test_session_options_do_not_race_or_block_on_background_readback(gui_owner):
+    owner, mount = gui_owner
+    connect(owner)
+    entered, release = threading.Event(), threading.Event()
+    original = mount.status
+
+    def blocked_status():
+        entered.set()
+        assert release.wait(2)
+        return original()
+
+    mount.status = blocked_status
+    owner.submit("refresh")
+    try:
+        assert entered.wait(1)
+        before = list(mount.calls)
+        assert "session only" in owner.set_display({"decimals": 3})
+        assert owner.snapshot()["ui"]["decimals"] == 3
+        assert mount.calls == before
+    finally:
+        release.set()
+    wait_idle(owner)
+    mount.homed = True
+    owner.submit("home")
+    wait_idle(owner)
+    mount.started.clear()
+    mount.release.clear()
+    owner.submit("move-to", target=1)
+    assert mount.started.wait(1)
+    try:
+        assert "Wait" in owner.set_display({"decimals": 6})
+        assert owner.snapshot()["ui"]["decimals"] == 3
+    finally:
+        mount.release.set()
+
+
+def test_failed_initial_settings_read_releases_connection_and_can_retry(gui_owner):
+    owner, mount = gui_owner
+    original = mount.query_settings
+
+    def failed_read(groups):
+        raise TimeoutError("No settings reply")
+
+    mount.query_settings = failed_read
+    owner.submit("connect", serial="55551174")
+    snapshot = wait_idle(owner)
+    assert not snapshot["connected"]
+    assert snapshot["settings"] == {} and snapshot["settings_updated"] is None
+    assert "No settings reply" in snapshot["error"]
+    assert mount.calls[-1][0] == "close"
+    mount.query_settings = original
+    connect(owner)
 
 
 @pytest.mark.parametrize("angle", [-1, 360.1, float("nan"), float("inf"), None, True])
