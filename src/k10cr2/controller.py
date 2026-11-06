@@ -26,6 +26,7 @@ from .settings import (
     MAX_ANGLE,
     SETTINGS,
     VELOCITY_SCALE,
+    boolean,
     data_packet,
     encode_changes,
     finite,
@@ -271,6 +272,8 @@ class K10CR2:
         EEPROM has no acknowledgement: persistence reports a request, not proof.
         Stage/axis, power, trigger, bow index and factory reset remain unavailable.
         """
+        boolean(high_power, "High-power USB confirmation")
+        boolean(persist, "EEPROM persistence")
         if not changes or any(group not in EDITABLE for group in changes):
             raise ValueError("Unknown, locked or unverified settings group")
         deadline = self._deadline(self.query_timeout * (3 * len(changes) + 1), self.query_timeout)
@@ -364,7 +367,13 @@ class K10CR2:
         finishes once, and repeats only while held. Temporary velocity changes are
         verified and restored. No receive path competes with this operation.
         """
-        if direction not in {-1, 1} or isinstance(direction, bool):
+        boolean(jog, "Jog selection")
+        boolean(high_power, "High-power USB confirmation")
+        if (
+            not isinstance(direction, int)
+            or isinstance(direction, bool)
+            or direction not in {-1, 1}
+        ):
             raise ValueError("Direction must be -1 or +1")
         if mode not in {"fixed", "total", "equivalent"}:
             raise ValueError("Invalid rotation mode")

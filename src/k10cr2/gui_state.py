@@ -100,7 +100,7 @@ class GuiController:
                 return "Control request rejected."
             if self._state["busy"] or self._closing:
                 return "Another operation owns the mount; request was not queued."
-            if isinstance(index, bool) or index not in range(4):
+            if not isinstance(index, int) or isinstance(index, bool) or index not in range(4):
                 raise ValueError("Invalid drive division")
             self._hold_token = token
             self._hold_until = time.monotonic() + 0.8

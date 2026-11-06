@@ -23,6 +23,16 @@ def test_query_velocity_literal_layout(mount_factory):
     assert not fake.steps
 
 
+@pytest.mark.parametrize("flag", ["false", "true", 0, 1, None])
+@pytest.mark.parametrize("option", ["high_power", "persist"])
+def test_settings_confirmation_requires_boolean_before_io(mount_factory, option, flag):
+    mount, fake = mount_factory([])
+    before = list(fake.sent)
+    with pytest.raises(ValueError, match="True or False"):
+        mount.configure({"velocity": dict(velocity=15, acceleration=10)}, **{option: flag})
+    assert fake.sent == before
+
+
 def test_configure_reads_back_and_persists_only_requested_group(mount_factory):
     eeprom_velocity = bytes.fromhex("b9 04 04 00 d0 01 01 00 13 04")
     mount, fake = mount_factory(

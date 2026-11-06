@@ -71,6 +71,28 @@ def test_manual_is_served_from_the_repository():
     assert response.status_code == 200 and response.data.startswith(b"%PDF")
 
 
+@pytest.mark.parametrize("index", [1.0, True, "1", -1, 4, None])
+def test_invalid_drive_index_returns_validation_error_before_start(index):
+    owner = GuiController(lambda serial: pytest.fail("Unexpected USB access"))
+    response = (
+        create_app(owner)
+        .server.test_client()
+        .post(
+            "/api/hold",
+            base_url="http://127.0.0.1",
+            json={
+                "action": "start",
+                "token": "invalid-index",
+                "command": "drive-forward",
+                "index": index,
+            },
+        )
+    )
+    assert response.status_code == 400
+    assert "drive division" in response.json["message"]
+    assert owner.snapshot()["busy"] is None
+
+
 def test_all_callback_components_exist_and_settings_fields_remain_mounted():
     app = create_app()
     ids = []

@@ -87,6 +87,12 @@ def integer(value, label, choices):
     return int(value)
 
 
+def boolean(value, label):
+    if not isinstance(value, bool):
+        raise ValueError(f"{label} must be True or False")
+    return value
+
+
 def position_counts(angle):
     return round(finite(angle, "Total angle / degrees", -MAX_ANGLE, MAX_ANGLE) * COUNTS_PER_DEGREE)
 

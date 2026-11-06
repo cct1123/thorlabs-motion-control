@@ -25,6 +25,16 @@ JOG_SETTINGS = bytes.fromhex(
 JOG_FORWARD = bytes.fromhex("6a 04 01 01 50 01")
 
 
+@pytest.mark.parametrize("option", ["jog", "high_power"])
+@pytest.mark.parametrize("flag", ["false", 0, 1, None])
+def test_manual_mode_and_supply_confirmation_require_boolean_before_io(mount_factory, option, flag):
+    mount, fake = mount_factory([])
+    before = list(fake.sent)
+    with pytest.raises(ValueError, match="True or False"):
+        mount.manual_motion(1, speed=1, **{option: flag})
+    assert fake.sent == before
+
+
 @pytest.mark.parametrize("failure", ["cancel", "exit"])
 def test_manual_observer_failure_at_completion_still_stops(mount_factory, failure):
     cancel = threading.Event()
