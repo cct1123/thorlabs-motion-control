@@ -172,6 +172,9 @@ uv build --no-sources
 ```
 
 See [command reference](docs/commands.md) and [validation record](docs/validation.md).
+The [holistic review](docs/reviews/holistic-review-20261106.md) records resolved
+flaws, migration, cleanup, package checks and final live readback. Older dated
+reviews describe their historical checkpoints.
 The [full capability/coverage catalogue](docs/command-catalog.md) distinguishes
 implemented commands, additional documented queries/settings, explicit exclusions,
 and unresolved K10CR2 applicability. Current settings and manual-motion extensions

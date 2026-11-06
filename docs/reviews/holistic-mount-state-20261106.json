@@ -1,0 +1,88 @@
+{
+  "busy": null,
+  "closing": false,
+  "connected": true,
+  "error": "",
+  "events": [
+    {
+      "level": "info",
+      "message": "connect complete.",
+      "time": "2026-11-06T17:01:34-06:00"
+    }
+  ],
+  "identity": {
+    "channels": 1,
+    "firmware": "2.0.1",
+    "hardware_revision": 4,
+    "model": "K10CR2",
+    "modification_state": 112,
+    "serial": "55551174"
+  },
+  "message": "connect complete.",
+  "position": {
+    "counts": 0,
+    "degrees": 0.0
+  },
+  "recovery": false,
+  "settings": {
+    "backlash": {
+      "channel": 1,
+      "distance": 136533
+    },
+    "buttons": {
+      "channel": 1,
+      "mode": 1,
+      "position1": 136533,
+      "position2": 682667,
+      "timeout1": 500,
+      "timeout2": 500
+    },
+    "home": {
+      "channel": 1,
+      "direction": 2,
+      "offset": 546133,
+      "switch": 1,
+      "velocity": 73300775
+    },
+    "jog": {
+      "acceleration": 22530,
+      "channel": 1,
+      "maximum": 109951163,
+      "minimum": 0,
+      "mode": 2,
+      "step": 13653,
+      "stop": 2
+    },
+    "velocity": {
+      "acceleration": 15020,
+      "channel": 1,
+      "maximum": 73300775,
+      "minimum": 0
+    }
+  },
+  "settings_revision": 1,
+  "settings_updated": 1794006094.9405367,
+  "status": {
+    "enabled": true,
+    "homed": true,
+    "homing": false,
+    "motion_error": false,
+    "moving": false,
+    "raw_bits": 2147484672
+  },
+  "ui": {
+    "decimals": 6,
+    "drives": [
+      2.5,
+      5,
+      7.5,
+      10
+    ],
+    "high_power": false,
+    "rotation_direction": "quickest",
+    "rotation_mode": "fixed",
+    "units": "deg"
+  },
+  "unknown": false,
+  "updated": 1794006125.1386063
+}

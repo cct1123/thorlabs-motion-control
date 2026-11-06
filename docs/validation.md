@@ -1,5 +1,13 @@
 # Validation record
 
+## Holistic migration review: 6 November 2026
+
+The [current holistic review](reviews/holistic-review-20261106.md) records **228
+passing offline tests**, lint/format and package checks, API/reference migration,
+cache/temp cleanup and the final actual-mount read-only UI check. All five raw
+settings groups matched the saved baseline; the mount remained at zero counts,
+homed and idle. New rotation modes/boundaries were not physically retested.
+
 ## Actual mount GUI controls: 6 November 2026, 15:14–15:22 CST
 
 The requested GUI Home, small absolute Move, positive/negative single-step Jog,
