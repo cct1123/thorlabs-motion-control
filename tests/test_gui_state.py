@@ -5,7 +5,8 @@ import pytest
 
 from k10cr2 import CleanupResult, MotionCancelled, MotionError, MotionResult, StopResult
 from k10cr2.gui_state import GuiController
-from k10cr2.protocol import Identity, Position, Status, angle_to_counts
+from k10cr2.protocol import Identity, Position, Status
+from k10cr2.settings import position_counts
 
 
 class FakeMount:
@@ -46,7 +47,7 @@ class FakeMount:
 
     def position(self):
         self.record("position")
-        return Position(angle_to_counts(self.angle), self.angle)
+        return Position(position_counts(self.angle), self.angle)
 
     def query_settings(self, groups):
         self.record("settings")
@@ -78,10 +79,7 @@ class FakeMount:
     def home(self, **kwargs):
         return self.move_absolute(0, **kwargs)
 
-    def move_to(self, angle, *, mode="fixed", direction="quickest", **kwargs):
-        return self.move_absolute(angle, **kwargs)
-
-    def move_absolute(self, angle, *, cancel, on_progress):
+    def move_absolute(self, angle, *, mode="fixed", direction="quickest", cancel, on_progress):
         self.record(f"move:{angle:g}")
         on_progress(self.status(), self.position())
         self.started.set()
@@ -144,8 +142,8 @@ def test_startup_and_connect_are_read_only(gui_owner):
     ]
     assert set(owner.snapshot()["settings"]) == {"velocity", "jog", "backlash", "home", "buttons"}
     assert owner.snapshot()["settings_updated"] is not None
-    assert "Home" in owner.submit("move-to", target=90)
-    assert "Home" in owner.submit("step-plus", step=1)
+    assert "Home" in owner.submit("move", target=90)
+    assert "Home" in owner.submit("jog-forward")
     assert len(mount.calls) == 5
 
 
@@ -154,7 +152,7 @@ def test_home_and_move_use_background_owner(gui_owner):
     connect(owner)
     owner.submit("home")
     assert wait_idle(owner)["status"]["homed"]
-    owner.submit("move-to", target=90)
+    owner.submit("move", target=90)
     assert wait_idle(owner)["position"]["degrees"] == 90
     assert all(ident != threading.get_ident() for _, ident in mount.calls)
 
@@ -186,7 +184,7 @@ def test_session_options_do_not_race_or_block_on_background_readback(gui_owner):
     wait_idle(owner)
     mount.started.clear()
     mount.release.clear()
-    owner.submit("move-to", target=1)
+    owner.submit("move", target=1)
     assert mount.started.wait(1)
     try:
         assert "Wait" in owner.set_display({"decimals": 6})
@@ -219,21 +217,18 @@ def test_invalid_targets_never_reach_worker(gui_owner, angle):
     mount.homed = True
     connect(owner)
     before = len(mount.calls)
-    assert "angle" in owner.submit("move-to", target=angle).lower()
+    assert "angle" in owner.submit("move", target=angle).lower()
     assert len(mount.calls) == before
 
 
-def test_step_uses_fresh_position_and_does_not_wrap(gui_owner):
+def test_removed_step_commands_are_rejected_without_io(gui_owner):
     owner, mount = gui_owner
     mount.homed = True
     connect(owner)
-    mount.angle = 20  # Position changed after the last UI snapshot.
-    owner.submit("step-plus", step=1)
-    assert wait_idle(owner)["position"]["degrees"] == 21
-    mount.angle = 359.5
-    owner.submit("step-plus", step=1)
-    assert "Angle" in wait_idle(owner)["error"]
-    assert not any(name == "move:360.5" for name, _ in mount.calls)
+    before = list(mount.calls)
+    for command in ("step-plus", "step-minus", "move-to"):
+        assert "Unknown command" in owner.submit(command, target=1)
+    assert mount.calls == before
 
 
 def test_stop_uses_active_owner_and_requires_reconnect(gui_owner):
@@ -241,7 +236,7 @@ def test_stop_uses_active_owner_and_requires_reconnect(gui_owner):
     mount.homed = True
     connect(owner)
     mount.release.clear()
-    owner.submit("move-to", target=90)
+    owner.submit("move", target=90)
     assert mount.started.wait(1)
     assert "not queued" in owner.submit("home")
     assert "not queued" in owner.submit("disconnect")
@@ -263,7 +258,7 @@ def test_failed_stop_reports_unknown_and_allows_explicit_retry(gui_owner):
     connect(owner)
     mount.fail_stop = True
     mount.release.clear()
-    owner.submit("move-to", target=90)
+    owner.submit("move", target=90)
     assert mount.started.wait(1)
     owner.submit("stop")
     snap = wait_idle(owner)
@@ -309,16 +304,16 @@ def test_background_refresh_preserves_command_result_and_error(gui_owner):
     owner, mount = gui_owner
     mount.homed = True
     connect(owner)
-    owner.submit("move-to", target=90)
-    assert wait_idle(owner)["message"] == "move-to complete."
+    owner.submit("move", target=90)
+    assert wait_idle(owner)["message"] == "move complete."
     owner.submit("refresh")
-    assert wait_idle(owner)["message"] == "move-to complete."
-    mount.angle = 359.5
-    owner.submit("step-plus", step=1)
+    assert wait_idle(owner)["message"] == "move complete."
+    mount.fail_query = True
+    owner.submit("refresh")
     error = wait_idle(owner)["error"]
-    assert "Angle" in error
-    owner.submit("refresh")
-    assert wait_idle(owner)["error"] == error
+    assert "No status reply" in error
+    owner.refresh()
+    assert owner.snapshot()["error"] == error
 
 
 def test_shutdown_timeout_does_not_close_an_active_owner(gui_owner):
@@ -361,7 +356,7 @@ def test_stop_at_final_readback_is_not_lost(gui_owner, fail_stop):
         original(status, position)
 
     owner._readback = final_readback
-    owner.submit("move-to", target=90)
+    owner.submit("move", target=90)
     try:
         assert entered.wait(1)
         assert "Stop requested" in owner.submit("stop")

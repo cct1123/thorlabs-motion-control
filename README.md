@@ -10,6 +10,8 @@ Thorlabs SDK DLL is required.
 The GUI follows the Thorlabs K10CR2 panel (Figure 16) and settings in the
 [manufacturer manual](docs/hardware/K10CR2-user-guide-ETN064249-D02.pdf).
 All communication is our own WinUSB/APT implementation; no Kinesis or SDK is used.
+The [migration guide](docs/migration.md) records the consolidated API, removed
+development interfaces and shared angle contract.
 
 ```powershell
 uv sync --locked --extra gui
@@ -94,11 +96,13 @@ uv run --locked k10cr2 --serial 55551174 move 90 --timeout 120
 uv run --locked k10cr2 --serial 55551174 stop --timeout 5
 ```
 
-An absolute move requires a fresh homed status. Targets are finite angles in
-`0 <= angle < 360` degrees, rounded to the nearest microstep (ties to even).
-Values that round to a full revolution are rejected. Targets do not silently wrap.
-The controller's existing rotation-direction/backlash settings determine the route;
-this release does not change those settings or support multiple-turn targets.
+An absolute move requires a fresh homed status. Fixed Range accepts finite targets
+in `0 <= angle <= 360` degrees, rounded to the nearest count (ties to even).
+The 360° endpoint is a complete counted turn; targets do not silently wrap.
+CLI, GUI and library share the same modes: `fixed`, `total` (±15,480°) and
+`equivalent` (0–360° phase resolved from a fresh counter). For equivalent routing,
+choose `--direction quickest`, `forward` or `reverse`; use `--mode` to select the mode.
+The device's backlash settings remain in effect.
 
 Home/move block until fresh status and position confirm completion. Homing must show
 a new homing/not-homed transition. A move already at its target is reported as a

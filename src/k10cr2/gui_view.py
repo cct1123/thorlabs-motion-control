@@ -8,15 +8,15 @@ from urllib.parse import urlsplit
 from dash import Dash, Input, Output, State, ctx, dcc, html, no_update
 from flask import abort, jsonify, redirect, request, send_file
 
-from .gui_state import MANUAL, MOTIONS, GuiController
+from .gui_state import MANUAL_COMMANDS, MOTION_COMMANDS, GuiController
 from .settings import UNIT_FACTORS, VELOCITY_SCALE, display_angle, resolve_target, to_display
 
-COMMANDS = (
+CONTROL_IDS = (
     "connect",
     "disconnect",
     "refresh-state",
     "home",
-    "move-to",
+    "move",
     "stop",
     "enable",
     "disable",
@@ -574,7 +574,7 @@ def settings_panel():
     ]
 
 
-def controls(snapshot, target, _step=None):
+def controls(snapshot, target):
     status = snapshot["status"]
     busy = snapshot["busy"]
     idle = snapshot["connected"] and not busy and not snapshot["closing"]
@@ -587,7 +587,7 @@ def controls(snapshot, target, _step=None):
         and not status.get("motion_error")
         and not status.get("raw_bits", 0) & 0x40000000
     )
-    disabled = {name: True for name in (*COMMANDS, *MANUAL)}
+    disabled = {name: True for name in (*CONTROL_IDS, *MANUAL_COMMANDS)}
     disabled.update(
         connect=snapshot["connected"] or bool(busy) or snapshot["closing"],
         disconnect=not idle
@@ -617,8 +617,8 @@ def controls(snapshot, target, _step=None):
         )
     except (ValueError, TypeError) as exc:
         error = str(exc)
-    disabled["move-to"] = not ready or not status.get("homed") or bool(error)
-    for name in MANUAL:
+    disabled["move"] = not ready or not status.get("homed") or bool(error)
+    for name in MANUAL_COMMANDS:
         disabled[name] = (
             not ready
             or not status.get("homed")
@@ -791,7 +791,7 @@ def create_app(controller=None, *, serial=None):
                                 ],
                                 className="readout-area",
                             ),
-                            action("Move ▾", "move-open", "➜", disabled=False, cls="move-tool"),
+                            action("Move ▾", "move-open", "➜", disabled=False, cls="moveol"),
                             html.Div(
                                 [
                                     drive("forward"),
@@ -917,7 +917,7 @@ def create_app(controller=None, *, serial=None):
                     ),
                     html.Button(
                         "Move to position →",
-                        id="move-to",
+                        id="move",
                         disabled=True,
                         className="button primary",
                     ),
@@ -949,7 +949,7 @@ def create_app(controller=None, *, serial=None):
         "disconnect",
         "refresh-state",
         "home",
-        "move-to",
+        "move",
         "stop",
         "enable",
         "disable",
@@ -997,7 +997,7 @@ def create_app(controller=None, *, serial=None):
         if name in {"move-open", "position-open", "settings-open", "jog-open", "drive-open"}:
             snapshot = owner.snapshot()
             if (
-                snapshot["busy"] in MOTIONS
+                snapshot["busy"] in MOTION_COMMANDS
                 or snapshot["status"].get("moving")
                 or snapshot["status"].get("homing")
             ):
@@ -1030,13 +1030,13 @@ def create_app(controller=None, *, serial=None):
                 }
                 message = owner.submit("configure", changes=changes, persist="yes" in persist)
             elif name == "apply-move" or (
-                name == "move-to" and (move_velocity is not None or move_acceleration is not None)
+                name == "move" and (move_velocity is not None or move_acceleration is not None)
             ):
                 changes = {
                     "velocity": {"velocity": move_velocity, "acceleration": move_acceleration}
                 }
                 message = owner.submit(
-                    "configure" if name == "apply-move" else "move-to",
+                    "configure" if name == "apply-move" else "move",
                     target=target,
                     changes=changes,
                 )
@@ -1063,7 +1063,7 @@ def create_app(controller=None, *, serial=None):
                 message = owner.submit(command, serial=serial_value, target=target)
         except (ValueError, TypeError, KeyError) as exc:
             message = str(exc)
-        if name == "move-to" and message == "move-to requested.":
+        if name == "move" and message == "move requested.":
             panel = None  # Keep the main Stop control immediately accessible.
         return message, panel, no_update
 
@@ -1163,7 +1163,7 @@ def create_app(controller=None, *, serial=None):
         Output("user-feedback", "children"),
         Output("settings-feedback", "children"),
         Output("move-feedback", "children"),
-        *[Output(name, "disabled") for name in COMMANDS],
+        *[Output(name, "disabled") for name in CONTROL_IDS],
         *[
             Output(f"{direction}-{i}", "disabled")
             for direction in ("forward", "reverse")
@@ -1187,14 +1187,14 @@ def create_app(controller=None, *, serial=None):
             "Homing"
             if snap["busy"] == "home" or state.get("homing")
             else "Moving"
-            if snap["busy"] in MOTIONS or state.get("moving")
+            if snap["busy"] in MOTION_COMMANDS or state.get("moving")
             else "Idle"
             if fresh
             else "Disconnected"
             if not snap["connected"]
             else "Unverified"
         )
-        if snap["busy"] not in {None, "refresh", *MOTIONS}:
+        if snap["busy"] not in {None, "refresh", *MOTION_COMMANDS}:
             operation = {
                 "connect": "Connecting…",
                 "load-settings": "Reading settings…",
@@ -1298,7 +1298,7 @@ def create_app(controller=None, *, serial=None):
             "" if snap["error"] else feedback,
             snap["error"] or feedback,
             snap["error"] or feedback,
-            *[disabled[name] for name in COMMANDS],
+            *[disabled[name] for name in CONTROL_IDS],
             *[
                 disabled[f"drive-{direction}"]
                 for direction in ("forward", "reverse")

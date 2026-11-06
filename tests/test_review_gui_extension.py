@@ -35,7 +35,7 @@ def test_unknown_state_blocks_motion_even_without_a_recovery_flag():
     disabled, _ = controls(snapshot, 90)
     assert not disabled["stop"]
     assert disabled["disconnect"]
-    assert disabled["home"] and disabled["move-to"] and disabled["disable"]
+    assert disabled["home"] and disabled["move"] and disabled["disable"]
 
 
 def test_worker_rejects_motion_while_physical_state_is_unknown():
@@ -48,7 +48,7 @@ def test_worker_rejects_motion_while_physical_state_is_unknown():
         status={"homed": True, "enabled": True},
         position={"degrees": 0},
     )
-    assert "UNKNOWN" in owner.submit("move-to", target=90)
+    assert "UNKNOWN" in owner.submit("move", target=90)
     assert owner.snapshot()["busy"] is None
 
 
@@ -78,9 +78,9 @@ def test_move_request_closes_dialog_so_stop_is_accessible(monkeypatch):
         "panel": "move",
     }
     args = [0] * len(callback["inputs"]) + [state.get(item["id"]) for item in callback["state"]]
-    monkeypatch.setattr(view, "ctx", SimpleNamespace(triggered_id="move-to"))
+    monkeypatch.setattr(view, "ctx", SimpleNamespace(triggered_id="move"))
     message, panel, _ = callback["callback"].__wrapped__(*args)
-    assert calls == ["move-to"] and message == "move-to requested."
+    assert calls == ["move"] and message == "move requested."
     assert panel is None
 
 
@@ -105,7 +105,7 @@ def test_opening_another_dialog_cannot_obscure_stop_during_motion(monkeypatch, b
     import k10cr2.gui_view as view
 
     snapshot = GuiController().snapshot()
-    snapshot.update(connected=True, busy="move-to")
+    snapshot.update(connected=True, busy="move")
     app = create_app(SimpleNamespace(snapshot=lambda: snapshot))
     callback = next(
         item for key, item in app.callback_map.items() if "request-result.children" in key

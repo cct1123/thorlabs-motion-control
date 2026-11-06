@@ -7,7 +7,7 @@ import socket
 from werkzeug.serving import ThreadedWSGIServer
 
 from .gui_state import GuiController
-from .gui_view import COMMANDS, controls, create_app  # noqa: F401
+from .gui_view import create_app
 
 
 class LocalServer(ThreadedWSGIServer):

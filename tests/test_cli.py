@@ -46,3 +46,35 @@ def test_invalid_motion_arguments_do_not_construct_controller(monkeypatch, capsy
     assert main(["--serial", "55551174", "move", "nan"]) == 1
     assert main(["--serial", "55551174", "home", "--timeout", "0"]) == 1
     assert "finite" in capsys.readouterr().err
+
+
+def test_cli_passes_the_shared_rotation_options(monkeypatch, capsys):
+    from k10cr2 import MotionResult, Position, Status
+
+    calls = []
+
+    class Mount:
+        def __init__(self, serial):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            pass
+
+        def move_absolute(self, angle, **kwargs):
+            calls.append((angle, kwargs))
+            return MotionResult(
+                Status(0x80000400, False, False, True, True, False), Position(0, 0), False
+            )
+
+    monkeypatch.setattr("k10cr2.cli.K10CR2", Mount)
+    assert (
+        main(
+            ["--serial", "55551174", "move", "10", "--mode", "equivalent", "--direction", "reverse"]
+        )
+        == 0
+    )
+    assert calls == [(10.0, dict(mode="equivalent", direction="reverse", timeout=None))]
+    assert '"position"' in capsys.readouterr().out

@@ -65,7 +65,7 @@ def test_manual_observer_failure_at_completion_still_stops(mount_factory, failur
 
 
 def test_single_jog_rejects_acceleration_above_manual_limit_before_motion(mount_factory):
-    # Raw acceleration 30,041 exceeds the 20 degree/s² limit (20 * 1,502).
+    # Raw acceleration 30,041 exceeds the 20 degree/sÂ² limit (20 * 1,502).
     profile = JOG_SETTINGS[:18] + bytes.fromhex("59 75 00 00") + JOG_SETTINGS[22:]
     mount, fake = mount_factory([(STATUS_REQUEST, HOMED), (JOG_QUERY, profile)])
     with pytest.raises(ValueError, match="[Aa]cceleration"):
@@ -86,7 +86,7 @@ def test_fixed_range_refuses_an_outside_counter_before_motion(mount_factory, man
         if manual:
             mount.manual_motion(1, jog=True)
         else:
-            mount.move_to(90, mode="fixed")
+            mount.move_absolute(90, mode="fixed")
     assert JOG_FORWARD not in fake.sent and not fake.steps
 
 

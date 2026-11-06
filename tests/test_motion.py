@@ -113,6 +113,50 @@ def test_already_at_target_no_op(mount_factory):
     assert MOVE_90 not in fake.sent and ENABLE_REQUEST not in fake.sent
 
 
+def test_fixed_range_full_turn_matches_the_gui_and_cli_contract(mount_factory):
+    move360 = bytes.fromhex("53 04 06 00 d0 01 01 00 00 00 ee 02")
+    position360 = bytes.fromhex("12 04 06 00 81 50 01 00 00 00 ee 02")
+    mount, fake = mount_factory(
+        [
+            (STATUS_REQUEST, HOMED),
+            (POSITION_REQUEST, POSITION_ZERO),
+            (move360, b""),
+            (STATUS_REQUEST, HOMED),
+            (POSITION_REQUEST, position360),
+        ]
+    )
+    assert mount.move_absolute(360).position.degrees == 360
+    assert not fake.steps
+
+
+def test_equivalent_route_uses_fresh_counter_and_preserves_total_turns(mount_factory):
+    import struct
+
+    position350 = bytes.fromhex("12 04 06 00 81 50") + struct.pack("<Hi", 1, 47_786_667)
+    position370 = bytes.fromhex("12 04 06 00 81 50") + struct.pack("<Hi", 1, 50_517_333)
+    move370 = bytes.fromhex("53 04 06 00 d0 01") + struct.pack("<Hi", 1, 50_517_333)
+    mount, fake = mount_factory(
+        [
+            (STATUS_REQUEST, HOMED),
+            (POSITION_REQUEST, position350),
+            (move370, b""),
+            (STATUS_REQUEST, HOMED),
+            (POSITION_REQUEST, position370),
+        ]
+    )
+    result = mount.move_absolute(10, mode="equivalent", direction="forward")
+    assert result.position.counts == 50_517_333 and not fake.steps
+
+
+@pytest.mark.parametrize("mode,direction", [("unknown", "quickest"), ("fixed", "invalid")])
+def test_invalid_rotation_options_do_not_query_or_move(mount_factory, mode, direction):
+    mount, fake = mount_factory([])
+    before = list(fake.sent)
+    with pytest.raises(ValueError):
+        mount.move_absolute(90, mode=mode, direction=direction)
+    assert fake.sent == before
+
+
 def test_unhomed_or_busy_refuses_before_actuator_write(mount_factory):
     for status in (IDLE, MOVING):
         mount, fake = mount_factory([(STATUS_REQUEST, status)])
@@ -122,7 +166,7 @@ def test_unhomed_or_busy_refuses_before_actuator_write(mount_factory):
         mount.close()
 
 
-@pytest.mark.parametrize("angle", [-1, 360, float("nan"), float("inf"), True])
+@pytest.mark.parametrize("angle", [-1, 360.1, float("nan"), float("inf"), True])
 def test_invalid_target_no_queries_or_motion(mount_factory, angle):
     mount, fake = mount_factory([])
     with pytest.raises(ValueError):

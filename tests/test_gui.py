@@ -6,8 +6,8 @@ import pytest
 
 pytest.importorskip("dash")
 
-from k10cr2.gui import COMMANDS, controls, create_app  # noqa: E402
 from k10cr2.gui_state import GuiController  # noqa: E402
+from k10cr2.gui_view import CONTROL_IDS, controls, create_app  # noqa: E402
 
 
 def test_layout_assets_and_status_never_open_usb():
@@ -21,9 +21,9 @@ def test_layout_assets_and_status_never_open_usb():
         assert client.get(path, base_url="http://127.0.0.1").status_code == 200
     status = client.get("/api/status", base_url="http://127.0.0.1").json
     assert not status["connected"] and status["busy"] is None
-    disabled, _ = controls(status, 90, 1)
+    disabled, _ = controls(status, 90)
     assert not disabled["connect"]
-    assert all(disabled[name] for name in COMMANDS if name != "connect")
+    assert all(disabled[name] for name in CONTROL_IDS if name != "connect")
 
 
 def post_callback(app, key, values, changed):
@@ -244,6 +244,6 @@ def test_unknown_physical_state_keeps_stop_available_and_blocks_disconnect():
         status={"homed": True},
         position={"degrees": 0},
     )
-    disabled, _ = controls(snapshot, 90, 1)
+    disabled, _ = controls(snapshot, 90)
     assert not disabled["stop"]
-    assert all(disabled[name] for name in COMMANDS if name != "stop")
+    assert all(disabled[name] for name in CONTROL_IDS if name != "stop")

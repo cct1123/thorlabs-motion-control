@@ -37,8 +37,10 @@ depending on timely browser release for a boundary stop. Fixed Range is 0–360�
 Total Angle and Equivalent Angle retain counts within ±15,480°, the manual's 43-turn
 display bound. Equivalent Angle wraps only the display and selects forward,
 reverse or quickest routing from a fresh counter. Ties at 180° select forward.
-The pre-existing CLI/library `move_absolute()` remains restricted to [0,360).
-The new GUI `move_to()` resolves the manual's rotation modes.
+The CLI, GUI and library all use `move_absolute(angle, mode=..., direction=...)`.
+Fixed Range includes both 0° and 360°; Total and Equivalent use the same target
+resolver and fresh-counter routing. The earlier `move_to()` API and unused
+`step-plus`/`step-minus` GUI commands have been removed; no aliases are retained.
 
 ## Settings and wire support
 

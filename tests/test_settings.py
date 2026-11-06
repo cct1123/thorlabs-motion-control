@@ -8,6 +8,28 @@ from conftest import HOMED, POSITION_REQUEST, POSITION_ZERO, STATUS_REQUEST
 from k10cr2.protocol import FrameBuffer, ProtocolError
 from k10cr2.settings import display_angle, resolve_target
 
+
+@pytest.mark.parametrize(
+    ("angle", "counts"),
+    [
+        (0, 0),
+        (10, 1365333),
+        (90, 12288000),
+        (180, 24576000),
+        (360, 49152000),
+        (359.999999999, 49152000),
+    ],
+)
+def test_fixed_range_counts_conversion_includes_full_turn(angle, counts):
+    assert resolve_target(angle, 0) == counts
+
+
+@pytest.mark.parametrize("angle", [-1, 360.1, math.nan, math.inf, -math.inf, "90", True])
+def test_invalid_fixed_range_angles(angle):
+    with pytest.raises(ValueError):
+        resolve_target(angle, 0)
+
+
 # Literal frames, independent of the implementation encoder.
 VEL_QUERY = bytes.fromhex("14 04 01 00 50 01")
 VEL_REPLY = bytes.fromhex("15 04 0e 00 81 50 01 00 00 00 00 00 ac 3a 00 00 52 55 5e 04")

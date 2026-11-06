@@ -1,5 +1,4 @@
 import json
-import math
 import struct
 
 import pytest
@@ -9,7 +8,6 @@ from k10cr2.protocol import (
     ControllerFault,
     FrameBuffer,
     ProtocolError,
-    angle_to_counts,
     decode_identity,
     decode_position,
     decode_status,
@@ -40,21 +38,6 @@ def test_absolute_move_literal_and_signed_payload():
     for value in (None, True, 1.5, 2**31, -(2**31) - 1):
         with pytest.raises(ValueError):
             request("move", counts=value)
-
-
-@pytest.mark.parametrize(
-    ("angle", "counts"), [(0, 0), (10, 1365333), (90, 12288000), (180, 24576000)]
-)
-def test_counts_conversion(angle, counts):
-    assert angle_to_counts(angle) == counts
-
-
-@pytest.mark.parametrize(
-    "angle", [-1, 360, math.nan, math.inf, -math.inf, "90", True, 359.999999999]
-)
-def test_invalid_angles(angle):
-    with pytest.raises(ValueError):
-        angle_to_counts(angle)
 
 
 def test_all_split_boundaries_and_coalesced_frames(identity_bytes):

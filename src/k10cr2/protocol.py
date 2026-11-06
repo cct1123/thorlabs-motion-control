@@ -1,6 +1,5 @@
 """APT wire contract audited against DOC-103274 issue 48; see docs/commands.md."""
 
-import math
 import struct
 from dataclasses import dataclass
 
@@ -69,17 +68,6 @@ def request(name: str, *, counts: int | None = None) -> bytes:
     if counts is not None:
         raise ValueError("Counts apply only to an absolute move")
     return struct.pack("<HBBBB", command.message_id, command.param1, command.param2, DEVICE, HOST)
-
-
-def angle_to_counts(angle: float) -> int:
-    if isinstance(angle, bool) or not isinstance(angle, (int, float)):
-        raise ValueError("Angle must be a finite number in [0, 360) degrees")
-    if not math.isfinite(angle) or not 0 <= angle < 360:
-        raise ValueError("Angle must be a finite number in [0, 360) degrees")
-    counts = round(angle * COUNTS_PER_REVOLUTION / 360)
-    if counts >= COUNTS_PER_REVOLUTION:
-        raise ValueError("Angle rounds to a full revolution; choose a smaller target")
-    return counts
 
 
 @dataclass(frozen=True)

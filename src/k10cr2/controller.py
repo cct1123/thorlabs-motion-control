@@ -14,7 +14,6 @@ from .protocol import (
     Identity,
     Position,
     Status,
-    angle_to_counts,
     decode_identity,
     decode_position,
     decode_status,
@@ -334,20 +333,6 @@ class K10CR2:
                 self._needs_recovery = True
                 raise
 
-    def move_to(
-        self,
-        angle,
-        *,
-        mode="fixed",
-        direction="quickest",
-        timeout=None,
-        cancel=None,
-        on_progress=None,
-    ):
-        # Resolve the equivalent-angle route on a fresh counter while owning USB.
-        resolve_target(angle, 0, mode, direction)  # Validate before I/O.
-        return self._motion("move", (angle, mode, direction), timeout, cancel, on_progress)
-
     def manual_motion(
         self,
         direction,
@@ -542,7 +527,7 @@ class K10CR2:
             before = self._position(deadline)
             if name == "move" and abs(before.degrees) > MAX_ANGLE:
                 raise RuntimeError("Counted angle exceeds the manual's 43-turn bound; home first")
-            if isinstance(target, tuple):
+            if name == "move":
                 angle, mode, direction = target
                 if mode == "fixed" and not 0 <= before.degrees <= 360:
                     raise ValueError(
@@ -623,10 +608,17 @@ class K10CR2:
         self,
         angle: float,
         *,
+        mode: str = "fixed",
+        direction: str = "quickest",
         timeout: float | None = None,
         cancel: threading.Event | None = None,
         on_progress: Callable[[Status, Position], None] | None = None,
     ) -> MotionResult:
-        """Move to [0, 360) degrees, rounded to nearest count (ties to even)."""
-        target = angle_to_counts(angle)  # Validate before preflight or any other I/O.
-        return self._motion("move", target, timeout, cancel, on_progress)
+        """Move in fixed [0, 360], total or equivalent-angle mode, in degrees.
+
+        Equivalent routes use a fresh counted position while owning USB. Targets
+        round to the nearest count (ties to even). Direction applies only to
+        equivalent-angle routing. No motion is replayed automatically.
+        """
+        resolve_target(angle, 0, mode, direction)  # Validate before any I/O.
+        return self._motion("move", (angle, mode, direction), timeout, cancel, on_progress)
