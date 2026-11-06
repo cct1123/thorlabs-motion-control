@@ -789,7 +789,7 @@ def create_app(controller=None, *, serial=None):
                                 ],
                                 className="readout-area",
                             ),
-                            action("Move ▾", "move-open", "➜", disabled=False, cls="moveol"),
+                            action("Move ▾", "move-open", "➜", disabled=False, cls="move-tool"),
                             html.Div(
                                 [
                                     drive("forward"),
