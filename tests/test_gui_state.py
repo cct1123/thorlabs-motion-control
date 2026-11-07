@@ -340,6 +340,57 @@ def test_shutdown_timeout_does_not_close_an_active_owner(gui_owner):
     assert owner.shutdown()
 
 
+def test_interrupting_shutdown_wait_preserves_the_active_owner(gui_owner, monkeypatch):
+    owner, mount = gui_owner
+    connect(owner)
+    entered, release = threading.Event(), threading.Event()
+    original = mount.status
+
+    def blocked_status():
+        entered.set()
+        assert release.wait(2)
+        return original()
+
+    def interrupt_wait(*args):
+        raise KeyboardInterrupt
+
+    mount.status = blocked_status
+    owner.submit("refresh")
+    try:
+        assert entered.wait(1)
+        with monkeypatch.context() as patch:
+            patch.setattr(owner._condition, "wait_for", interrupt_wait)
+            assert not owner.shutdown()
+        snapshot = owner.snapshot()
+        assert snapshot["busy"] == "refresh" and not snapshot["closing"]
+        assert "interrupted" in snapshot["error"]
+        assert not any(name == "close" for name, _ in mount.calls)
+    finally:
+        release.set()
+    wait_idle(owner)
+    assert owner.shutdown()
+
+
+def test_interrupting_shutdown_query_keeps_stop_and_retry_available(gui_owner):
+    owner, mount = gui_owner
+    connect(owner)
+    original = mount.status
+
+    def interrupted_status():
+        mount.status = original
+        raise KeyboardInterrupt
+
+    mount.status = interrupted_status
+    assert not owner.shutdown()
+    snapshot = owner.snapshot()
+    assert snapshot["connected"] and snapshot["unknown"] and not snapshot["closing"]
+    assert "KeyboardInterrupt" in snapshot["error"]
+    assert not any(name == "close" for name, _ in mount.calls)
+    assert owner.shutdown()
+    names = [name for name, _ in mount.calls]
+    assert names.index("stop") < names.index("close")
+
+
 @pytest.mark.parametrize("fail_stop", [False, True])
 def test_stop_at_final_readback_is_not_lost(gui_owner, fail_stop):
     owner, mount = gui_owner

@@ -21,6 +21,24 @@ class LocalServer(ThreadedWSGIServer):
         super().server_bind()
 
 
+def serve_gui(server, controller):
+    """Keep Stop available until the USB owner confirms shutdown, then close HTTP."""
+    try:
+        while True:
+            try:
+                server.serve_forever()
+            except KeyboardInterrupt:
+                pass
+            if controller.shutdown():
+                return True
+            print(
+                "Shutdown incomplete; controls remain available. " + controller.snapshot()["error"],
+                flush=True,
+            )
+    finally:
+        server.server_close()
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--serial", help="Prefill an eight-digit serial; does not connect")
@@ -41,20 +59,7 @@ def main(argv=None):
     print(
         "Startup does not connect or move the mount. Ctrl+C stops and closes the GUI.", flush=True
     )
-    try:
-        while True:
-            try:
-                server.serve_forever()
-            except KeyboardInterrupt:
-                pass
-            if controller.shutdown():
-                break
-            print(
-                "Shutdown incomplete; controls remain available. " + controller.snapshot()["error"],
-                flush=True,
-            )
-    finally:
-        server.server_close()
+    serve_gui(server, controller)
     return 0
 
 

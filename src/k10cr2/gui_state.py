@@ -423,7 +423,15 @@ class GuiController:
                 return self._mount is None and self._state["busy"] is None
             self._closing = True
             self._cancel.set()
-            if not self._condition.wait_for(lambda: self._state["busy"] is None, timeout):
+            try:
+                finished = self._condition.wait_for(lambda: self._state["busy"] is None, timeout)
+            except KeyboardInterrupt:
+                self._closing = False
+                self._state["error"] = (
+                    "Shutdown interrupted; USB owner is still active. Retry Stop."
+                )
+                return False
+            if not finished:
                 self._closing = False
                 self._state["error"] = "Shutdown timed out; USB owner is still active. Retry Stop."
                 return False
@@ -449,10 +457,12 @@ class GuiController:
             with self._condition:
                 self._state["message"] = "Web UI closed. You may close this tab."
             return True
-        except Exception as exc:
+        except (Exception, KeyboardInterrupt) as exc:
             with self._condition:
                 self._closing = False
-                self._state["error"] = f"Shutdown failed; physical state may be UNKNOWN: {exc}"
+                self._state["error"] = (
+                    f"Shutdown failed; physical state may be UNKNOWN: {type(exc).__name__}: {exc}"
+                )
                 self._state["unknown"] = True
                 self._state["recovery"] = self._mount is not None and self._mount.recovery_required
             return False
