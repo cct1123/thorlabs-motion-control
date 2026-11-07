@@ -11,7 +11,7 @@
             const response = await fetch("/api/hold", {
                 method: "POST", headers: {"Content-Type": "application/json"}, keepalive: true,
                 body: JSON.stringify({action, token: current.token,
-                    command: current.command, index: current.index})
+                    command: current.command, index: current.index, reason: current.reason})
             });
             const result = await response.json();
             if (action === "start") message(result.message);
@@ -19,16 +19,17 @@
             message("Control connection lost. The owner will stop when the heartbeat expires.");
         }
     }
-    function release() {
+    function release(reason) {
         if (!active) return;
         const current = active;
         active = null;
+        current.reason = reason;
         clearInterval(current.timer);
         void send("release", current);
     }
     function start(button) {
         if (active || button.disabled) return;
-        const current = {token: crypto.randomUUID(), command: button.dataset.hold,
+        const current = {button, token: crypto.randomUUID(), command: button.dataset.hold,
             index: Number(button.dataset.index || 0)};
         active = current;
         void send("start", current);
@@ -42,10 +43,10 @@
         button.setPointerCapture(event.pointerId);
         start(button);
     });
-    document.addEventListener("pointerup", release);
-    document.addEventListener("pointercancel", release);
+    document.addEventListener("pointerup", () => release("pointer-up"));
+    document.addEventListener("pointercancel", () => release("pointer-cancel"));
     document.addEventListener("keydown", event => {
-        if (event.key === "Escape") { release(); return; }
+        if (event.key === "Escape") { release("escape"); return; }
         if (event.key !== " " && event.key !== "Enter") return;
         const button = event.target.closest("button[data-hold]");
         if (!button) return;
@@ -53,9 +54,12 @@
         if (!event.repeat) start(button);
     });
     document.addEventListener("keyup", event => {
-        if (event.key === " " || event.key === "Enter") release();
+        if (event.key === " " || event.key === "Enter") release("key-up");
     });
-    document.addEventListener("visibilitychange", () => { if (document.hidden) release(); });
-    window.addEventListener("blur", release);
-    window.addEventListener("pagehide", release);
+    document.addEventListener("focusout", event => {
+        if (event.target === active?.button) release("focus-out");
+    });
+    document.addEventListener("visibilitychange", () => { if (document.hidden) release("hidden"); });
+    window.addEventListener("blur", () => release("window-blur"));
+    window.addEventListener("pagehide", () => release("page-hide"));
 })();

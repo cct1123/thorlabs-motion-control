@@ -38,6 +38,27 @@ def test_unknown_state_blocks_motion_even_without_a_recovery_flag():
     assert disabled["home"] and disabled["move"] and disabled["disable"]
 
 
+@pytest.mark.parametrize(
+    "command", ["jog-forward", "jog-reverse", "drive-forward", "drive-reverse"]
+)
+def test_held_control_keeps_focus_while_other_motion_controls_are_disabled(command):
+    snapshot = GuiController().snapshot()
+    snapshot.update(
+        connected=True,
+        busy=command,
+        status={"homed": True, "enabled": True, "moving": True},
+        settings={"jog": {}},
+        position={"degrees": 0},
+    )
+    disabled, _ = controls(snapshot, 0)
+    assert not disabled[command] and not disabled["stop"]
+    assert disabled["home"] and disabled["move"]
+    for other in {"jog-forward", "jog-reverse", "drive-forward", "drive-reverse"} - {command}:
+        assert disabled[other]
+    snapshot["unknown"] = True
+    assert controls(snapshot, 0)[0][command]
+
+
 def test_worker_rejects_motion_while_physical_state_is_unknown():
     owner = GuiController()
     owner._mount = SimpleNamespace(recovery_required=False)

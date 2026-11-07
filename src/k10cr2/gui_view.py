@@ -617,8 +617,19 @@ def controls(snapshot, target):
         error = str(exc)
     disabled["move"] = not ready or not status.get("homed") or bool(error)
     for name in MANUAL_COMMANDS:
+        # Keep the held control focusable while it owns motion. Disabling it
+        # would blur it immediately and turn every keyboard hold into a release.
+        holding = (
+            busy == name
+            and snapshot["connected"]
+            and not snapshot["closing"]
+            and not snapshot.get("unknown", False)
+            and not snapshot["recovery"]
+            and not status.get("motion_error")
+            and not status.get("raw_bits", 0) & 0x40000000
+        )
         disabled[name] = (
-            not ready
+            not (ready or holding)
             or not status.get("homed")
             or not status.get("enabled")
             or (name.startswith("jog-") and "jog" not in snapshot["settings"])
