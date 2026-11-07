@@ -27,9 +27,9 @@
         clearInterval(current.timer);
         void send("release", current);
     }
-    function start(button) {
+    function start(button, pointerId) {
         if (active || button.disabled) return;
-        const current = {button, token: crypto.randomUUID(), command: button.dataset.hold,
+        const current = {button, pointerId, token: crypto.randomUUID(), command: button.dataset.hold,
             index: Number(button.dataset.index || 0)};
         active = current;
         void send("start", current);
@@ -41,10 +41,15 @@
         event.preventDefault();
         button.focus();
         button.setPointerCapture(event.pointerId);
-        start(button);
+        start(button, event.pointerId);
     });
     document.addEventListener("pointerup", () => release("pointer-up"));
     document.addEventListener("pointercancel", () => release("pointer-cancel"));
+    document.addEventListener("lostpointercapture", event => {
+        if (active && event.target === active.button && event.pointerId === active.pointerId) {
+            release("capture-lost");
+        }
+    });
     document.addEventListener("keydown", event => {
         if (event.key === "Escape") { release("escape"); return; }
         if (event.key !== " " && event.key !== "Enter") return;

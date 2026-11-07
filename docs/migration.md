@@ -8,6 +8,7 @@ legacy command adapter or automatic startup configuration is retained.
 | --- | --- |
 | `mount.move_to(angle, mode=..., direction=...)` | `mount.move_absolute(angle, mode=..., direction=...)` |
 | GUI `move-to` command/control ID | `move` |
+| GUI `refresh-state` control, which also reloaded settings | `refresh-status` reads status/position only; Settings **Refresh readbacks** reloads device settings. No old-ID alias. |
 | GUI `step-plus` / `step-minus`, `submit(..., step=...)` | Removed. Use native Jog with readback-verified jog settings. |
 | `k10cr2.protocol.angle_to_counts(angle)` | `k10cr2.settings.resolve_target(angle, current_degrees, mode, direction)` for a preview in counts; ordinary code passes degrees to `move_absolute()` |
 | `k10cr2.gui` re-exports of view helpers | `create_app`, `controls`, `CONTROL_IDS` live in `k10cr2.gui_view`; `k10cr2.gui` owns the server/entry point |

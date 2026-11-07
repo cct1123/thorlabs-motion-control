@@ -140,5 +140,6 @@ def test_opening_another_dialog_cannot_obscure_stop_during_motion(monkeypatch, b
     )
     args = [0] * len(callback["inputs"]) + [None] * len(callback["state"])
     monkeypatch.setattr(view, "ctx", SimpleNamespace(triggered_id=button))
-    _, panel, _ = callback["callback"].__wrapped__(*args)
+    message, panel, _ = callback["callback"].__wrapped__(*args)
     assert panel is None or panel is view.no_update
+    assert message.startswith("Panel request declined during motion.")

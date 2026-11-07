@@ -113,6 +113,18 @@ def test_manual_is_served_from_the_repository():
     assert response.status_code == 200 and response.data.startswith(b"%PDF")
 
 
+def test_status_refresh_does_not_reload_or_replace_settings(monkeypatch):
+    owner = GuiController(lambda serial: pytest.fail("Unexpected USB access"))
+    calls = []
+    monkeypatch.setattr(owner, "submit", lambda command, **kwargs: calls.append(command) or "ok")
+    app = create_app(owner)
+    key = next(key for key in app.callback_map if "request-result.children" in key)
+    button = next(name for name in CONTROL_IDS if name.startswith("refresh-"))
+    response = post_callback(app, key, {"panel": None}, f"{button}.n_clicks")
+    assert response.status_code == 200
+    assert calls == ["refresh"]
+
+
 @pytest.mark.parametrize("index", [1.0, True, "1", -1, 4, None])
 def test_invalid_drive_index_returns_validation_error_before_start(index):
     owner = GuiController(lambda serial: pytest.fail("Unexpected USB access"))

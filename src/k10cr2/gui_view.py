@@ -15,7 +15,7 @@ from .settings import UNIT_FACTORS, VELOCITY_SCALE, display_angle, resolve_targe
 CONTROL_IDS = (
     "connect",
     "disconnect",
-    "refresh-state",
+    "refresh-status",
     "home",
     "move",
     "stop",
@@ -602,7 +602,7 @@ def controls(snapshot, target):
         or snapshot["closing"]
         or busy in {"connect", "disconnect", "stop"}
     )
-    for name in ("refresh-state", "load-settings"):
+    for name in ("refresh-status", "load-settings"):
         disabled[name] = not ready
     error = ""
     ui = snapshot["ui"]
@@ -745,7 +745,7 @@ def create_app(controller=None, *, serial=None):
                     html.Button("Connect", id="connect", className="button primary"),
                     html.Button("Disconnect", id="disconnect", disabled=True, className="button"),
                     html.Button(
-                        "Refresh status", id="refresh-state", disabled=True, className="button"
+                        "Refresh status", id="refresh-status", disabled=True, className="button"
                     ),
                     html.Button("Close web UI", id="close-gui", className="button"),
                 ],
@@ -956,7 +956,7 @@ def create_app(controller=None, *, serial=None):
     buttons = (
         "connect",
         "disconnect",
-        "refresh-state",
+        "refresh-status",
         "home",
         "move",
         "stop",
@@ -1011,7 +1011,8 @@ def create_app(controller=None, *, serial=None):
                 or snapshot["status"].get("homing")
             ):
                 return (
-                    "Motion is active. Stop remains available on the main panel.",
+                    "Panel request declined during motion. "
+                    "Stop remains available on the main panel.",
                     None,
                     no_update,
                 )
@@ -1069,8 +1070,8 @@ def create_app(controller=None, *, serial=None):
                     message = "Closing web UI; waiting for the USB owner. Then close this tab."
             else:
                 command = (
-                    "load-settings"
-                    if name == "refresh-state"
+                    "refresh"
+                    if name == "refresh-status"
                     else "stop"
                     if name in {"settings-dialog-stop", "move-dialog-stop"}
                     else name
