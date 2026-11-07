@@ -1,5 +1,30 @@
 # Validation record
 
+## Continuous and held-repeat GUI jog: 6 November 2026, 18:13–18:24 CST
+
+The [held-jog bench record](bench/gui-jog-20261107-002109Z.md) verifies continuous
+jog and 0.05° held-repeat jog on serial **55551174**, firmware **2.0.1**. Both modes
+passed pointer release, focus moving to another control, navigation away, and
+explicit Stop. Finite jogs finished their current step after normal release/focus
+loss; no native jog packet followed the recorded release. Stop interrupted the
+second finite step and confirmed stopped state before explicit reconnect.
+
+Two fixes were verified: release is checked again after the between-step position
+query, and leaving a held button releases its lease while the active control stays
+focusable. **287 Python tests and one JavaScript event test passed**, plus Ruff
+lint/format and JavaScript syntax checks. Both raw journals reassemble into valid
+APT frames with no partial tail; neither bench guard fired. The final normal GUI
+is at zero, homed, enabled and idle, with all five original raw settings groups
+restored exactly. All communication used our WinUSB/APT commands, without SDK use
+or EEPROM writes.
+
+Focus changes within the page and navigation away were demonstrated. Ordinary OS
+window switching was not reproduced. The exploratory capture also contains an
+explicit Home, whose trace reached −1.778562°; the travel guard excludes Home.
+These controller-count observations do not establish independent angular accuracy,
+mechanical stop timing, fault recovery under lost USB communication, or endurance.
+Earlier records below retain their historical coverage and test counts.
+
 ## Migrated GUI actual-mount acceptance: 6 November 2026, 17:08–17:24 CST
 
 The [migration bench record](bench/gui-migration-20261106-231335Z.md) verifies small

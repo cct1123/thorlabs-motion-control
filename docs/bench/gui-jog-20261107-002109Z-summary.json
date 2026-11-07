@@ -1,0 +1,1789 @@
+{
+  "serial": "55551174",
+  "communication": "our WinUSB/PyUSB/libusb/APT only",
+  "sessions": [
+    {
+      "name": "gui-jog-20261107-001256Z",
+      "source_hashes": {
+        "src\\k10cr2\\cli.py": "cc91d03604194e247a563fd5d7a47bc06fd17157e5e36df32355cfa2431c695c",
+        "src\\k10cr2\\controller.py": "f1a1d1b76450e004734350a59667db290181cca48c8e36239385f349f0302189",
+        "src\\k10cr2\\gui.py": "80b9b224b1e3e5ee18cc127468e6145de3526fcdacadc48a4a6d52543e9606fd",
+        "src\\k10cr2\\gui_state.py": "8b64673e6cbed0e71a29578d5be34e75d89d52b805a284d784939113b3875f41",
+        "src\\k10cr2\\gui_view.py": "f13e1246ebfc98256985ff64aff9f21e3f8c4e2e662afd34ea712c20d391dcd6",
+        "src\\k10cr2\\protocol.py": "622f02321ee07913a9c00c71ac6014415e3a970e9d1e80be4d4a90cb4e8dbec1",
+        "src\\k10cr2\\settings.py": "5ec2c1d76967ae74b4309a10404405a259d56a1e2d8053f74c2c7fafc04efd51",
+        "src\\k10cr2\\transport.py": "7cd62fe985a153b7cd5b2859373a5e50bc7a106cf7d6cc65cde512667d265fe5",
+        "src\\k10cr2\\__init__.py": "56f1e09e89ca1f777096dd8f327c9b518847647fe8231da995f2a8ef94d7fe59",
+        "src\\k10cr2\\__main__.py": "935a1c1166b0c1ea35a82256345000bf2c73ded718d77773bc27a71ecce28f7d",
+        "src\\k10cr2\\assets\\dialogs.js": "d006b733a0689b66590f015c510bc2fbdf368007c22f42ab6da3a179839a4ba4",
+        "src\\k10cr2\\assets\\hold.js": "3be3f8f2aa4d92d08044d5ee81622301eea80cc0641e58c091d47003399beb2c",
+        "src\\k10cr2\\assets\\rotation.css": "ffd6b3613fe13874b45ae2f38b60b7a0cd4485c047e7e56a958ad242ffb8eec9",
+        "tools\\bench\\record_gui.py": "87c518af06030608a4a0cfae0013b4e1d89c5a6bc7e74cfa61e2db8c58fb1aa5"
+      },
+      "guards": {
+        "counted_degrees": [
+          -1.0,
+          1.0
+        ],
+        "manual_seconds": 4.0
+      },
+      "guard_events": [],
+      "tx_counts": {
+        "0005": 2,
+        "0429": 1003,
+        "0411": 1001,
+        "0414": 21,
+        "0417": 9,
+        "043B": 3,
+        "0441": 1,
+        "04B7": 1,
+        "0413": 13,
+        "0416": 1,
+        "043A": 1,
+        "0453": 5,
+        "0465": 5,
+        "0443": 1
+      },
+      "rx_counts": {
+        "0006": 2,
+        "042A": 1003,
+        "0412": 1001,
+        "0415": 21,
+        "0418": 9,
+        "043C": 3,
+        "0442": 1,
+        "04B8": 1,
+        "0466": 5,
+        "0464": 5,
+        "0444": 1
+      },
+      "counted_range_degrees": [
+        -1.77856201171875,
+        0.42366943359375
+      ],
+      "all_rx_frames_valid": true,
+      "partial_rx_tail": false,
+      "clean_shutdown": true,
+      "forbidden_modules": [],
+      "operations": [
+        {
+          "command": "connect",
+          "utc": "2026-11-07T00:13:12.342+00:00",
+          "start_s": 15.86,
+          "journal_start_line": 4,
+          "journal_end_line": 38,
+          "end_s": 16.094,
+          "duration_s": 0.234,
+          "start_position": null,
+          "end_position": {
+            "counts": 0,
+            "degrees": 0.0
+          },
+          "jog_mode": null,
+          "status": {
+            "raw_bits": 2147484672,
+            "moving": false,
+            "homing": false,
+            "homed": true,
+            "enabled": true,
+            "motion_error": false
+          },
+          "error": "",
+          "recovery": false,
+          "unknown": false,
+          "message": "connect complete.",
+          "tx_counts": {
+            "0005": 2,
+            "0429": 1,
+            "0411": 1,
+            "0414": 1,
+            "0417": 1,
+            "043B": 1,
+            "0441": 1,
+            "04B7": 1
+          },
+          "rx_counts": {
+            "0006": 2,
+            "042A": 1,
+            "0412": 1,
+            "0415": 1,
+            "0418": 1,
+            "043C": 1,
+            "0442": 1,
+            "04B8": 1
+          },
+          "releases": [],
+          "stop_requests_s": []
+        },
+        {
+          "command": "configure",
+          "utc": "2026-11-07T00:13:45.888+00:00",
+          "start_s": 49.406,
+          "journal_start_line": 507,
+          "journal_end_line": 531,
+          "end_s": 49.453,
+          "duration_s": 0.047,
+          "start_position": {
+            "counts": 0,
+            "degrees": 0.0
+          },
+          "end_position": {
+            "counts": 0,
+            "degrees": 0.0
+          },
+          "jog_mode": 2,
+          "status": {
+            "raw_bits": 2147484672,
+            "moving": false,
+            "homing": false,
+            "homed": true,
+            "enabled": true,
+            "motion_error": false
+          },
+          "error": "",
+          "recovery": false,
+          "unknown": false,
+          "message": "configure complete.",
+          "tx_counts": {
+            "0429": 1,
+            "0414": 2,
+            "0417": 2,
+            "043B": 2,
+            "0413": 1,
+            "0416": 1,
+            "043A": 1
+          },
+          "rx_counts": {
+            "042A": 1,
+            "0415": 2,
+            "0418": 2,
+            "043C": 2
+          },
+          "releases": [],
+          "stop_requests_s": []
+        },
+        {
+          "command": "jog-forward",
+          "utc": "2026-11-07T00:13:57.103+00:00",
+          "start_s": 60.625,
+          "journal_start_line": 694,
+          "journal_end_line": 857,
+          "end_s": 61.672,
+          "duration_s": 1.047,
+          "start_position": {
+            "counts": 0,
+            "degrees": 0.0
+          },
+          "end_position": {
+            "counts": 24545,
+            "degrees": 0.17977294921875
+          },
+          "jog_mode": 1,
+          "status": {
+            "raw_bits": 2147484672,
+            "moving": false,
+            "homing": false,
+            "homed": true,
+            "enabled": true,
+            "motion_error": false
+          },
+          "error": "",
+          "recovery": false,
+          "unknown": false,
+          "message": "jog-forward complete.",
+          "tx_counts": {
+            "0429": 19,
+            "0417": 1,
+            "0414": 3,
+            "0413": 2,
+            "0411": 19,
+            "0453": 1,
+            "0465": 1
+          },
+          "rx_counts": {
+            "042A": 19,
+            "0418": 1,
+            "0415": 3,
+            "0412": 19,
+            "0466": 1,
+            "0464": 1
+          },
+          "releases": [
+            {
+              "elapsed_s": 61.656,
+              "reason": "pointer-up"
+            }
+          ],
+          "stop_requests_s": [],
+          "native_jogs_after_release": 0,
+          "profile_writes": [
+            {
+              "index": 703,
+              "elapsed_s": 60.641,
+              "id": "0413",
+              "raw": "13 04 0e 00 d0 01 01 00 00 00 00 00 de 05 00 00 de 5d 16 00"
+            },
+            {
+              "index": 851,
+              "elapsed_s": 61.672,
+              "id": "0413",
+              "raw": "13 04 0e 00 d0 01 01 00 00 00 00 00 ef 02 00 00 ef 2e 0b 00"
+            }
+          ],
+          "stop_packets_s": [
+            61.656
+          ],
+          "stopped_frames_s": [
+            61.656
+          ],
+          "last_velocity_readback": {
+            "channel": 1,
+            "minimum": 0,
+            "acceleration": 751,
+            "maximum": 732911
+          },
+          "temporary_profile_restored": true
+        },
+        {
+          "command": "jog-reverse",
+          "utc": "2026-11-07T00:14:35.731+00:00",
+          "start_s": 99.25,
+          "journal_start_line": 1375,
+          "journal_end_line": 1780,
+          "end_s": 102.297,
+          "duration_s": 3.047,
+          "start_position": {
+            "counts": 24545,
+            "degrees": 0.17977294921875
+          },
+          "end_position": {
+            "counts": -48686,
+            "degrees": -0.3565869140625
+          },
+          "jog_mode": 1,
+          "status": {
+            "raw_bits": 2147484672,
+            "moving": false,
+            "homing": false,
+            "homed": true,
+            "enabled": true,
+            "motion_error": false
+          },
+          "error": "",
+          "recovery": false,
+          "unknown": false,
+          "message": "jog-reverse complete.",
+          "tx_counts": {
+            "0429": 53,
+            "0417": 1,
+            "0414": 3,
+            "0413": 2,
+            "0411": 53,
+            "0453": 1,
+            "0465": 1
+          },
+          "rx_counts": {
+            "042A": 53,
+            "0418": 1,
+            "0415": 3,
+            "0412": 53,
+            "0466": 1,
+            "0464": 1
+          },
+          "releases": [
+            {
+              "elapsed_s": 102.266,
+              "reason": "key-up"
+            }
+          ],
+          "stop_requests_s": [],
+          "native_jogs_after_release": 0,
+          "profile_writes": [
+            {
+              "index": 1384,
+              "elapsed_s": 99.266,
+              "id": "0413",
+              "raw": "13 04 0e 00 d0 01 01 00 00 00 00 00 de 05 00 00 de 5d 16 00"
+            },
+            {
+              "index": 1774,
+              "elapsed_s": 102.281,
+              "id": "0413",
+              "raw": "13 04 0e 00 d0 01 01 00 00 00 00 00 ef 02 00 00 ef 2e 0b 00"
+            }
+          ],
+          "stop_packets_s": [
+            102.281
+          ],
+          "stopped_frames_s": [
+            102.281
+          ],
+          "last_velocity_readback": {
+            "channel": 1,
+            "minimum": 0,
+            "acceleration": 751,
+            "maximum": 732911
+          },
+          "temporary_profile_restored": true
+        },
+        {
+          "command": "jog-forward",
+          "utc": "2026-11-07T00:15:55.856+00:00",
+          "start_s": 179.375,
+          "journal_start_line": 2860,
+          "journal_end_line": 3262,
+          "end_s": 182.469,
+          "duration_s": 3.094,
+          "start_position": {
+            "counts": -48686,
+            "degrees": -0.3565869140625
+          },
+          "end_position": {
+            "counts": 31509,
+            "degrees": 0.23077880859375
+          },
+          "jog_mode": 1,
+          "status": {
+            "raw_bits": 2147484672,
+            "moving": false,
+            "homing": false,
+            "homed": true,
+            "enabled": true,
+            "motion_error": false
+          },
+          "error": "",
+          "recovery": false,
+          "unknown": false,
+          "message": "jog-forward complete.",
+          "tx_counts": {
+            "0429": 54,
+            "0417": 1,
+            "0414": 3,
+            "0413": 2,
+            "0411": 54,
+            "0453": 1,
+            "0465": 1
+          },
+          "rx_counts": {
+            "042A": 54,
+            "0418": 1,
+            "0415": 3,
+            "0412": 54,
+            "0466": 1,
+            "0464": 1
+          },
+          "releases": [
+            {
+              "elapsed_s": 182.391,
+              "reason": "key-up"
+            }
+          ],
+          "stop_requests_s": [],
+          "native_jogs_after_release": 0,
+          "profile_writes": [
+            {
+              "index": 2868,
+              "elapsed_s": 179.391,
+              "id": "0413",
+              "raw": "13 04 0e 00 d0 01 01 00 00 00 00 00 de 05 00 00 de 5d 16 00"
+            },
+            {
+              "index": 3256,
+              "elapsed_s": 182.453,
+              "id": "0413",
+              "raw": "13 04 0e 00 d0 01 01 00 00 00 00 00 ef 02 00 00 ef 2e 0b 00"
+            }
+          ],
+          "stop_packets_s": [
+            182.453
+          ],
+          "stopped_frames_s": [
+            182.453
+          ],
+          "last_velocity_readback": {
+            "channel": 1,
+            "minimum": 0,
+            "acceleration": 751,
+            "maximum": 732911
+          },
+          "temporary_profile_restored": true
+        },
+        {
+          "command": "jog-reverse",
+          "utc": "2026-11-07T00:16:36.926+00:00",
+          "start_s": 220.453,
+          "journal_start_line": 3790,
+          "journal_end_line": 4135,
+          "end_s": 223.016,
+          "duration_s": 2.563,
+          "start_position": {
+            "counts": 31509,
+            "degrees": 0.23077880859375
+          },
+          "end_position": {
+            "counts": -30191,
+            "degrees": -0.22112548828125
+          },
+          "jog_mode": 1,
+          "status": {
+            "raw_bits": 2147484672,
+            "moving": false,
+            "homing": false,
+            "homed": true,
+            "enabled": true,
+            "motion_error": false
+          },
+          "error": "",
+          "recovery": false,
+          "unknown": false,
+          "message": "jog-reverse complete.",
+          "tx_counts": {
+            "0429": 45,
+            "0417": 1,
+            "0414": 3,
+            "0413": 2,
+            "0411": 45,
+            "0453": 1,
+            "0465": 1
+          },
+          "rx_counts": {
+            "042A": 45,
+            "0418": 1,
+            "0415": 3,
+            "0412": 45,
+            "0466": 1,
+            "0464": 1
+          },
+          "releases": [
+            {
+              "elapsed_s": 222.953,
+              "reason": "key-up"
+            }
+          ],
+          "stop_requests_s": [],
+          "native_jogs_after_release": 0,
+          "profile_writes": [
+            {
+              "index": 3799,
+              "elapsed_s": 220.469,
+              "id": "0413",
+              "raw": "13 04 0e 00 d0 01 01 00 00 00 00 00 de 05 00 00 de 5d 16 00"
+            },
+            {
+              "index": 4129,
+              "elapsed_s": 223.0,
+              "id": "0413",
+              "raw": "13 04 0e 00 d0 01 01 00 00 00 00 00 ef 02 00 00 ef 2e 0b 00"
+            }
+          ],
+          "stop_packets_s": [
+            223.0
+          ],
+          "stopped_frames_s": [
+            223.0
+          ],
+          "last_velocity_readback": {
+            "channel": 1,
+            "minimum": 0,
+            "acceleration": 751,
+            "maximum": 732911
+          },
+          "temporary_profile_restored": true
+        },
+        {
+          "command": "home",
+          "utc": "2026-11-07T00:17:53.454+00:00",
+          "start_s": 296.985,
+          "journal_start_line": 5171,
+          "journal_end_line": 5466,
+          "end_s": 299.5,
+          "duration_s": 2.515,
+          "start_position": {
+            "counts": -30191,
+            "degrees": -0.22112548828125
+          },
+          "end_position": {
+            "counts": 0,
+            "degrees": 0.0
+          },
+          "jog_mode": 1,
+          "status": {
+            "raw_bits": 2147484672,
+            "moving": false,
+            "homing": false,
+            "homed": true,
+            "enabled": true,
+            "motion_error": false
+          },
+          "error": "",
+          "recovery": false,
+          "unknown": false,
+          "message": "home complete.",
+          "tx_counts": {
+            "0429": 45,
+            "0411": 45,
+            "0443": 1
+          },
+          "rx_counts": {
+            "042A": 45,
+            "0412": 45,
+            "0444": 1
+          },
+          "releases": [],
+          "stop_requests_s": []
+        },
+        {
+          "command": "jog-forward",
+          "utc": "2026-11-07T00:18:58.021+00:00",
+          "start_s": 361.547,
+          "journal_start_line": 6347,
+          "journal_end_line": 6658,
+          "end_s": 363.813,
+          "duration_s": 2.266,
+          "start_position": {
+            "counts": 0,
+            "degrees": 0.0
+          },
+          "end_position": {
+            "counts": 57845,
+            "degrees": 0.42366943359375
+          },
+          "jog_mode": 1,
+          "status": {
+            "raw_bits": 2147484672,
+            "moving": false,
+            "homing": false,
+            "homed": true,
+            "enabled": true,
+            "motion_error": false
+          },
+          "error": "",
+          "recovery": false,
+          "unknown": false,
+          "message": "jog-forward complete.",
+          "tx_counts": {
+            "0429": 40,
+            "0417": 1,
+            "0414": 3,
+            "0413": 2,
+            "0411": 40,
+            "0453": 1,
+            "0465": 1
+          },
+          "rx_counts": {
+            "042A": 40,
+            "0418": 1,
+            "0415": 3,
+            "0412": 40,
+            "0466": 1,
+            "0464": 1
+          },
+          "releases": [
+            {
+              "elapsed_s": 363.766,
+              "reason": "key-up"
+            }
+          ],
+          "stop_requests_s": [],
+          "native_jogs_after_release": 0,
+          "profile_writes": [
+            {
+              "index": 6356,
+              "elapsed_s": 361.563,
+              "id": "0413",
+              "raw": "13 04 0e 00 d0 01 01 00 00 00 00 00 de 05 00 00 de 5d 16 00"
+            },
+            {
+              "index": 6652,
+              "elapsed_s": 363.797,
+              "id": "0413",
+              "raw": "13 04 0e 00 d0 01 01 00 00 00 00 00 ef 02 00 00 ef 2e 0b 00"
+            }
+          ],
+          "stop_packets_s": [
+            363.797
+          ],
+          "stopped_frames_s": [
+            363.797
+          ],
+          "last_velocity_readback": {
+            "channel": 1,
+            "minimum": 0,
+            "acceleration": 751,
+            "maximum": 732911
+          },
+          "temporary_profile_restored": true
+        },
+        {
+          "command": "jog-reverse",
+          "utc": "2026-11-07T00:19:56.133+00:00",
+          "start_s": 419.656,
+          "journal_start_line": 7443,
+          "journal_end_line": 7467,
+          "end_s": 419.688,
+          "duration_s": 0.032,
+          "start_position": {
+            "counts": 57845,
+            "degrees": 0.42366943359375
+          },
+          "end_position": {
+            "counts": 57845,
+            "degrees": 0.42366943359375
+          },
+          "jog_mode": 1,
+          "status": {
+            "raw_bits": 2147484672,
+            "moving": false,
+            "homing": false,
+            "homed": true,
+            "enabled": true,
+            "motion_error": false
+          },
+          "error": "",
+          "recovery": false,
+          "unknown": false,
+          "message": "jog-reverse complete.",
+          "tx_counts": {
+            "0429": 1,
+            "0417": 1,
+            "0414": 3,
+            "0413": 2,
+            "0411": 1
+          },
+          "rx_counts": {
+            "042A": 1,
+            "0418": 1,
+            "0415": 3,
+            "0412": 1
+          },
+          "releases": [
+            {
+              "elapsed_s": 419.672,
+              "reason": "focus-out"
+            }
+          ],
+          "stop_requests_s": [],
+          "native_jogs_after_release": 0,
+          "profile_writes": [
+            {
+              "index": 7452,
+              "elapsed_s": 419.672,
+              "id": "0413",
+              "raw": "13 04 0e 00 d0 01 01 00 00 00 00 00 de 05 00 00 de 5d 16 00"
+            },
+            {
+              "index": 7461,
+              "elapsed_s": 419.672,
+              "id": "0413",
+              "raw": "13 04 0e 00 d0 01 01 00 00 00 00 00 ef 02 00 00 ef 2e 0b 00"
+            }
+          ],
+          "stop_packets_s": [],
+          "stopped_frames_s": [],
+          "last_velocity_readback": {
+            "channel": 1,
+            "minimum": 0,
+            "acceleration": 751,
+            "maximum": 732911
+          },
+          "temporary_profile_restored": true
+        },
+        {
+          "command": "disconnect",
+          "utc": "2026-11-07T00:20:55.035+00:00",
+          "start_s": 478.563,
+          "journal_start_line": 8299,
+          "journal_end_line": 8303,
+          "end_s": 478.563,
+          "duration_s": 0.0,
+          "start_position": {
+            "counts": 57845,
+            "degrees": 0.42366943359375
+          },
+          "end_position": null,
+          "jog_mode": 1,
+          "status": {},
+          "error": "",
+          "recovery": false,
+          "unknown": false,
+          "message": "disconnect complete.",
+          "tx_counts": {
+            "0429": 1
+          },
+          "rx_counts": {
+            "042A": 1
+          },
+          "releases": [],
+          "stop_requests_s": []
+        }
+      ]
+    },
+    {
+      "name": "gui-jog-20261107-002109Z",
+      "source_hashes": {
+        "src\\k10cr2\\cli.py": "cc91d03604194e247a563fd5d7a47bc06fd17157e5e36df32355cfa2431c695c",
+        "src\\k10cr2\\controller.py": "f1a1d1b76450e004734350a59667db290181cca48c8e36239385f349f0302189",
+        "src\\k10cr2\\gui.py": "80b9b224b1e3e5ee18cc127468e6145de3526fcdacadc48a4a6d52543e9606fd",
+        "src\\k10cr2\\gui_state.py": "8b64673e6cbed0e71a29578d5be34e75d89d52b805a284d784939113b3875f41",
+        "src\\k10cr2\\gui_view.py": "ea3783dff8bf6e114d9b6d102cad5b0ec355d4fa0154b1185bf485db604949e1",
+        "src\\k10cr2\\protocol.py": "622f02321ee07913a9c00c71ac6014415e3a970e9d1e80be4d4a90cb4e8dbec1",
+        "src\\k10cr2\\settings.py": "5ec2c1d76967ae74b4309a10404405a259d56a1e2d8053f74c2c7fafc04efd51",
+        "src\\k10cr2\\transport.py": "7cd62fe985a153b7cd5b2859373a5e50bc7a106cf7d6cc65cde512667d265fe5",
+        "src\\k10cr2\\__init__.py": "56f1e09e89ca1f777096dd8f327c9b518847647fe8231da995f2a8ef94d7fe59",
+        "src\\k10cr2\\__main__.py": "935a1c1166b0c1ea35a82256345000bf2c73ded718d77773bc27a71ecce28f7d",
+        "src\\k10cr2\\assets\\dialogs.js": "d006b733a0689b66590f015c510bc2fbdf368007c22f42ab6da3a179839a4ba4",
+        "src\\k10cr2\\assets\\hold.js": "7e1e628864e2c673cb6c2a1a28e496a8ab3bb2a00dadc7709a3b147feac9071b",
+        "src\\k10cr2\\assets\\rotation.css": "ffd6b3613fe13874b45ae2f38b60b7a0cd4485c047e7e56a958ad242ffb8eec9",
+        "tools\\bench\\record_gui.py": "87c518af06030608a4a0cfae0013b4e1d89c5a6bc7e74cfa61e2db8c58fb1aa5"
+      },
+      "guards": {
+        "counted_degrees": [
+          -1.0,
+          1.0
+        ],
+        "manual_seconds": 4.0
+      },
+      "guard_events": [],
+      "tx_counts": {
+        "0005": 4,
+        "0429": 452,
+        "0411": 454,
+        "0414": 18,
+        "0417": 16,
+        "043B": 3,
+        "0441": 3,
+        "04B7": 3,
+        "0413": 10,
+        "0453": 6,
+        "0465": 7,
+        "0416": 2,
+        "046A": 9
+      },
+      "rx_counts": {
+        "0006": 4,
+        "042A": 452,
+        "0412": 454,
+        "0415": 18,
+        "0418": 16,
+        "043C": 3,
+        "0442": 3,
+        "04B8": 3,
+        "0466": 7,
+        "0464": 15
+      },
+      "counted_range_degrees": [
+        0.0,
+        0.42366943359375
+      ],
+      "all_rx_frames_valid": true,
+      "partial_rx_tail": false,
+      "clean_shutdown": true,
+      "forbidden_modules": [],
+      "operations": [
+        {
+          "command": "connect",
+          "utc": "2026-11-07T00:21:21.907+00:00",
+          "start_s": 12.735,
+          "journal_start_line": 4,
+          "journal_end_line": 38,
+          "end_s": 12.953,
+          "duration_s": 0.218,
+          "start_position": null,
+          "end_position": {
+            "counts": 57845,
+            "degrees": 0.42366943359375
+          },
+          "jog_mode": null,
+          "status": {
+            "raw_bits": 2147484672,
+            "moving": false,
+            "homing": false,
+            "homed": true,
+            "enabled": true,
+            "motion_error": false
+          },
+          "error": "",
+          "recovery": false,
+          "unknown": false,
+          "message": "connect complete.",
+          "tx_counts": {
+            "0005": 2,
+            "0429": 1,
+            "0411": 1,
+            "0414": 1,
+            "0417": 1,
+            "043B": 1,
+            "0441": 1,
+            "04B7": 1
+          },
+          "rx_counts": {
+            "0006": 2,
+            "042A": 1,
+            "0412": 1,
+            "0415": 1,
+            "0418": 1,
+            "043C": 1,
+            "0442": 1,
+            "04B8": 1
+          },
+          "releases": [],
+          "stop_requests_s": []
+        },
+        {
+          "command": "jog-reverse",
+          "utc": "2026-11-07T00:21:33.479+00:00",
+          "start_s": 24.297,
+          "journal_start_line": 199,
+          "journal_end_line": 457,
+          "end_s": 26.157,
+          "duration_s": 1.86,
+          "start_position": {
+            "counts": 57845,
+            "degrees": 0.42366943359375
+          },
+          "end_position": {
+            "counts": 14636,
+            "degrees": 0.107197265625
+          },
+          "jog_mode": 1,
+          "status": {
+            "raw_bits": 2147484672,
+            "moving": false,
+            "homing": false,
+            "homed": true,
+            "enabled": true,
+            "motion_error": false
+          },
+          "error": "",
+          "recovery": false,
+          "unknown": false,
+          "message": "jog-reverse complete.",
+          "tx_counts": {
+            "0429": 33,
+            "0417": 1,
+            "0414": 3,
+            "0413": 2,
+            "0411": 33,
+            "0453": 1,
+            "0465": 1
+          },
+          "rx_counts": {
+            "042A": 33,
+            "0418": 1,
+            "0415": 3,
+            "0412": 33,
+            "0466": 1,
+            "0464": 1
+          },
+          "releases": [
+            {
+              "elapsed_s": 26.11,
+              "reason": "key-up"
+            }
+          ],
+          "stop_requests_s": [],
+          "native_jogs_after_release": 0,
+          "profile_writes": [
+            {
+              "index": 208,
+              "elapsed_s": 24.313,
+              "id": "0413",
+              "raw": "13 04 0e 00 d0 01 01 00 00 00 00 00 de 05 00 00 de 5d 16 00"
+            },
+            {
+              "index": 451,
+              "elapsed_s": 26.141,
+              "id": "0413",
+              "raw": "13 04 0e 00 d0 01 01 00 00 00 00 00 ef 02 00 00 ef 2e 0b 00"
+            }
+          ],
+          "stop_packets_s": [
+            26.141
+          ],
+          "stopped_frames_s": [
+            26.141
+          ],
+          "last_velocity_readback": {
+            "channel": 1,
+            "minimum": 0,
+            "acceleration": 751,
+            "maximum": 732911
+          },
+          "temporary_profile_restored": true
+        },
+        {
+          "command": "jog-reverse",
+          "utc": "2026-11-07T00:21:59.220+00:00",
+          "start_s": 50.047,
+          "journal_start_line": 785,
+          "journal_end_line": 832,
+          "end_s": 50.203,
+          "duration_s": 0.156,
+          "start_position": {
+            "counts": 14636,
+            "degrees": 0.107197265625
+          },
+          "end_position": {
+            "counts": 13713,
+            "degrees": 0.10043701171875
+          },
+          "jog_mode": 1,
+          "status": {
+            "raw_bits": 2147484672,
+            "moving": false,
+            "homing": false,
+            "homed": true,
+            "enabled": true,
+            "motion_error": false
+          },
+          "error": "",
+          "recovery": false,
+          "unknown": false,
+          "message": "jog-reverse complete.",
+          "tx_counts": {
+            "0429": 4,
+            "0417": 1,
+            "0414": 3,
+            "0413": 2,
+            "0411": 4,
+            "0453": 1,
+            "0465": 1
+          },
+          "rx_counts": {
+            "042A": 4,
+            "0418": 1,
+            "0415": 3,
+            "0412": 4,
+            "0466": 1,
+            "0464": 1
+          },
+          "releases": [
+            {
+              "elapsed_s": 50.141,
+              "reason": "focus-out"
+            }
+          ],
+          "stop_requests_s": [],
+          "native_jogs_after_release": 0,
+          "profile_writes": [
+            {
+              "index": 794,
+              "elapsed_s": 50.047,
+              "id": "0413",
+              "raw": "13 04 0e 00 d0 01 01 00 00 00 00 00 de 05 00 00 de 5d 16 00"
+            },
+            {
+              "index": 826,
+              "elapsed_s": 50.188,
+              "id": "0413",
+              "raw": "13 04 0e 00 d0 01 01 00 00 00 00 00 ef 02 00 00 ef 2e 0b 00"
+            }
+          ],
+          "stop_packets_s": [
+            50.188
+          ],
+          "stopped_frames_s": [
+            50.188
+          ],
+          "last_velocity_readback": {
+            "channel": 1,
+            "minimum": 0,
+            "acceleration": 751,
+            "maximum": 732911
+          },
+          "temporary_profile_restored": true,
+          "case": "continuous_navigation_focus_loss"
+        },
+        {
+          "command": "jog-forward",
+          "utc": "2026-11-07T00:22:15.718+00:00",
+          "start_s": 66.547,
+          "journal_start_line": 1048,
+          "journal_end_line": 1114,
+          "end_s": 66.766,
+          "duration_s": 0.219,
+          "start_position": {
+            "counts": 13713,
+            "degrees": 0.10043701171875
+          },
+          "end_position": {
+            "counts": 15808,
+            "degrees": 0.11578125
+          },
+          "jog_mode": 1,
+          "status": {
+            "raw_bits": 2147484672,
+            "moving": false,
+            "homing": false,
+            "homed": true,
+            "enabled": true,
+            "motion_error": false
+          },
+          "error": "",
+          "recovery": false,
+          "unknown": false,
+          "message": "Stop confirmed by controller.",
+          "tx_counts": {
+            "0429": 6,
+            "0417": 1,
+            "0414": 3,
+            "0413": 2,
+            "0411": 6,
+            "0453": 1,
+            "0465": 2
+          },
+          "rx_counts": {
+            "042A": 6,
+            "0418": 1,
+            "0415": 3,
+            "0412": 6,
+            "0466": 2,
+            "0464": 1
+          },
+          "releases": [
+            {
+              "elapsed_s": 66.735,
+              "reason": "focus-out"
+            }
+          ],
+          "stop_requests_s": [
+            66.735
+          ],
+          "native_jogs_after_release": 0,
+          "profile_writes": [
+            {
+              "index": 1057,
+              "elapsed_s": 66.547,
+              "id": "0413",
+              "raw": "13 04 0e 00 d0 01 01 00 00 00 00 00 de 05 00 00 de 5d 16 00"
+            },
+            {
+              "index": 1098,
+              "elapsed_s": 66.75,
+              "id": "0413",
+              "raw": "13 04 0e 00 d0 01 01 00 00 00 00 00 ef 02 00 00 ef 2e 0b 00"
+            }
+          ],
+          "stop_packets_s": [
+            66.735,
+            66.766
+          ],
+          "stopped_frames_s": [
+            66.75,
+            66.766
+          ],
+          "last_velocity_readback": {
+            "channel": 1,
+            "minimum": 0,
+            "acceleration": 751,
+            "maximum": 732911
+          },
+          "temporary_profile_restored": true,
+          "case": "continuous_stop"
+        },
+        {
+          "command": "jog-forward",
+          "utc": "2026-11-07T00:22:33.434+00:00",
+          "start_s": 84.25,
+          "journal_start_line": 1360,
+          "journal_end_line": 1494,
+          "end_s": 85.11,
+          "duration_s": 0.86,
+          "start_position": {
+            "counts": 15808,
+            "degrees": 0.11578125
+          },
+          "end_position": {
+            "counts": 35359,
+            "degrees": 0.25897705078125
+          },
+          "jog_mode": 1,
+          "status": {
+            "raw_bits": 2147484672,
+            "moving": false,
+            "homing": false,
+            "homed": true,
+            "enabled": true,
+            "motion_error": false
+          },
+          "error": "",
+          "recovery": false,
+          "unknown": false,
+          "message": "jog-forward complete.",
+          "tx_counts": {
+            "0429": 16,
+            "0417": 1,
+            "0414": 3,
+            "0413": 2,
+            "0411": 16,
+            "0453": 1,
+            "0465": 1
+          },
+          "rx_counts": {
+            "042A": 16,
+            "0418": 1,
+            "0415": 3,
+            "0412": 16,
+            "0466": 1,
+            "0464": 1
+          },
+          "releases": [
+            {
+              "elapsed_s": 85.078,
+              "reason": "pointer-up"
+            }
+          ],
+          "stop_requests_s": [],
+          "native_jogs_after_release": 0,
+          "profile_writes": [
+            {
+              "index": 1369,
+              "elapsed_s": 84.266,
+              "id": "0413",
+              "raw": "13 04 0e 00 d0 01 01 00 00 00 00 00 de 05 00 00 de 5d 16 00"
+            },
+            {
+              "index": 1488,
+              "elapsed_s": 85.11,
+              "id": "0413",
+              "raw": "13 04 0e 00 d0 01 01 00 00 00 00 00 ef 02 00 00 ef 2e 0b 00"
+            }
+          ],
+          "stop_packets_s": [
+            85.094
+          ],
+          "stopped_frames_s": [
+            85.094
+          ],
+          "last_velocity_readback": {
+            "channel": 1,
+            "minimum": 0,
+            "acceleration": 751,
+            "maximum": 732911
+          },
+          "temporary_profile_restored": true,
+          "case": "continuous_pointer_release"
+        },
+        {
+          "command": "configure",
+          "utc": "2026-11-07T00:22:42.856+00:00",
+          "start_s": 93.672,
+          "journal_start_line": 1610,
+          "journal_end_line": 1620,
+          "end_s": 93.688,
+          "duration_s": 0.016,
+          "start_position": {
+            "counts": 35359,
+            "degrees": 0.25897705078125
+          },
+          "end_position": {
+            "counts": 35359,
+            "degrees": 0.25897705078125
+          },
+          "jog_mode": 1,
+          "status": {
+            "raw_bits": 2147484672,
+            "moving": false,
+            "homing": false,
+            "homed": true,
+            "enabled": true,
+            "motion_error": false
+          },
+          "error": "",
+          "recovery": false,
+          "unknown": false,
+          "message": "configure complete.",
+          "tx_counts": {
+            "0429": 1,
+            "0417": 2,
+            "0416": 1
+          },
+          "rx_counts": {
+            "042A": 1,
+            "0418": 2
+          },
+          "releases": [],
+          "stop_requests_s": []
+        },
+        {
+          "command": "jog-reverse",
+          "utc": "2026-11-07T00:22:45.265+00:00",
+          "start_s": 96.094,
+          "journal_start_line": 1658,
+          "journal_end_line": 1893,
+          "end_s": 97.657,
+          "duration_s": 1.563,
+          "start_position": {
+            "counts": 35359,
+            "degrees": 0.25897705078125
+          },
+          "end_position": {
+            "counts": 14878,
+            "degrees": 0.1089697265625
+          },
+          "jog_mode": 2,
+          "status": {
+            "raw_bits": 2147484672,
+            "moving": false,
+            "homing": false,
+            "homed": true,
+            "enabled": true,
+            "motion_error": false
+          },
+          "error": "",
+          "recovery": false,
+          "unknown": false,
+          "message": "jog-reverse complete.",
+          "tx_counts": {
+            "0429": 30,
+            "0417": 1,
+            "0411": 32,
+            "046A": 3
+          },
+          "rx_counts": {
+            "042A": 30,
+            "0418": 1,
+            "0412": 32,
+            "0464": 3
+          },
+          "releases": [
+            {
+              "elapsed_s": 97.5,
+              "reason": "pointer-up"
+            }
+          ],
+          "stop_requests_s": [],
+          "native_jogs_after_release": 0,
+          "profile_writes": [],
+          "stop_packets_s": [],
+          "stopped_frames_s": [],
+          "case": "held_repeat_pointer_release"
+        },
+        {
+          "command": "jog-forward",
+          "utc": "2026-11-07T00:23:03.258+00:00",
+          "start_s": 114.078,
+          "journal_start_line": 2123,
+          "journal_end_line": 2269,
+          "end_s": 115.047,
+          "duration_s": 0.969,
+          "start_position": {
+            "counts": 14878,
+            "degrees": 0.1089697265625
+          },
+          "end_position": {
+            "counts": 28532,
+            "degrees": 0.208974609375
+          },
+          "jog_mode": 2,
+          "status": {
+            "raw_bits": 2147484672,
+            "moving": false,
+            "homing": false,
+            "homed": true,
+            "enabled": true,
+            "motion_error": false
+          },
+          "error": "",
+          "recovery": false,
+          "unknown": false,
+          "message": "jog-forward complete.",
+          "tx_counts": {
+            "0429": 19,
+            "0417": 1,
+            "0411": 20,
+            "046A": 2
+          },
+          "rx_counts": {
+            "042A": 19,
+            "0418": 1,
+            "0412": 20,
+            "0464": 2
+          },
+          "releases": [
+            {
+              "elapsed_s": 115.032,
+              "reason": "focus-out"
+            }
+          ],
+          "stop_requests_s": [],
+          "native_jogs_after_release": 0,
+          "profile_writes": [],
+          "stop_packets_s": [],
+          "stopped_frames_s": [],
+          "case": "held_repeat_navigation_focus_loss"
+        },
+        {
+          "command": "jog-reverse",
+          "utc": "2026-11-07T00:23:16.019+00:00",
+          "start_s": 126.844,
+          "journal_start_line": 2415,
+          "journal_end_line": 2545,
+          "end_s": 127.641,
+          "duration_s": 0.797,
+          "start_position": {
+            "counts": 28532,
+            "degrees": 0.208974609375
+          },
+          "end_position": {
+            "counts": 16760,
+            "degrees": 0.12275390625
+          },
+          "jog_mode": 2,
+          "status": {
+            "raw_bits": 2147484672,
+            "moving": false,
+            "homing": false,
+            "homed": true,
+            "enabled": true,
+            "motion_error": false
+          },
+          "error": "MotionError: MotionCancelled: Stop requested; stop confirmed by controller. Close and explicitly reconnect before another motion.",
+          "recovery": true,
+          "unknown": false,
+          "message": "Operation failed; inspect Activity.",
+          "tx_counts": {
+            "0429": 16,
+            "0417": 1,
+            "0411": 17,
+            "046A": 2,
+            "0465": 1
+          },
+          "rx_counts": {
+            "042A": 16,
+            "0418": 1,
+            "0412": 17,
+            "0464": 2,
+            "0466": 1
+          },
+          "releases": [
+            {
+              "elapsed_s": 127.61,
+              "reason": "focus-out"
+            }
+          ],
+          "stop_requests_s": [
+            127.625
+          ],
+          "native_jogs_after_release": 0,
+          "profile_writes": [],
+          "stop_packets_s": [
+            127.625
+          ],
+          "stopped_frames_s": [
+            127.625
+          ],
+          "case": "held_repeat_stop"
+        },
+        {
+          "command": "disconnect",
+          "utc": "2026-11-07T00:23:26.510+00:00",
+          "start_s": 137.328,
+          "journal_start_line": 2548,
+          "journal_end_line": 2549,
+          "end_s": 137.328,
+          "duration_s": 0.0,
+          "start_position": {
+            "counts": 16760,
+            "degrees": 0.12275390625
+          },
+          "end_position": null,
+          "jog_mode": 2,
+          "status": {},
+          "error": "",
+          "recovery": false,
+          "unknown": false,
+          "message": "disconnect complete.",
+          "tx_counts": {},
+          "rx_counts": {},
+          "releases": [],
+          "stop_requests_s": []
+        },
+        {
+          "command": "connect",
+          "utc": "2026-11-07T00:23:26.724+00:00",
+          "start_s": 137.547,
+          "journal_start_line": 2552,
+          "journal_end_line": 2588,
+          "end_s": 137.657,
+          "duration_s": 0.11,
+          "start_position": null,
+          "end_position": {
+            "counts": 16760,
+            "degrees": 0.12275390625
+          },
+          "jog_mode": null,
+          "status": {
+            "raw_bits": 2147484672,
+            "moving": false,
+            "homing": false,
+            "homed": true,
+            "enabled": true,
+            "motion_error": false
+          },
+          "error": "",
+          "recovery": false,
+          "unknown": false,
+          "message": "connect complete.",
+          "tx_counts": {
+            "0005": 2,
+            "0429": 1,
+            "0411": 1,
+            "0414": 1,
+            "0417": 1,
+            "043B": 1,
+            "0441": 1,
+            "04B7": 1
+          },
+          "rx_counts": {
+            "0006": 2,
+            "042A": 1,
+            "0412": 1,
+            "0415": 1,
+            "0418": 1,
+            "043C": 1,
+            "0442": 1,
+            "04B8": 1
+          },
+          "releases": [],
+          "stop_requests_s": []
+        },
+        {
+          "command": "jog-forward",
+          "utc": "2026-11-07T00:23:40.243+00:00",
+          "start_s": 151.063,
+          "journal_start_line": 2775,
+          "journal_end_line": 2926,
+          "end_s": 152.032,
+          "duration_s": 0.969,
+          "start_position": {
+            "counts": 16760,
+            "degrees": 0.12275390625
+          },
+          "end_position": {
+            "counts": 30414,
+            "degrees": 0.2227587890625
+          },
+          "jog_mode": 2,
+          "status": {
+            "raw_bits": 2147484672,
+            "moving": false,
+            "homing": false,
+            "homed": true,
+            "enabled": true,
+            "motion_error": false
+          },
+          "error": "",
+          "recovery": false,
+          "unknown": false,
+          "message": "jog-forward complete.",
+          "tx_counts": {
+            "0429": 19,
+            "0417": 1,
+            "0411": 20,
+            "046A": 2
+          },
+          "rx_counts": {
+            "042A": 19,
+            "0418": 1,
+            "0412": 20,
+            "0464": 2
+          },
+          "releases": [
+            {
+              "elapsed_s": 151.907,
+              "reason": "focus-out"
+            }
+          ],
+          "stop_requests_s": [],
+          "native_jogs_after_release": 0,
+          "profile_writes": [],
+          "stop_packets_s": [],
+          "stopped_frames_s": [],
+          "case": "held_repeat_control_focus_loss"
+        },
+        {
+          "command": "configure",
+          "utc": "2026-11-07T00:23:53.429+00:00",
+          "start_s": 164.25,
+          "journal_start_line": 3100,
+          "journal_end_line": 3111,
+          "end_s": 164.266,
+          "duration_s": 0.016,
+          "start_position": {
+            "counts": 30414,
+            "degrees": 0.2227587890625
+          },
+          "end_position": {
+            "counts": 30414,
+            "degrees": 0.2227587890625
+          },
+          "jog_mode": 2,
+          "status": {
+            "raw_bits": 2147484672,
+            "moving": false,
+            "homing": false,
+            "homed": true,
+            "enabled": true,
+            "motion_error": false
+          },
+          "error": "",
+          "recovery": false,
+          "unknown": false,
+          "message": "configure complete.",
+          "tx_counts": {
+            "0429": 1,
+            "0417": 2,
+            "0416": 1
+          },
+          "rx_counts": {
+            "042A": 1,
+            "0418": 2
+          },
+          "releases": [],
+          "stop_requests_s": []
+        },
+        {
+          "command": "jog-reverse",
+          "utc": "2026-11-07T00:23:56.742+00:00",
+          "start_s": 167.563,
+          "journal_start_line": 3158,
+          "journal_end_line": 3216,
+          "end_s": 167.782,
+          "duration_s": 0.219,
+          "start_position": {
+            "counts": 30414,
+            "degrees": 0.2227587890625
+          },
+          "end_position": {
+            "counts": 28305,
+            "degrees": 0.20731201171875
+          },
+          "jog_mode": 1,
+          "status": {
+            "raw_bits": 2147484672,
+            "moving": false,
+            "homing": false,
+            "homed": true,
+            "enabled": true,
+            "motion_error": false
+          },
+          "error": "",
+          "recovery": false,
+          "unknown": false,
+          "message": "jog-reverse complete.",
+          "tx_counts": {
+            "0429": 5,
+            "0417": 1,
+            "0414": 3,
+            "0413": 2,
+            "0411": 5,
+            "0453": 1,
+            "0465": 1
+          },
+          "rx_counts": {
+            "042A": 5,
+            "0418": 1,
+            "0415": 3,
+            "0412": 5,
+            "0466": 1,
+            "0464": 1
+          },
+          "releases": [
+            {
+              "elapsed_s": 167.719,
+              "reason": "focus-out"
+            }
+          ],
+          "stop_requests_s": [],
+          "native_jogs_after_release": 0,
+          "profile_writes": [
+            {
+              "index": 3167,
+              "elapsed_s": 167.578,
+              "id": "0413",
+              "raw": "13 04 0e 00 d0 01 01 00 00 00 00 00 de 05 00 00 de 5d 16 00"
+            },
+            {
+              "index": 3210,
+              "elapsed_s": 167.782,
+              "id": "0413",
+              "raw": "13 04 0e 00 d0 01 01 00 00 00 00 00 ef 02 00 00 ef 2e 0b 00"
+            }
+          ],
+          "stop_packets_s": [
+            167.766
+          ],
+          "stopped_frames_s": [
+            167.766
+          ],
+          "last_velocity_readback": {
+            "channel": 1,
+            "minimum": 0,
+            "acceleration": 751,
+            "maximum": 732911
+          },
+          "temporary_profile_restored": true,
+          "case": "continuous_control_focus_loss"
+        },
+        {
+          "command": "move",
+          "utc": "2026-11-07T00:24:09.061+00:00",
+          "start_s": 179.875,
+          "journal_start_line": 3388,
+          "journal_end_line": 3681,
+          "end_s": 182.36,
+          "duration_s": 2.485,
+          "start_position": {
+            "counts": 28305,
+            "degrees": 0.20731201171875
+          },
+          "end_position": {
+            "counts": 0,
+            "degrees": 0.0
+          },
+          "jog_mode": 1,
+          "status": {
+            "raw_bits": 2147484672,
+            "moving": false,
+            "homing": false,
+            "homed": true,
+            "enabled": true,
+            "motion_error": false
+          },
+          "error": "",
+          "recovery": false,
+          "unknown": false,
+          "message": "move complete.",
+          "tx_counts": {
+            "0429": 44,
+            "0411": 44,
+            "0453": 1
+          },
+          "rx_counts": {
+            "042A": 44,
+            "0412": 44,
+            "0464": 1
+          },
+          "releases": [],
+          "stop_requests_s": []
+        },
+        {
+          "command": "load-settings",
+          "utc": "2026-11-07T00:24:13.829+00:00",
+          "start_s": 184.657,
+          "journal_start_line": 3712,
+          "journal_end_line": 3734,
+          "end_s": 184.688,
+          "duration_s": 0.031,
+          "start_position": {
+            "counts": 0,
+            "degrees": 0.0
+          },
+          "end_position": {
+            "counts": 0,
+            "degrees": 0.0
+          },
+          "jog_mode": 1,
+          "status": {
+            "raw_bits": 2147484672,
+            "moving": false,
+            "homing": false,
+            "homed": true,
+            "enabled": true,
+            "motion_error": false
+          },
+          "error": "",
+          "recovery": false,
+          "unknown": false,
+          "message": "load-settings complete.",
+          "tx_counts": {
+            "0429": 1,
+            "0411": 1,
+            "0414": 1,
+            "0417": 1,
+            "043B": 1,
+            "0441": 1,
+            "04B7": 1
+          },
+          "rx_counts": {
+            "042A": 1,
+            "0412": 1,
+            "0415": 1,
+            "0418": 1,
+            "043C": 1,
+            "0442": 1,
+            "04B8": 1
+          },
+          "releases": [],
+          "stop_requests_s": []
+        },
+        {
+          "command": "disconnect",
+          "utc": "2026-11-07T00:24:21.319+00:00",
+          "start_s": 192.141,
+          "journal_start_line": 3839,
+          "journal_end_line": 3842,
+          "end_s": 192.141,
+          "duration_s": 0.0,
+          "start_position": {
+            "counts": 0,
+            "degrees": 0.0
+          },
+          "end_position": null,
+          "jog_mode": 1,
+          "status": {},
+          "error": "",
+          "recovery": false,
+          "unknown": false,
+          "message": "disconnect complete.",
+          "tx_counts": {
+            "0429": 1
+          },
+          "rx_counts": {
+            "042A": 1
+          },
+          "releases": [],
+          "stop_requests_s": []
+        }
+      ]
+    }
+  ],
+  "exact_settings_restored": true,
+  "final_position": {
+    "counts": 0,
+    "degrees": 0.0
+  },
+  "final_status": {
+    "enabled": true,
+    "homed": true,
+    "homing": false,
+    "motion_error": false,
+    "moving": false,
+    "raw_bits": 2147484672
+  },
+  "offline_python_tests": 287,
+  "offline_javascript_tests": 1,
+  "final_source_hashes_match": true,
+  "restoration_tx_counts": {
+    "0005": 1,
+    "0429": 2,
+    "0411": 2,
+    "0414": 3,
+    "0417": 3,
+    "043B": 3,
+    "0441": 2,
+    "04B7": 2,
+    "0413": 1,
+    "0416": 1,
+    "043A": 1
+  },
+  "restoration_rx_frames_valid": true,
+  "limitations": [
+    "Controller counts only; no independent angular calibration or mechanical stop timing.",
+    "Focus change within the page and navigation away verified; ordinary OS window switching was not reproduced.",
+    "The exploratory session changed hold.js during testing; the stable retest session hashes match the final sources.",
+    "An explicit Home in the exploratory session reached -1.778562 degrees. The travel guard excludes Home.",
+    "No EEPROM retention, fault injection, USB-disconnect or endurance claim."
+  ]
+}

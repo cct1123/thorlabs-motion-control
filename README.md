@@ -52,7 +52,11 @@ small Fixed/Total/Equivalent moves, all three Equivalent directions, repeated-ph
 no-ops, Jog, Drive/release, Stop and all five settings readbacks on serial 55551174,
 firmware 2.0.1. Two defects were fixed and retested; original raw settings were
 restored exactly. The [earlier test](docs/bench/gui-controls-20261106-211627Z.md)
-also covers Home. Independent accuracy, full/multi-turn travel and fault scenarios
+also covers Home. The [held-jog acceptance record](docs/bench/gui-jog-20261107-002109Z.md)
+adds continuous jog and 0.05° held-repeat checks: pointer release, focus moving to
+another control, navigation away, and Stop. Release/focus races were fixed and
+retested; original raw settings were restored at zero. Ordinary OS window switching
+was not reproduced. Independent accuracy, full/multi-turn travel and fault scenarios
 remain unverified. Install the `gui` extra for GUI tests; core library/CLI use does
 not require Dash.
 

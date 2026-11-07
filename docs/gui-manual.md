@@ -23,13 +23,21 @@ an SDK startup profile or automatically homes, enables, configures, or moves a m
 | Settings | Moves/Jogs, Rotation, Stage/Axis, Advanced, Defaults. Reset/Close/×/Escape discard unapplied edits; device groups and session options have separate Apply actions. Scrollable form, fixed feedback/actions and keyboard focus containment | 17-24 |
 
 Held controls use pointer capture and support Space/Enter. Release, pointer cancel,
-hidden tab, blur and page unload end the browser lease. Heartbeats run every 200 ms;
+focus leaving the held button, hidden tab, window blur and page unload end the
+browser lease. The active control stays focusable during motion; the owner rejects
+additional starts while busy. Heartbeats run every 200 ms;
 the owner regards a lease as expired after 800 ms. Expired leases cannot be renewed.
 Release tokens are retained to reject a release-before-start race. This is software
 ownership protection, not a real-time safety interlock: an in-flight USB transfer or
 query can delay observation, and stop cleanup has its own deadline. Single-step jog
 finishes the already-requested finite step when released; it does not start another.
 Use Stop to interrupt that step.
+
+The [actual-mount held-jog record](bench/gui-jog-20261107-002109Z.md) verifies
+continuous and repeated finite jog release, focus moving to another control,
+navigation away, and Stop with small counted moves. It includes raw traffic and
+exact settings restoration. Native OS window switching was not reproduced; it is
+not included in that acceptance claim.
 
 Drive and continuous jog use an absolute finite boundary target instead of an
 unbounded velocity packet. This enforces the selected counted interval without
@@ -60,8 +68,8 @@ Hardware-button writes, EEPROM persistence, other modes/fault scenarios, physica
 profile calibration and the unavailable mappings are not established by that test.
 
 `Connect` reads velocity, jog, backlash, home and button groups before publishing a
-successful connection. `Refresh readbacks` (or the main Refresh button) reads them
-again, together with fresh status and counted position. Settings show a read time;
+successful connection. `Refresh readbacks` reloads all five groups; the main
+`Refresh status` button reads status and position only. Settings show a read time;
 position and status continue polling independently. A settings read failure during
 Connect closes the connection and reports the error for explicit retry.
 An edit requires a previous readback and a new read immediately before writing.

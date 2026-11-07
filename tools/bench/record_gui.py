@@ -59,9 +59,11 @@ class TrafficHandler(logging.Handler):
 
 
 class BenchOwner(GuiController):
-    def __init__(self, recorder):
+    def __init__(self, recorder, *, max_degrees=3, manual_seconds=2):
         super().__init__()
         self.recorder = recorder
+        self.max_degrees = max_degrees
+        self.manual_seconds = manual_seconds
         self.motion_started = None
         self.guard_fired = False
 
@@ -84,9 +86,13 @@ class BenchOwner(GuiController):
         manual_overdue = (
             command in MANUAL_COMMANDS
             and self.motion_started is not None
-            and time.monotonic() - self.motion_started > 2
+            and time.monotonic() - self.motion_started > self.manual_seconds
         )
-        outside = command in MOTION_COMMANDS and command != "home" and abs(position.degrees) > 3
+        outside = (
+            command in MOTION_COMMANDS
+            and command != "home"
+            and abs(position.degrees) > self.max_degrees
+        )
         if (manual_overdue or outside) and not self.guard_fired:
             self.guard_fired = True
             self.recorder.write(
@@ -99,14 +105,19 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--serial", required=True)
     parser.add_argument("--port", type=int, default=8050)
+    parser.add_argument("--label", choices=("gui-migration", "gui-jog"), default="gui-migration")
+    parser.add_argument("--max-degrees", type=float, default=3)
+    parser.add_argument("--manual-seconds", type=float, default=2)
     args = parser.parse_args()
     if len(args.serial) != 8 or not args.serial.isascii() or not args.serial.isdigit():
         parser.error("Serial must be eight ASCII digits")
     if not 1 <= args.port <= 65535:
         parser.error("Port must be 1–65535")
+    if not 0 < args.max_degrees <= 3 or not 0 < args.manual_seconds <= 5:
+        parser.error("Bench bounds require 0 < degrees <= 3 and 0 < seconds <= 5")
     stamp = datetime.now(UTC).strftime("%Y%m%d-%H%M%SZ")
-    recorder = Recorder(ROOT / "docs/bench" / f"gui-migration-{stamp}")
-    owner = BenchOwner(recorder)
+    recorder = Recorder(ROOT / "docs/bench" / f"{args.label}-{stamp}")
+    owner = BenchOwner(recorder, max_degrees=args.max_degrees, manual_seconds=args.manual_seconds)
     app = create_app(owner, serial=args.serial)
     server = LocalServer("127.0.0.1", args.port, app.server)
     app.server.config["GUI_SHUTDOWN"] = server.shutdown
@@ -147,7 +158,10 @@ def main():
         source_hashes={
             str(p.relative_to(ROOT)): hashlib.sha256(p.read_bytes()).hexdigest() for p in sources
         },
-        guards=dict(counted_degrees=[-3, 3], manual_seconds=2),
+        guards=dict(
+            counted_degrees=[-args.max_degrees, args.max_degrees],
+            manual_seconds=args.manual_seconds,
+        ),
     )
     print(
         json.dumps(dict(url=f"http://127.0.0.1:{args.port}", record=str(recorder.base))), flush=True

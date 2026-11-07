@@ -11,8 +11,16 @@ GUI's USB connection/server before starting another owner.
 Open the printed URL. Startup does not access USB; all connection, setting and
 motion actions come from the GUI. The script records timestamped GUI requests,
 worker boundaries, fresh readbacks, raw APT chunks and source hashes under
-`docs/bench/gui-migration-<UTC timestamp>`. It adds ±3° counted-travel and 2 s manual
-motion guards for small-move checks, recording any activation. They do not replace
+`docs/bench/gui-migration-<UTC timestamp>`. Defaults add ±3° counted-travel and 2 s
+manual-motion guards, recording any activation. Home is excluded from the travel
+guard. For small held-jog checks, the recorded session used:
+
+```powershell
+.venv/Scripts/python.exe -B tools/bench/record_gui.py --serial 55551174 --label gui-jog --max-degrees 1 --manual-seconds 4
+```
+
+Labels select the evidence filename only. Guard bounds must be positive and no
+greater than 3° / 5 s; metadata records the actual values. These guards do not replace
 apparatus safety measures or guarantee a stop when communication fails. Close the
 session through **Disconnect** and **Close web UI** after confirming idle state.
 
@@ -33,3 +41,12 @@ same actual unit before the test. It sends no motion, enable or EEPROM command
 and refuses to overwrite evidence files. Reconnect the normal GUI and compare
 all five groups afterward. These tools were exercised in the
 [migration acceptance record](../../docs/bench/gui-migration-20261106-231335Z.md).
+The [held-jog record](../../docs/bench/gui-jog-20261107-002109Z.md) includes pointer
+and focus release reasons, native repeated steps, explicit Stop and exact restoration.
+
+Offline checks (no USB access):
+
+```powershell
+.venv/Scripts/python.exe -B -m pytest -q -p no:cacheprovider
+node tests/hold.test.mjs
+```

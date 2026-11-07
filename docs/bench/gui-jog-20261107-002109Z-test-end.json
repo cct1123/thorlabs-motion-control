@@ -1,0 +1,183 @@
+{
+  "busy": null,
+  "closing": false,
+  "connected": true,
+  "error": "",
+  "events": [
+    {
+      "level": "info",
+      "message": "load-settings complete.",
+      "time": "2026-11-06T18:24:13-06:00"
+    },
+    {
+      "level": "info",
+      "message": "move complete.",
+      "time": "2026-11-06T18:24:11-06:00"
+    },
+    {
+      "level": "info",
+      "message": "jog-reverse complete.",
+      "time": "2026-11-06T18:23:56-06:00"
+    },
+    {
+      "level": "info",
+      "message": "configure complete.",
+      "time": "2026-11-06T18:23:53-06:00"
+    },
+    {
+      "level": "info",
+      "message": "jog-forward complete.",
+      "time": "2026-11-06T18:23:41-06:00"
+    },
+    {
+      "level": "info",
+      "message": "connect complete.",
+      "time": "2026-11-06T18:23:26-06:00"
+    },
+    {
+      "level": "info",
+      "message": "disconnect complete.",
+      "time": "2026-11-06T18:23:26-06:00"
+    },
+    {
+      "level": "error",
+      "message": "MotionError: MotionCancelled: Stop requested; stop confirmed by controller. Close and explicitly reconnect before another motion.",
+      "time": "2026-11-06T18:23:16-06:00"
+    },
+    {
+      "level": "info",
+      "message": "Stop requested",
+      "time": "2026-11-06T18:23:16-06:00"
+    },
+    {
+      "level": "info",
+      "message": "jog-forward complete.",
+      "time": "2026-11-06T18:23:04-06:00"
+    },
+    {
+      "level": "info",
+      "message": "jog-reverse complete.",
+      "time": "2026-11-06T18:22:46-06:00"
+    },
+    {
+      "level": "info",
+      "message": "configure complete.",
+      "time": "2026-11-06T18:22:42-06:00"
+    },
+    {
+      "level": "info",
+      "message": "jog-forward complete.",
+      "time": "2026-11-06T18:22:34-06:00"
+    },
+    {
+      "level": "info",
+      "message": "Stop confirmed by controller.",
+      "time": "2026-11-06T18:22:15-06:00"
+    },
+    {
+      "level": "info",
+      "message": "jog-forward complete.",
+      "time": "2026-11-06T18:22:15-06:00"
+    },
+    {
+      "level": "info",
+      "message": "Stop requested",
+      "time": "2026-11-06T18:22:15-06:00"
+    },
+    {
+      "level": "info",
+      "message": "jog-reverse complete.",
+      "time": "2026-11-06T18:21:59-06:00"
+    },
+    {
+      "level": "info",
+      "message": "jog-reverse complete.",
+      "time": "2026-11-06T18:21:35-06:00"
+    },
+    {
+      "level": "info",
+      "message": "Display, rotation and drive options applied for this server session.",
+      "time": "2026-11-06T18:21:30-06:00"
+    },
+    {
+      "level": "info",
+      "message": "connect complete.",
+      "time": "2026-11-06T18:21:22-06:00"
+    }
+  ],
+  "identity": {
+    "channels": 1,
+    "firmware": "2.0.1",
+    "hardware_revision": 4,
+    "model": "K10CR2",
+    "modification_state": 112,
+    "serial": "55551174"
+  },
+  "message": "load-settings complete.",
+  "position": {
+    "counts": 0,
+    "degrees": 0.0
+  },
+  "recovery": false,
+  "settings": {
+    "backlash": {
+      "channel": 1,
+      "distance": 0
+    },
+    "buttons": {
+      "channel": 1,
+      "mode": 1,
+      "position1": 136533,
+      "position2": 682667,
+      "timeout1": 500,
+      "timeout2": 500
+    },
+    "home": {
+      "channel": 1,
+      "direction": 2,
+      "offset": 546133,
+      "switch": 1,
+      "velocity": 73300775
+    },
+    "jog": {
+      "acceleration": 1502,
+      "channel": 1,
+      "maximum": 1465822,
+      "minimum": 0,
+      "mode": 1,
+      "step": 6827,
+      "stop": 2
+    },
+    "velocity": {
+      "acceleration": 751,
+      "channel": 1,
+      "maximum": 732911,
+      "minimum": 0
+    }
+  },
+  "settings_revision": 6,
+  "settings_updated": 1794011053.8600185,
+  "status": {
+    "enabled": true,
+    "homed": true,
+    "homing": false,
+    "motion_error": false,
+    "moving": false,
+    "raw_bits": 2147484672
+  },
+  "ui": {
+    "decimals": 6,
+    "drives": [
+      2.5,
+      5,
+      7.5,
+      10
+    ],
+    "high_power": false,
+    "rotation_direction": "quickest",
+    "rotation_mode": "total",
+    "units": "deg"
+  },
+  "unknown": false,
+  "updated": 1794011058.8303304
+}
