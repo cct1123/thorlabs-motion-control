@@ -389,6 +389,7 @@ class K10CR2:
             old_velocity = self._setting("velocity", deadline) if continuous else None
             lower, upper = (0, 360) if mode == "fixed" else (-MAX_ANGLE, MAX_ANGLE)
             restore = False
+            completed_step = False
             try:
                 if continuous:
                     maximum = profile["maximum"] if jog else round(speed * VELOCITY_SCALE)
@@ -409,6 +410,13 @@ class K10CR2:
                     self._write_setting("velocity", velocity, deadline)
                 while True:
                     before = self._position(deadline)
+                    if cancel is not None and cancel.is_set():
+                        raise MotionCancelled("Cancelled before manual motion")
+                    # The lease may end while this between-step query is in flight.
+                    # A click still requests its first finite step; repeats require
+                    # a lease checked again after the fresh position arrives.
+                    if completed_step and held is not None and not held():
+                        return MotionResult(state, before, 0x0464 in self._events)
                     if not position_counts(lower) <= before.counts <= position_counts(upper):
                         raise ValueError(
                             "Current counter is outside the selected range; home first"
@@ -422,8 +430,6 @@ class K10CR2:
                         raise ValueError("Jog would exceed the selected rotation range")
                     if before.counts == target:
                         return MotionResult(state, before, False, no_op=True)
-                    if cancel is not None and cancel.is_set():
-                        raise MotionCancelled("Cancelled before manual motion")
                     if continuous and held is not None and not held():
                         return MotionResult(state, before, False, no_op=True)
                     self._events.clear()
@@ -456,6 +462,7 @@ class K10CR2:
                             if not state.busy and position.counts == target:
                                 if continuous or held is None or not held():
                                     return MotionResult(state, position, 0x0464 in self._events)
+                                completed_step = True
                                 break
                             self._pause(deadline)
                     except BaseException as original:

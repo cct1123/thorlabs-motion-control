@@ -5,6 +5,7 @@ import threading
 import pytest
 from conftest import (
     HOMED,
+    MOVE_DONE,
     MOVING,
     POSITION_90,
     POSITION_REQUEST,
@@ -23,6 +24,36 @@ JOG_SETTINGS = bytes.fromhex(
     "18 04 16 00 81 50 01 00 02 00 00 80 bb 00 00 00 00 00 de 05 00 00 55 d5 6f 00 02 00"
 )
 JOG_FORWARD = bytes.fromhex("6a 04 01 01 50 01")
+
+
+def test_release_during_between_step_readback_prevents_an_extra_jog(mount_factory, monkeypatch):
+    mount, fake = mount_factory(
+        [
+            (STATUS_REQUEST, HOMED),
+            (JOG_QUERY, JOG_SETTINGS),
+            (POSITION_REQUEST, POSITION_ZERO),
+            (JOG_FORWARD, b""),
+            (STATUS_REQUEST, HOMED),
+            (POSITION_REQUEST, MOVE_DONE + POSITION_90),
+            (POSITION_REQUEST, POSITION_90),
+        ]
+    )
+    held = [True]
+    reads = [0]
+    position = mount._position
+
+    def release_between_steps(deadline):
+        result = position(deadline)
+        reads[0] += 1
+        if reads[0] == 3:
+            held[0] = False
+        return result
+
+    monkeypatch.setattr(mount, "_position", release_between_steps)
+    result = mount.manual_motion(1, jog=True, held=lambda: held[0])
+    assert result.position.counts == 12_288_000 and result.completion_received
+    assert not result.no_op and not mount.recovery_required and not fake.steps
+    assert fake.sent.count(JOG_FORWARD) == 1 and STOP_REQUEST not in fake.sent
 
 
 @pytest.mark.parametrize("option", ["jog", "high_power"])
