@@ -263,6 +263,23 @@ def test_local_server_rejects_foreign_hosts_and_cross_origin_commands():
         )
 
 
+def test_stale_gui_callback_requires_reload_without_dispatch_or_server_error(caplog):
+    owner = GuiController(lambda serial: pytest.fail("Stale GUI attempted USB access"))
+    app = create_app(owner)
+    render_key = next(key for key in app.callback_map if "angle.children" in key)
+    stale_key = render_key.replace("refresh-status", "refresh-state")
+    assert stale_key != render_key
+    response = app.server.test_client().post(
+        "/_dash-update-component",
+        base_url="http://127.0.0.1",
+        json={"output": stale_key, "changedPropIds": ["refresh.n_intervals"]},
+    )
+    assert response.status_code == 409
+    assert "Reload this tab" in response.json["message"]
+    assert not owner.snapshot()["connected"] and owner.snapshot()["busy"] is None
+    assert not [record for record in caplog.records if record.levelname == "ERROR"]
+
+
 def test_gui_help_and_import_do_not_import_usb():
     code = (
         "import sys; from k10cr2.gui import main; "

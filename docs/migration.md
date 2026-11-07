@@ -17,6 +17,12 @@ legacy command adapter or automatic startup configuration is retained.
 These interfaces have no compatibility aliases. Repository callers, tests and
 tutorial notebooks are migrated together.
 
+After updating an already-running GUI, close its USB connection/server, start the
+new version, **reload every open GUI tab**, and explicitly reconnect. An old tab's
+callback layout is rejected with HTTP 409 and a reload-required message; it is not
+adapted to the new interface. Stop an active motion through its current owner
+before updating. Reconnection does not automatically home or apply settings.
+
 ## Shared angle contract
 
 - `fixed` (default): finite absolute target **0–360° inclusive**, from a counter

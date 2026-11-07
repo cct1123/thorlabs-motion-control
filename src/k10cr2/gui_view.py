@@ -657,6 +657,11 @@ def create_app(controller=None, *, serial=None):
             origin = request.headers.get("Origin")
             if origin and origin != request.host_url.rstrip("/"):
                 abort(403)
+            if request.path == "/_dash-update-component":
+                payload = request.get_json(silent=True)
+                output = payload.get("output") if isinstance(payload, dict) else None
+                if isinstance(output, str) and output not in app.callback_map:
+                    return jsonify(message="GUI layout changed. Reload this tab to continue."), 409
 
     @app.server.get("/api/status")
     def api_status():
