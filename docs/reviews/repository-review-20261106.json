@@ -1,0 +1,139 @@
+{
+  "recorded_utc": "2026-11-07T01:20:41+00:00",
+  "source_commit": "f43c6cfbc95ee36814024121fd12491a65c8cc81",
+  "communication": "our WinUSB/PyUSB/libusb/APT only; no Kinesis or SDK",
+  "validation": {
+    "python_tests": 292,
+    "javascript_event_tests": 2,
+    "ruff_lint": true,
+    "ruff_format": true,
+    "javascript_syntax": true,
+    "removed_interfaces_absent_from_active_code": true,
+    "warning": "Third-party Dash pytest-plugin deprecation warning"
+  },
+  "commands": [
+    "python -B -m pytest -q -p no:cacheprovider --basetemp=.tmp/review-final-pytest",
+    "node tests/hold.test.mjs",
+    "ruff check --no-cache src tests tools",
+    "ruff format --check --no-cache src tests tools",
+    "node --check src/k10cr2/assets/hold.js",
+    "node --check src/k10cr2/assets/dialogs.js",
+    "uv lock --check --offline",
+    "uv build --offline --no-sources --out-dir .tmp/review-dist"
+  ],
+  "package": {
+    "lockfile_offline": true,
+    "wheel_build": true,
+    "sdist_build": true,
+    "wheel_sha256": "defc52ec01a14c881c79d7f63ce27bab3ce814195773aaf0d0f39124d959eb56",
+    "sdist_sha256": "b34b7863ebffe598968e423664b3b7f74b15cfd8304e052ceaf8eb11153471e4",
+    "wheel_members": 18,
+    "sdist_members": 135,
+    "generated_or_legacy_members": false,
+    "entry_points": "[console_scripts]\nk10cr2 = k10cr2.cli:main\nk10cr2-gui = k10cr2.gui:main\n",
+    "extracted_wheel_smoke": true,
+    "usb_imported": false,
+    "manual_sha256": "e0c3a77232005cfca12381493ed8ea6907e0cfdc7fa406b8c7c02a6bd04dbeab",
+    "package_smoke_note": "Imported the extracted wheel with existing .venv dependencies; no new environment or USB access."
+  },
+  "bench_manifests": [
+    {
+      "path": "docs/bench/gui-controls-20261106-211627Z-manifest.json",
+      "entries": 13,
+      "working_bytes_match": true,
+      "committed_bytes_match": true
+    },
+    {
+      "path": "docs/bench/gui-jog-20261107-002109Z-manifest.json",
+      "entries": 14,
+      "working_bytes_match": true,
+      "committed_bytes_match": true
+    },
+    {
+      "path": "docs/bench/gui-migration-20261106-231335Z-manifest.json",
+      "entries": 20,
+      "working_bytes_match": true,
+      "committed_bytes_match": true
+    }
+  ],
+  "reference_sha256": {
+    "apt-communications-protocol-issue48.pdf": "911bdd8cc6a445f959a5fae3f44456ebf345c65d5103f3f7d5c5fd547d6e523f",
+    "k10cr2-user-guide-etn064249-d02.pdf": "e0c3a77232005cfca12381493ed8ea6907e0cfdc7fa406b8c7c02a6bd04dbeab"
+  },
+  "live_check": {
+    "serial": "55551174",
+    "firmware": "2.0.1",
+    "status_refresh_settings_unchanged": true,
+    "settings_revision_before": 1,
+    "settings_revision_after_status": 1,
+    "settings_revision_after_settings": 2,
+    "settings_read_time_before": 1794014224.0487545,
+    "settings_read_time_after_status": 1794014224.0487545,
+    "settings_read_time_after_settings": 1794014246.891157,
+    "exact_baseline_match": true,
+    "position": {
+      "counts": 0,
+      "degrees": 0.0
+    },
+    "status": {
+      "enabled": true,
+      "homed": true,
+      "homing": false,
+      "motion_error": false,
+      "moving": false,
+      "raw_bits": 2147484672
+    },
+    "actuator_actions_requested": false,
+    "device_or_eeprom_writes_requested": false,
+    "physical_fault_injection": false
+  },
+  "source_sha256": {
+    "src/k10cr2/cli.py": "cc91d03604194e247a563fd5d7a47bc06fd17157e5e36df32355cfa2431c695c",
+    "src/k10cr2/controller.py": "f1a1d1b76450e004734350a59667db290181cca48c8e36239385f349f0302189",
+    "src/k10cr2/gui.py": "6c1a888239dc9fc94f044887f4979e6ee07b2673c753048c319809afeb7133cd",
+    "src/k10cr2/gui_state.py": "1638023b7862d0d38759a7edfe3a097edd710964749ed95565f89cd36a9ce11e",
+    "src/k10cr2/gui_view.py": "23c8c79070627b2b07875e2f1c695a608443ea1b1e5004bd7d5a381da2438686",
+    "src/k10cr2/protocol.py": "622f02321ee07913a9c00c71ac6014415e3a970e9d1e80be4d4a90cb4e8dbec1",
+    "src/k10cr2/settings.py": "5ec2c1d76967ae74b4309a10404405a259d56a1e2d8053f74c2c7fafc04efd51",
+    "src/k10cr2/transport.py": "7cd62fe985a153b7cd5b2859373a5e50bc7a106cf7d6cc65cde512667d265fe5",
+    "src/k10cr2/__init__.py": "56f1e09e89ca1f777096dd8f327c9b518847647fe8231da995f2a8ef94d7fe59",
+    "src/k10cr2/__main__.py": "935a1c1166b0c1ea35a82256345000bf2c73ded718d77773bc27a71ecce28f7d",
+    "src/k10cr2/assets/dialogs.js": "d006b733a0689b66590f015c510bc2fbdf368007c22f42ab6da3a179839a4ba4",
+    "src/k10cr2/assets/hold.js": "b9e0e48745853d2caed197728b2b82bc6ae6add113e55838402dbea91908f1e7",
+    "src/k10cr2/assets/rotation.css": "ffd6b3613fe13874b45ae2f38b60b7a0cd4485c047e7e56a958ad242ffb8eec9",
+    "tests/conftest.py": "94b6c91ce3bc0000cb6a4996667eb67ca65b72d982c086a7abeb83bfbed8c08f",
+    "tests/test_cli.py": "448df937d2092c773dff096542c73a9ef5f48b593910693a0836acff90426bb6",
+    "tests/test_gui.py": "4740e12117c67fa7b40e8f6aae944a8c7ff79402bd587e7b1c510ff3d237169c",
+    "tests/test_gui_server.py": "37ed92f74ad3609170ba29ace22d7cead9363d92c662ca28f6fa5b7e10ec2b09",
+    "tests/test_gui_state.py": "922bd8312a3e83a1338c4885b2bd44a50332b55eef17776e87f2d0031ff37695",
+    "tests/test_gui_workflows.py": "fece33a91c6edc826767a510858fb553fac9494591066aec031833f4cdbd0643",
+    "tests/test_manual_motion.py": "13081dcd3b3b4a891d041219db1fc7ad9f0f70812fa838deef5f92e735155df4",
+    "tests/test_motion.py": "6975f719b2f9a6d40e8f9143e0452f796077a2fc95c5cdc4b6907bf1ce447c6d",
+    "tests/test_notebooks.py": "cbd07df1974da76f6e72102059c527d87e3e725288cab9e0ceef179c3bdddd88",
+    "tests/test_protocol.py": "5ed7355da5e040d8ca9264557534b504cd379a1aab6d3fa568368c6a02b03100",
+    "tests/test_queries.py": "b57e1b5f696dbeedbcc4c4d4459ce2e0b0b6ce67f5d241f73c1a692f2d31eca7",
+    "tests/test_settings.py": "47b99f5e9412481750c72ffaba463d63808188203a7b2ed442af5aa94b8bfc30",
+    "tests/test_transport.py": "d6f8e25a118a8ce6cb2c2d5ff1882271cb18f5851161ed204321b9ae209a7a4a",
+    "tests/hold.test.mjs": "66b7cc9fc8c128778f0b37ccac2e2c20eefd0a9f97994f17cd705eb47685ea82",
+    "tools/bench/record_gui.py": "cebd37d18ac874548d437aea4b8002ecbc64161da30d9f6df57b44de4492f7d0",
+    "tools/bench/restore_raw_settings.py": "4ea7aef20966836bc7fe74a1605e889e81b752ab07d8e0d60a364bfce154f393"
+  },
+  "cleanup": {
+    "targets": [
+      ".tmp",
+      ".ruff_cache"
+    ],
+    "files": 30,
+    "bytes": 12764847,
+    "paths_verified_inside_repo": true,
+    "tracked_files": 0,
+    "reparse_links": 0,
+    "complete": true,
+    "venv_preserved": true
+  },
+  "limitations": [
+    "Lost-capture and shutdown-interruption checks were offline, not physical fault injection.",
+    "No new motion acceptance; previous motion records retain their source checkpoints.",
+    "Independent calibration, mechanical stop timing, OS window blur, USB/browser crash, immediate stop, EEPROM retention and endurance remain unverified."
+  ]
+}

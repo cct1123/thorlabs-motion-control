@@ -23,6 +23,7 @@ an SDK startup profile or automatically homes, enables, configures, or moves a m
 | Settings | Moves/Jogs, Rotation, Stage/Axis, Advanced, Defaults. Reset/Close/×/Escape discard unapplied edits; device groups and session options have separate Apply actions. Scrollable form, fixed feedback/actions and keyboard focus containment | 17-24 |
 
 Held controls use pointer capture and support Space/Enter. Release, pointer cancel,
+loss of the active pointer's capture,
 focus leaving the held button, hidden tab, window blur and page unload end the
 browser lease. The active control stays focusable during motion; the owner rejects
 additional starts while busy. Heartbeats run every 200 ms;
@@ -32,6 +33,12 @@ ownership protection, not a real-time safety interlock: an in-flight USB transfe
 query can delay observation, and stop cleanup has its own deadline. Single-step jog
 finishes the already-requested finite step when released; it does not start another.
 Use Stop to interrupt that step.
+
+The normal GUI and bench recorder share server shutdown handling. Failed shutdown,
+timeout or an interrupted wait keeps the current owner and controls available for
+Stop/retry. Shutdown query interruptions retain an unknown-state indication until
+an explicit Stop/retry confirms the state. See the [repository review](reviews/repository-review-20261106.md)
+for offline failure-path tests and the current read-only live check.
 
 The [actual-mount held-jog record](bench/gui-jog-20261107-002109Z.md) verifies
 continuous and repeated finite jog release, focus moving to another control,

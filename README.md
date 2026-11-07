@@ -20,15 +20,19 @@ uv run --locked --extra gui k10cr2-gui --serial 55551174
 ```
 
 Open **http://127.0.0.1:8050**; use `--port 8051` if that port is occupied.
-Startup only shows the UI; click **Connect** for readback and **Home** explicitly
-before positioning. Close other software that owns the mount first.
+Startup only shows the UI; click **Connect** for readback. If the mount is not
+homed, use **Home** explicitly before positioning. Close other software that owns
+the mount first.
+After a software update, reload every open GUI tab before reconnecting; stale
+callback layouts are rejected with a reload-required response.
 
 The panel provides Move/profile editing, Home, Stop, held Drive/Jog controls,
 Enable/Disable, Identify, serial/position/status and limit indicators. Settings
 include display units, Fixed/Equivalent/Total rotation modes, forward/reverse/
 quickest routing, velocity/jog/backlash and hardware-button parameters. **Connect**
 reads all five device settings groups; **Refresh readbacks** reloads them and shows
-the read time. Setting writes require fresh readback, validation and verification.
+the read time. **Refresh status** reads status and position without replacing
+settings or settings drafts. Setting writes require fresh readback, validation and verification.
 Persistence is opt-in; an EEPROM write is
 reported as requested, not power-cycle proven. Session display and drive options
 have a separate **Apply session options** button. **Close**, × and Escape discard
@@ -46,6 +50,8 @@ retains **physical state UNKNOWN**. **Close web UI** or console **Ctrl+C** waits
 for the owner before releasing USB. Closing a tab alone leaves the server running;
 finite moves continue, while held controls expire. All tabs share the controller.
 The server binds only to loopback and rejects foreign-host/cross-origin writes.
+Normal and recording servers share shutdown handling: a timed-out, interrupted or
+failed shutdown keeps the controls available for Stop/retry.
 
 The [migrated-GUI hardware test](docs/bench/gui-migration-20261106-231335Z.md) passed
 small Fixed/Total/Equivalent moves, all three Equivalent directions, repeated-phase
@@ -173,14 +179,18 @@ proof of mechanical rest or optical safety.
 
 ```powershell
 uv run --locked --extra gui pytest
+node tests/hold.test.mjs
 uv run --locked ruff check .
 uv run --locked ruff format --check .
 uv build --no-sources
 ```
 
 See [command reference](docs/commands.md) and [validation record](docs/validation.md).
-The [holistic review](docs/reviews/holistic-review-20261106.md) records resolved
-flaws, migration, cleanup, package checks and final live readback. Older dated
+The [latest repository review](docs/reviews/repository-review-20261106.md) records
+shutdown/input/migration fixes, **292 Python and 2 JavaScript tests**, offline
+package checks, cleanup and final live readback. Node.js runs the browser-script
+event tests; Python tests use the project environment. The [earlier holistic
+review](docs/reviews/holistic-review-20261106.md) retains its own checkpoint. Older dated
 reviews describe their historical checkpoints.
 The [full capability/coverage catalogue](docs/command-catalog.md) distinguishes
 implemented commands, additional documented queries/settings, explicit exclusions,

@@ -1,5 +1,25 @@
 # Validation record
 
+## Repository review after jog acceptance: 6 November 2026
+
+The [follow-up review](reviews/repository-review-20261106.md) fixed shutdown retry
+and interruption handling, status-refresh naming/behavior, lost pointer capture,
+stale motion feedback and stale callback migration. **292 Python tests and two
+JavaScript event tests passed**, with Ruff, JavaScript syntax checks, offline
+lockfile/build checks, and an extracted-wheel startup/assets/manual smoke check.
+The recorder and normal GUI now share one server lifecycle; removed interfaces
+have no compatibility aliases.
+
+The current GUI was restarted and checked on the actual mount using **read-only
+actions**. Status refresh preserved the settings revision/read time; explicit
+settings refresh advanced them. All five groups matched the original raw baseline.
+Final state was zero counts, homed, enabled and idle. No movement, output-state
+change, device Apply or EEPROM command was requested during this review.
+Shutdown interruption and capture loss were tested offline, not deliberately
+induced on the mount. Prior motion records retain their original source hashes
+and physical scope. The report records preserved evidence hashes, package checks,
+cleanup, source checkpoint and remaining bench limits.
+
 ## Continuous and held-repeat GUI jog: 6 November 2026, 18:13–18:24 CST
 
 The [held-jog bench record](bench/gui-jog-20261107-002109Z.md) verifies continuous
@@ -47,7 +67,7 @@ remain open. Earlier records below describe their own historical checkpoints.
 
 ## Holistic migration review: 6 November 2026
 
-The [current holistic review](reviews/holistic-review-20261106.md) records **228
+The [earlier holistic review](reviews/holistic-review-20261106.md) records **228
 passing offline tests**, lint/format and package checks, API/reference migration,
 cache/temp cleanup and the final actual-mount read-only UI check. All five raw
 settings groups matched the saved baseline; the mount remained at zero counts,

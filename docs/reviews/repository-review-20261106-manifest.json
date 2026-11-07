@@ -1,0 +1,10 @@
+{
+  "algorithm": "SHA256",
+  "scope": "Review artifacts; excludes this manifest.",
+  "files": {
+    "repository-review-20261106-gui.png": "03abfc47680d8bb5a501dd9480398bcd87124bae7ba95e30006f451a9ba9fdac",
+    "repository-review-20261106-state.json": "574a4674f7862ef93adb752dc66d1d9bf023032c28b00e887e663f25d9082ecb",
+    "repository-review-20261106.json": "8ac5d6d6f52fb111d3df797c075b8a6b960e4ac1df46c82f8301043c39e18051",
+    "repository-review-20261106.md": "5695269a1f8f947a8185623f077816c7600e8eba8cba849e0d02b2e5bd9bf208"
+  }
+}

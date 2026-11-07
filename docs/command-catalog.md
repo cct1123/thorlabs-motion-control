@@ -32,7 +32,7 @@ extension and must not be silently advertised as verified K10CR2 raw commands.
 | Position counter | 0410 | 0411 -> 0412 | Query implemented and bench-tested; setter absent | 73-74 |
 | Encoder counter | 0409 | 040A -> 040B | Definition is for encoded stages. No independent encoder support established for this mount; not implemented | 75-76 |
 | Move velocity/acceleration | 0413 | 0414 -> 0415 | Read/write and readback verification implemented; volatile writes/restoration bench-tested on the recorded unit | 77-78 |
-| Jog parameters | 0416 | 0417 -> 0418 | Read/write implemented; single-step profile writes/readbacks bench-tested. Firmware host-zero reply exception retained | 79-80 |
+| Jog parameters | 0416 | 0417 -> 0418 | Read/write implemented; continuous and single-step profile writes/readbacks bench-tested. Firmware host-zero reply exception retained | 79-80 |
 | General move / backlash | 043A | 043B -> 043C | Read/write and readback verification implemented; volatile write/restoration bench-tested | 84 |
 | Stored relative target | 0445 | 0446 -> 0447 | Shared index; not implemented | 85 |
 | Stored absolute target | 0450 | 0451 -> 0452 | Not implemented; long-form 0453 carries the target directly | 86 |
@@ -41,7 +41,7 @@ extension and must not be silently advertised as verified K10CR2 raw commands.
 | Home | 0443 | Event 0444 | Implemented; short completion frame bench-tested | 91 |
 | Relative move | 0448 | Event 0464 | Manual supports relative movement; not implemented | 92-94 |
 | Absolute move | 0453 | Event 0464 | Long form implemented; 90-degree and zero moves/completions bench-tested | 94-96 |
-| Jog | 046A | Event 0464 | Native single-step jog implemented and bench-tested in both directions; continuous/repeated modes have offline coverage only | 97 |
+| Jog | 046A | Event 0464 | Native single-step and held-repeat jog bench-tested. Host-bounded continuous jog uses 0453; release, control focus loss and Stop passed small-move checks in both modes | 97 |
 | Continuous velocity move | 0457 | Stop with 0465 | Manual describes continuous motion; raw command not implemented | 98 |
 | Stop | 0465 | Event 0466 | Profiled public Stop and Ctrl+C cleanup bench-tested. Jog-selected immediate stop is implemented but not bench-tested | 99-100 |
 | LED/AV modes | 04B3 | 04B4 -> 04B5 | **Explicitly not applicable to K10CR1 or K10CR2**, despite shared index listing | 106-107 |
@@ -69,6 +69,12 @@ No firmware-programming command or automatic actuation is added by this catalogu
 The manual's hardware/GUI capabilities and the low-level protocol's applicability
 tables are different kinds of evidence. The core requests and supported settings
 are mapped separately; this is not a claim to implement every message in the 494-page protocol.
+
+The [held-jog bench record](bench/gui-jog-20261107-002109Z.md) is the evidence for
+the continuous/repeated coverage above. Ordinary OS window switching, lost pointer
+capture, immediate jog stop, USB-loss behavior and independent mechanical stop
+timing are not established by that run. Lost-capture release has offline event
+coverage in the [subsequent review](reviews/repository-review-20261106.md).
 
 ## Audit result for the implemented subset
 

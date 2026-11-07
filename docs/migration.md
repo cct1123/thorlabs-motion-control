@@ -11,17 +11,17 @@ legacy command adapter or automatic startup configuration is retained.
 | GUI `refresh-state` control, which also reloaded settings | `refresh-status` reads status/position only; Settings **Refresh readbacks** reloads device settings. No old-ID alias. |
 | GUI `step-plus` / `step-minus`, `submit(..., step=...)` | Removed. Use native Jog with readback-verified jog settings. |
 | `k10cr2.protocol.angle_to_counts(angle)` | `k10cr2.settings.resolve_target(angle, current_degrees, mode, direction)` for a preview in counts; ordinary code passes degrees to `move_absolute()` |
-| `k10cr2.gui` re-exports of view helpers | `create_app`, `controls`, `CONTROL_IDS` live in `k10cr2.gui_view`; `k10cr2.gui` owns the server/entry point |
+| `k10cr2.gui` re-exports of view helpers | `create_app`, `controls`, `CONTROL_IDS` live in `k10cr2.gui_view`; `k10cr2.gui` owns the server, entry point and shared server lifecycle |
 | Settings OK / implicit Apply | Explicit Apply session options, Apply device settings, and Close |
 
 These interfaces have no compatibility aliases. Repository callers, tests and
 tutorial notebooks are migrated together.
 
-After updating an already-running GUI, close its USB connection/server, start the
-new version, **reload every open GUI tab**, and explicitly reconnect. An old tab's
+To update a running GUI, first stop active motion through its current owner,
+disconnect, and close the web UI server. Update the software, start the new version,
+**reload every open GUI tab**, and explicitly reconnect. An old tab's
 callback layout is rejected with HTTP 409 and a reload-required message; it is not
-adapted to the new interface. Stop an active motion through its current owner
-before updating. Reconnection does not automatically home or apply settings.
+adapted to the new interface. Reconnection does not automatically home or apply settings.
 
 ## Shared angle contract
 

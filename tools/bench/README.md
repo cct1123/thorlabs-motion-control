@@ -23,6 +23,9 @@ Labels select the evidence filename only. Guard bounds must be positive and no
 greater than 3° / 5 s; metadata records the actual values. These guards do not replace
 apparatus safety measures or guarantee a stop when communication fails. Close the
 session through **Disconnect** and **Close web UI** after confirming idle state.
+The recorder uses the same server lifecycle as the normal GUI. A failed,
+timed-out or interrupted owner shutdown keeps the server and recorder open for
+Stop/retry; HTTP and recording close after shutdown succeeds.
 
 Capture `/api/status` from the same owner before any temporary setting changes.
 It reads the GUI cache and does not create another USB reader. Keep the original
