@@ -1,3 +1,6 @@
+import struct
+import threading
+
 import pytest
 from conftest import (
     ENABLE_REQUEST,
@@ -16,7 +19,7 @@ from conftest import (
     STOP_REQUEST,
 )
 
-from k10cr2 import MotionError
+from k10cr2 import MotionCancelled, MotionError
 
 MOVE_90 = bytes.fromhex("53 04 06 00 d0 01 01 00 00 80 bb 00")
 
@@ -127,6 +130,22 @@ def test_fixed_range_full_turn_matches_the_gui_and_cli_contract(mount_factory):
     )
     assert mount.move_absolute(360).position.degrees == 360
     assert not fake.steps
+
+
+@pytest.mark.parametrize("counts", [-12_288_000, 61_440_000])
+def test_fixed_move_can_return_from_outside_the_interval(mount_factory, counts):
+    position = bytes.fromhex("12 04 06 00 81 50") + struct.pack("<Hi", 1, counts)
+    mount, fake = mount_factory(
+        [
+            (STATUS_REQUEST, HOMED),
+            (POSITION_REQUEST, position),
+            (MOVE_90, b""),
+            (STATUS_REQUEST, HOMED),
+            (POSITION_REQUEST, POSITION_90),
+        ]
+    )
+    assert mount.move_absolute(90).position.degrees == 90
+    assert HOME_REQUEST not in fake.sent and not fake.steps
 
 
 def test_equivalent_route_uses_fresh_counter_and_preserves_total_turns(mount_factory):
@@ -412,3 +431,129 @@ def test_observer_system_exit_still_runs_stop_cleanup(mount_factory):
         mount.move_absolute(90, on_progress=exit_observer)
     assert isinstance(caught.value.original, SystemExit)
     assert caught.value.cleanup.confirmed_stopped and not fake.steps
+
+
+@pytest.mark.parametrize("operation", ["home", "move"])
+def test_confirmed_cancellation_allows_the_next_motion_without_reconnect(mount_factory, operation):
+    cancel = threading.Event()
+    mount, fake = mount_factory(
+        [
+            (STATUS_REQUEST, HOMED),
+            (POSITION_REQUEST, POSITION_ZERO),
+            (HOME_REQUEST if operation == "home" else MOVE_90, b""),
+            (STATUS_REQUEST, HOMING if operation == "home" else MOVING),
+            (POSITION_REQUEST, POSITION_ZERO),
+            *stop_steps(),
+            (STATUS_REQUEST, HOMED),
+            (POSITION_REQUEST, POSITION_ZERO),
+            (MOVE_90, b""),
+            # A late completion from the cancelled operation must not complete
+            # the next move at the wrong counter.
+            (STATUS_REQUEST, MOVE_DONE + HOMED),
+            (POSITION_REQUEST, POSITION_ZERO),
+            (STATUS_REQUEST, HOMED),
+            (POSITION_REQUEST, POSITION_90),
+        ]
+    )
+    with pytest.raises(MotionError) as caught:
+        if operation == "home":
+            mount.home(cancel=cancel, on_progress=lambda *_: cancel.set())
+        else:
+            mount.move_absolute(90, cancel=cancel, on_progress=lambda *_: cancel.set())
+    assert caught.value.cleanup.confirmed_stopped
+    assert not caught.value.recovery_required and not mount.recovery_required
+    assert "reconnect" not in str(caught.value)
+    cancel.clear()
+    assert mount.move_absolute(90).position.degrees == 90
+    assert fake.sent.count(STOP_REQUEST) == 1 and not fake.steps
+
+
+@pytest.mark.parametrize("failure_at", ["write", "ack", "status", "position"])
+def test_cancel_with_failed_stop_still_requires_reconnect(mount_factory, failure_at):
+    cancel = threading.Event()
+    cleanup = {
+        "write": [(STOP_REQUEST, OSError("USB gone"))],
+        "ack": [(STOP_REQUEST, [TimeoutError("No stop acknowledgement")])],
+        "status": [(STOP_REQUEST, STOP_DONE), (STATUS_REQUEST, TimeoutError("No status"))],
+        "position": [
+            (STOP_REQUEST, STOP_DONE),
+            (STATUS_REQUEST, HOMED),
+            (POSITION_REQUEST, TimeoutError("No position")),
+        ],
+    }[failure_at]
+    mount, fake = mount_factory(
+        [
+            (STATUS_REQUEST, HOMED),
+            (POSITION_REQUEST, POSITION_ZERO),
+            (MOVE_90, b""),
+            (STATUS_REQUEST, MOVING),
+            (POSITION_REQUEST, POSITION_ZERO),
+            *cleanup,
+        ]
+    )
+    with pytest.raises(MotionError, match="UNKNOWN") as caught:
+        mount.move_absolute(90, cancel=cancel, on_progress=lambda *_: cancel.set())
+    assert caught.value.recovery_required and mount.recovery_required
+    with pytest.raises(RuntimeError, match="uncertain"):
+        mount.move_absolute(90)
+    assert not fake.steps
+
+
+@pytest.mark.parametrize("bits", [0x80004400, 0xC0000400])
+def test_confirmed_cancel_does_not_clear_controller_fault(mount_factory, bits):
+    fault = bytes.fromhex("2a 04 06 00 81 50") + struct.pack("<HI", 1, bits)
+    cancel = threading.Event()
+    mount, fake = mount_factory(
+        [
+            (STATUS_REQUEST, HOMED),
+            (POSITION_REQUEST, POSITION_ZERO),
+            (MOVE_90, b""),
+            (STATUS_REQUEST, MOVING),
+            (POSITION_REQUEST, POSITION_ZERO),
+            (STOP_REQUEST, STOP_DONE),
+            (STATUS_REQUEST, fault),
+            (POSITION_REQUEST, POSITION_ZERO),
+        ]
+    )
+    with pytest.raises(MotionError) as caught:
+        mount.move_absolute(90, cancel=cancel, on_progress=lambda *_: cancel.set())
+    assert caught.value.cleanup.confirmed_stopped
+    assert caught.value.recovery_required and mount.recovery_required and not fake.steps
+
+
+def test_cancel_exception_during_query_keeps_uncertain_receive_path_blocked(mount_factory):
+    mount, fake = mount_factory(
+        [
+            (STATUS_REQUEST, HOMED),
+            (POSITION_REQUEST, POSITION_ZERO),
+            (MOVE_90, b""),
+            (STATUS_REQUEST, [MotionCancelled("Interrupted receive")]),
+            *stop_steps(),
+        ]
+    )
+    with pytest.raises(MotionError) as caught:
+        mount.move_absolute(90)
+    assert caught.value.cleanup.confirmed_stopped
+    assert caught.value.recovery_required and mount.recovery_required and not fake.steps
+
+
+@pytest.mark.parametrize(
+    "operation,bits", [("home", 0x00000400), ("move", 0x00000400), ("move", 0x80000010)]
+)
+def test_motion_losing_enable_or_reference_stops_immediately(mount_factory, operation, bits):
+    lost = bytes.fromhex("2a 04 06 00 81 50") + struct.pack("<HI", 1, bits)
+    mount, fake = mount_factory(
+        [
+            (STATUS_REQUEST, HOMED),
+            (POSITION_REQUEST, POSITION_ZERO),
+            (HOME_REQUEST if operation == "home" else MOVE_90, b""),
+            (STATUS_REQUEST, lost),
+            *stop_steps(),
+        ]
+    )
+    with pytest.raises(MotionError) as caught:
+        mount.home() if operation == "home" else mount.move_absolute(90)
+    assert isinstance(caught.value.original, RuntimeError)
+    assert "lost home reference or motor enable" in str(caught.value.original)
+    assert caught.value.cleanup.confirmed_stopped and mount.recovery_required
+    assert fake.sent.count(STOP_REQUEST) == 1 and not fake.steps

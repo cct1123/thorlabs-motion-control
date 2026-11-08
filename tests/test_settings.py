@@ -223,6 +223,41 @@ def test_identify_and_explicit_disable_use_documented_short_commands(mount_facto
     assert not fake.steps
 
 
+@pytest.mark.parametrize("bits", [0x00004400, 0x40000400])
+def test_faulted_controller_cannot_be_explicitly_enabled(mount_factory, bits):
+    fault = bytes.fromhex("2a 04 06 00 81 50") + struct.pack("<HI", 1, bits)
+    mount, fake = mount_factory([(STATUS_REQUEST, fault)])
+    with pytest.raises(RuntimeError, match="motion/error flag"):
+        mount.set_enabled(True)
+    assert not fake.steps  # No enable packet was scripted.
+
+
+def test_explicit_enable_rejects_a_fault_in_its_readback(mount_factory):
+    disabled = bytes.fromhex("2a 04 06 00 81 50 01 00 00 04 00 00")
+    fault = bytes.fromhex("2a 04 06 00 81 50 01 00 00 44 00 80")
+    enable = bytes.fromhex("10 02 01 01 50 01")
+    mount, fake = mount_factory(
+        [(STATUS_REQUEST, disabled), (enable, b""), (STATUS_REQUEST, fault)]
+    )
+    with pytest.raises(RuntimeError, match="motion/error flag"):
+        mount.set_enabled(True)
+    assert mount.recovery_required and not fake.steps
+
+
+def test_idle_fault_does_not_prevent_explicit_disable(mount_factory):
+    enabled_fault = bytes.fromhex("2a 04 06 00 81 50 01 00 00 44 00 80")
+    disabled_fault = bytes.fromhex("2a 04 06 00 81 50 01 00 00 44 00 00")
+    disable = bytes.fromhex("10 02 01 02 50 01")
+    mount, fake = mount_factory(
+        [
+            (STATUS_REQUEST, enabled_fault),
+            (disable, b""),
+            (STATUS_REQUEST, disabled_fault),
+        ]
+    )
+    assert not mount.set_enabled(False).enabled and not fake.steps
+
+
 def test_single_jog_literal_command_and_completion(mount_factory):
     jog_query = bytes.fromhex("17 04 01 00 50 01")
     jog_reply = bytes.fromhex(

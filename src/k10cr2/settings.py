@@ -6,10 +6,8 @@ editing; docs/validation.md separates the tested unit/subset from unverified mod
 """
 
 import math
-import struct
-from dataclasses import dataclass
 
-from .protocol import COUNTS_PER_DEGREE, COUNTS_PER_REVOLUTION, DEVICE, HOST
+from .protocol import COUNTS_PER_DEGREE, COUNTS_PER_REVOLUTION
 
 VELOCITY_SCALE = 7_329_109
 ACCELERATION_SCALE = 1_502
@@ -23,51 +21,7 @@ UNIT_FACTORS = {
 }
 
 
-@dataclass(frozen=True)
-class Setting:
-    set_id: int
-    request_id: int
-    response_id: int
-    format: str
-    fields: tuple[str, ...]
-
-    @property
-    def size(self):
-        return struct.calcsize(self.format)
-
-
-SETTINGS = {
-    "velocity": Setting(
-        0x0413, 0x0414, 0x0415, "<HIII", ("channel", "minimum", "acceleration", "maximum")
-    ),
-    "jog": Setting(
-        0x0416,
-        0x0417,
-        0x0418,
-        "<HHIIIIH",
-        ("channel", "mode", "step", "minimum", "acceleration", "maximum", "stop"),
-    ),
-    "backlash": Setting(0x043A, 0x043B, 0x043C, "<Hi", ("channel", "distance")),
-    "home": Setting(
-        0x0440, 0x0441, 0x0442, "<HHHIi", ("channel", "direction", "switch", "velocity", "offset")
-    ),
-    "buttons": Setting(
-        0x04B6,
-        0x04B7,
-        0x04B8,
-        "<HHiiHH",
-        ("channel", "mode", "position1", "position2", "timeout1", "timeout2"),
-    ),
-}
 EDITABLE = {"velocity", "jog", "backlash", "buttons"}
-
-
-def short_packet(message_id, p1=1, p2=0):
-    return struct.pack("<HBBBB", message_id, p1, p2, DEVICE, HOST)
-
-
-def data_packet(message_id, payload):
-    return struct.pack("<HHBB", message_id, len(payload), DEVICE | 0x80, HOST) + payload
 
 
 def finite(value, label, low, high):
@@ -123,6 +77,32 @@ def resolve_target(angle, current, mode="fixed", direction="quickest"):
             raise ValueError("Equivalent route exceeds the counted 43-turn bound; home first")
         return target_counts
     return position_counts(angle)
+
+
+def manual_target(current_counts, direction, *, mode, step=None):
+    """Resolve a bounded drive target or finite jog, entirely in integer counts."""
+    if mode not in {"fixed", "total", "equivalent"}:
+        raise ValueError("Invalid rotation mode")
+    if isinstance(direction, bool) or direction not in {-1, 1}:
+        raise ValueError("Direction must be -1 or +1")
+    limit = position_counts(MAX_ANGLE)
+    if abs(current_counts) > limit:
+        raise RuntimeError("Counted angle exceeds the manual's 43-turn bound; home first")
+    lower, upper = (0, COUNTS_PER_REVOLUTION) if mode == "fixed" else (-limit, limit)
+    if current_counts < lower:
+        if direction < 0:
+            raise ValueError("Outside selected range; move forward toward the range")
+        boundary = lower
+    elif current_counts > upper:
+        if direction > 0:
+            raise ValueError("Outside selected range; move reverse toward the range")
+        boundary = upper
+    else:
+        boundary = upper if direction > 0 else lower
+    target = boundary if step is None else current_counts + direction * step
+    if not min(current_counts, lower) <= target <= max(current_counts, upper):
+        raise ValueError("Jog would exceed the selected rotation range")
+    return target
 
 
 def display_angle(angle, mode, units="deg", decimals=6):

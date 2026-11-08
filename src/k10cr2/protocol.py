@@ -35,6 +35,52 @@ class ControllerFault(ProtocolError):
 
 
 @dataclass(frozen=True)
+class Setting:
+    set_id: int
+    request_id: int
+    response_id: int
+    format: str
+    fields: tuple[str, ...]
+
+    @property
+    def size(self):
+        return struct.calcsize(self.format)
+
+
+SETTINGS = {
+    "velocity": Setting(
+        0x0413, 0x0414, 0x0415, "<HIII", ("channel", "minimum", "acceleration", "maximum")
+    ),
+    "jog": Setting(
+        0x0416,
+        0x0417,
+        0x0418,
+        "<HHIIIIH",
+        ("channel", "mode", "step", "minimum", "acceleration", "maximum", "stop"),
+    ),
+    "backlash": Setting(0x043A, 0x043B, 0x043C, "<Hi", ("channel", "distance")),
+    "home": Setting(
+        0x0440, 0x0441, 0x0442, "<HHHIi", ("channel", "direction", "switch", "velocity", "offset")
+    ),
+    "buttons": Setting(
+        0x04B6,
+        0x04B7,
+        0x04B8,
+        "<HHiiHH",
+        ("channel", "mode", "position1", "position2", "timeout1", "timeout2"),
+    ),
+}
+
+
+def short_packet(message_id, p1=1, p2=0):
+    return struct.pack("<HBBBB", message_id, p1, p2, DEVICE, HOST)
+
+
+def data_packet(message_id, payload):
+    return struct.pack("<HHBB", message_id, len(payload), DEVICE | 0x80, HOST) + payload
+
+
+@dataclass(frozen=True)
 class Command:
     message_id: int
     param1: int
@@ -53,7 +99,7 @@ COMMANDS = {
     "stop": Command(0x0465, 1, 2, 0x0466, 14),
 }
 RESPONSE_SIZES = {c.response_id: c.response_size for c in COMMANDS.values() if c.response_id}
-RESPONSE_SIZES.update({0x0415: 14, 0x0418: 22, 0x043C: 6, 0x0442: 14, 0x04B8: 16})
+RESPONSE_SIZES.update({spec.response_id: spec.size for spec in SETTINGS.values()})
 FAULT_RESPONSE_SIZES = {0x0080: 0, 0x0081: 68}
 
 
@@ -64,10 +110,10 @@ def request(name: str, *, counts: int | None = None) -> bytes:
             raise ValueError("Target counts must be a signed 32-bit integer")
         if not -(2**31) <= counts < 2**31:
             raise ValueError("Target counts exceed signed 32-bit range")
-        return struct.pack("<HHBBHi", command.message_id, 6, DEVICE | 0x80, HOST, CHANNEL, counts)
+        return data_packet(command.message_id, struct.pack("<Hi", CHANNEL, counts))
     if counts is not None:
         raise ValueError("Counts apply only to an absolute move")
-    return struct.pack("<HBBBB", command.message_id, command.param1, command.param2, DEVICE, HOST)
+    return short_packet(command.message_id, command.param1, command.param2)
 
 
 @dataclass(frozen=True)

@@ -10,28 +10,28 @@ from dataclasses import dataclass
 
 from .protocol import (
     COMMANDS,
+    SETTINGS,
     FrameBuffer,
     Identity,
     Position,
     Status,
+    data_packet,
     decode_identity,
     decode_position,
     decode_status,
     request,
+    short_packet,
 )
 from .settings import (
     ACCELERATION_SCALE,
     EDITABLE,
     MAX_ANGLE,
-    SETTINGS,
     VELOCITY_SCALE,
     boolean,
-    data_packet,
     encode_changes,
     finite,
-    position_counts,
+    manual_target,
     resolve_target,
-    short_packet,
 )
 from .transport import WinUSBTransport, remaining
 
@@ -72,17 +72,20 @@ class CleanupResult:
 class MotionError(RuntimeError):
     """Original motion failure and the separate stop-cleanup outcome."""
 
-    def __init__(self, original: BaseException, cleanup: CleanupResult):
+    def __init__(
+        self, original: BaseException, cleanup: CleanupResult, *, recovery_required: bool = True
+    ):
         self.original, self.cleanup = original, cleanup
+        self.recovery_required = recovery_required
         outcome = (
             "stop confirmed by controller"
             if cleanup.confirmed_stopped
             else (f"stop unconfirmed; physical state UNKNOWN ({cleanup.error})")
         )
-        super().__init__(
-            f"{type(original).__name__}: {original}; {outcome}. "
-            "Close and explicitly reconnect before another motion."
+        recovery = (
+            " Close and explicitly reconnect before another motion." if recovery_required else ""
         )
+        super().__init__(f"{type(original).__name__}: {original}; {outcome}.{recovery}")
 
 
 class MotionCancelled(RuntimeError):
@@ -314,9 +317,13 @@ class K10CR2:
             state = self._status(deadline)
             if state.busy:
                 raise RuntimeError("Stop motion before enabling or disabling the motor")
+            if enabled:
+                self._check_motion_status(state)
             try:
                 self._transport.write(short_packet(0x0210, 1, 1 if enabled else 2), deadline)
                 state = self._status(deadline)
+                if enabled:
+                    self._check_motion_status(state)
                 if state.enabled != enabled:
                     raise RuntimeError("Motor enable readback did not match the request")
                 return state
@@ -387,7 +394,6 @@ class K10CR2:
             continuous = not jog or profile["mode"] == 1
             stop_mode = profile["stop"] if jog else 2
             old_velocity = self._setting("velocity", deadline) if continuous else None
-            lower, upper = (0, 360) if mode == "fixed" else (-MAX_ANGLE, MAX_ANGLE)
             restore = False
             completed_step = False
             try:
@@ -417,17 +423,12 @@ class K10CR2:
                     # a lease checked again after the fresh position arrives.
                     if completed_step and held is not None and not held():
                         return MotionResult(state, before, 0x0464 in self._events)
-                    if not position_counts(lower) <= before.counts <= position_counts(upper):
-                        raise ValueError(
-                            "Current counter is outside the selected range; home first"
-                        )
-                    target = (
-                        position_counts(upper if direction > 0 else lower)
-                        if continuous
-                        else before.counts + direction * profile["step"]
+                    target = manual_target(
+                        before.counts,
+                        direction,
+                        mode=mode,
+                        step=None if continuous else profile["step"],
                     )
-                    if not position_counts(lower) <= target <= position_counts(upper):
-                        raise ValueError("Jog would exceed the selected rotation range")
                     if before.counts == target:
                         return MotionResult(state, before, False, no_op=True)
                     if continuous and held is not None and not held():
@@ -466,19 +467,9 @@ class K10CR2:
                                 break
                             self._pause(deadline)
                     except BaseException as original:
-                        self._needs_recovery = True
-                        try:
-                            cleanup = CleanupResult(
-                                True, stop=self._stop(self._deadline(None, self.cleanup_timeout))
-                            )
-                        except BaseException as exc:
-                            cleanup = CleanupResult(False, error=f"{type(exc).__name__}: {exc}")
-                        failure = MotionError(original, cleanup)
-                        if restore:
-                            failure.add_note(
-                                "Temporary manual-motion profile was not restored; "
-                                "reload and inspect velocity settings after recovery."
-                            )
+                        restore_velocity = old_velocity if restore else None
+                        restore = False  # Cleanup owns restoration, including failures.
+                        failure = self._motion_failure(original, restore_velocity=restore_velocity)
                         raise failure from original
             finally:
                 if restore and not self._needs_recovery:
@@ -522,6 +513,40 @@ class K10CR2:
                 self._needs_recovery = True
                 raise
 
+    def _motion_failure(self, original, *, restore_velocity=None):
+        # Only cooperative cancellation on a healthy receive path can resume.
+        # A confirmed Stop must never erase a prior query/write/protocol fault.
+        can_resume = isinstance(original, MotionCancelled) and not self._needs_recovery
+        note = None
+        try:
+            stopped = self._stop(self._deadline(None, self.cleanup_timeout))
+            cleanup = CleanupResult(True, stop=stopped)
+            if stopped.status.motion_error or stopped.status.raw_bits & 0x40000000:
+                can_resume = False
+        except BaseException as exc:
+            cleanup = CleanupResult(False, error=f"{type(exc).__name__}: {exc}")
+            can_resume = False
+        if can_resume and restore_velocity is not None:
+            try:
+                self._write_setting(
+                    "velocity",
+                    restore_velocity,
+                    self._deadline(self.query_timeout * 2, self.query_timeout),
+                )
+            except BaseException as exc:
+                can_resume = False
+                note = (
+                    f"Temporary manual-motion profile restore failed: {type(exc).__name__}: {exc}. "
+                )
+        self._needs_recovery = not can_resume
+        failure = MotionError(original, cleanup, recovery_required=self._needs_recovery)
+        if restore_velocity is not None and not can_resume:
+            failure.add_note(
+                (note or "Temporary manual-motion profile was not restored. ")
+                + "Reload and inspect velocity settings after recovery."
+            )
+        return failure
+
     def _motion(self, name, target, timeout, cancel=None, on_progress=None) -> MotionResult:
         deadline = self._deadline(timeout, self.motion_timeout)
         with self._operation():
@@ -536,10 +561,6 @@ class K10CR2:
                 raise RuntimeError("Counted angle exceeds the manual's 43-turn bound; home first")
             if name == "move":
                 angle, mode, direction = target
-                if mode == "fixed" and not 0 <= before.degrees <= 360:
-                    raise ValueError(
-                        "Current counter is outside Fixed Range; home or use Total Angle"
-                    )
                 target = resolve_target(angle, before.degrees, mode, direction)
             if cancel is not None and cancel.is_set():
                 raise MotionCancelled("Cancelled before motion; no motion command sent")
@@ -572,6 +593,8 @@ class K10CR2:
                         raise MotionCancelled("Stop requested")
                     state = self._status(deadline)
                     self._check_motion_status(state)
+                    if not state.enabled or (name == "move" and not state.homed):
+                        raise RuntimeError("Motion lost home reference or motor enable")
                     position = self._position(deadline) if on_progress is not None else None
                     if on_progress is not None:
                         on_progress(state, position)
@@ -591,15 +614,7 @@ class K10CR2:
                             return MotionResult(state, position, completion in self._events)
                     self._pause(deadline)
             except BaseException as original:
-                self._needs_recovery = True
-                try:
-                    stopped = self._stop(self._deadline(None, self.cleanup_timeout))
-                    cleanup = CleanupResult(True, stop=stopped)
-                except BaseException as stop_error:
-                    cleanup = CleanupResult(
-                        False, error=f"{type(stop_error).__name__}: {stop_error}"
-                    )
-                raise MotionError(original, cleanup) from original
+                raise self._motion_failure(original) from original
 
     def home(
         self,
