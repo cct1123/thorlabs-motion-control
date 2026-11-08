@@ -207,7 +207,12 @@ uv build --no-sources
 
 The [repository review](docs/reviews/repository-review-20261108.md) records the
 controller/GUI migration checkpoint. Subsequent pruning reduced `gui.py` from
-1,925 to 1,615 lines; **357 Python tests** pass. See the
+1,925 to 1,615 lines. The current checks pass **363 Python tests and two JavaScript
+event tests**. The [8 November live GUI test](docs/bench/gui-live-20261108.md)
+exercised settings, cyclic Jog, Drive/release, Stop and subsequent motion on the
+actual mount, including ±12° sweeps with a 20°/s, 20°/s² profile. It found and
+retested callback rendering and one-count Move-completion fixes, then restored
+all raw settings and exactly zero counts. See the
 [validation record](docs/validation.md) for checkpoint-specific evidence and
 [command reference](docs/commands.md) for protocol details. Tests use independent
 literal frames, saved traffic and mocked USB; they do not operate the mount.

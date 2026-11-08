@@ -111,15 +111,20 @@ def main():
     parser.add_argument("--serial", required=True)
     parser.add_argument("--port", type=int, default=8050)
     parser.add_argument("--label", choices=("gui-migration", "gui-jog"), default="gui-migration")
-    parser.add_argument("--max-degrees", type=float, default=3)
+    parser.add_argument(
+        "--max-degrees",
+        type=float,
+        default=3,
+        help="Counted stop guard about absolute zero (default 3, maximum 20); allow braking margin",
+    )
     parser.add_argument("--manual-seconds", type=float, default=2)
     args = parser.parse_args()
     if len(args.serial) != 8 or not args.serial.isascii() or not args.serial.isdigit():
         parser.error("Serial must be eight ASCII digits")
     if not 1 <= args.port <= 65535:
         parser.error("Port must be 1–65535")
-    if not 0 < args.max_degrees <= 3 or not 0 < args.manual_seconds <= 5:
-        parser.error("Bench bounds require 0 < degrees <= 3 and 0 < seconds <= 5")
+    if not 0 < args.max_degrees <= 20 or not 0 < args.manual_seconds <= 5:
+        parser.error("Bench bounds require 0 < degrees <= 20 and 0 < seconds <= 5")
     stamp = datetime.now(UTC).strftime("%Y%m%d-%H%M%SZ")
     recorder = Recorder(ROOT / "docs/bench" / f"{args.label}-{stamp}")
     owner = BenchOwner(recorder, max_degrees=args.max_degrees, manual_seconds=args.manual_seconds)

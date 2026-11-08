@@ -1,0 +1,1041 @@
+{
+  "serial": "55551174",
+  "firmware": "2.0.1",
+  "date": "2026-11-08",
+  "sessions": [
+    {
+      "file": "gui-migration-20261108-233046Z.jsonl",
+      "sha256": "cadbb7e5fcb0ce388e1128155443501fbcdcb8dce39c21722fec6f6522c68c5c",
+      "guards": {
+        "counted_degrees": [
+          -3,
+          3
+        ],
+        "manual_seconds": 2
+      },
+      "counted_extent_degrees": [
+        0.0,
+        0.0
+      ],
+      "guard_events": [],
+      "shutdown": true,
+      "forbidden_modules": [],
+      "tx_packets": {
+        "0x0005": 2,
+        "0x0429": 2,
+        "0x0411": 1,
+        "0x0414": 1,
+        "0x0417": 1,
+        "0x043b": 1,
+        "0x0441": 1,
+        "0x04b7": 1
+      },
+      "operations": [
+        {
+          "command": "connect",
+          "started_utc": "2026-11-08T23:31:04.300+00:00",
+          "elapsed_s": 0.203,
+          "arguments": [
+            "55551174",
+            0,
+            null,
+            false,
+            null
+          ],
+          "final_counts": 0,
+          "busy": null,
+          "recovery": false,
+          "unknown": false,
+          "error": "",
+          "message": "connect complete.",
+          "peak_sampled_counter_rate_deg_s": 0,
+          "tx_packets": {
+            "0x0005": 2,
+            "0x0429": 1,
+            "0x0411": 1,
+            "0x0414": 1,
+            "0x0417": 1,
+            "0x043b": 1,
+            "0x0441": 1,
+            "0x04b7": 1
+          }
+        }
+      ]
+    },
+    {
+      "file": "gui-migration-20261108-233207Z.jsonl",
+      "sha256": "084ce871dc61d57d303288589e463156943b6758668fd52d11f3b7eb83e19ff5",
+      "guards": {
+        "counted_degrees": [
+          -0.4,
+          0.4
+        ],
+        "manual_seconds": 1.0
+      },
+      "counted_extent_degrees": [
+        -0.09999755859375,
+        0.35000244140625
+      ],
+      "guard_events": [],
+      "shutdown": true,
+      "forbidden_modules": [],
+      "tx_packets": {
+        "0x0005": 2,
+        "0x0429": 412,
+        "0x0411": 406,
+        "0x0414": 12,
+        "0x0417": 9,
+        "0x043b": 3,
+        "0x0441": 1,
+        "0x04b7": 1,
+        "0x0413": 6,
+        "0x0416": 2,
+        "0x043a": 1,
+        "0x046a": 3,
+        "0x0453": 4,
+        "0x0465": 3
+      },
+      "operations": [
+        {
+          "command": "connect",
+          "started_utc": "2026-11-08T23:32:20.638+00:00",
+          "elapsed_s": 0.219,
+          "arguments": [
+            "55551174",
+            0,
+            null,
+            false,
+            null
+          ],
+          "final_counts": 0,
+          "busy": null,
+          "recovery": false,
+          "unknown": false,
+          "error": "",
+          "message": "connect complete.",
+          "peak_sampled_counter_rate_deg_s": 0,
+          "tx_packets": {
+            "0x0005": 2,
+            "0x0429": 1,
+            "0x0411": 1,
+            "0x0414": 1,
+            "0x0417": 1,
+            "0x043b": 1,
+            "0x0441": 1,
+            "0x04b7": 1
+          }
+        },
+        {
+          "command": "configure",
+          "started_utc": "2026-11-08T23:32:35.967+00:00",
+          "elapsed_s": 0.047,
+          "arguments": [
+            null,
+            null,
+            {
+              "velocity": {
+                "velocity": 0.2,
+                "acceleration": 1
+              },
+              "jog": {
+                "jog_step": 0.09999756,
+                "jog_mode": 2,
+                "jog_stop": 2,
+                "jog_velocity": 0.2,
+                "jog_acceleration": 1
+              },
+              "backlash": {
+                "backlash": 0
+              }
+            },
+            false,
+            {
+              "rotation_mode": "equivalent",
+              "rotation_direction": "quickest",
+              "units": "deg",
+              "decimals": 6,
+              "high_power": false,
+              "drives": [
+                2.5,
+                5,
+                7.5,
+                10
+              ]
+            }
+          ],
+          "final_counts": 0,
+          "busy": null,
+          "recovery": false,
+          "unknown": false,
+          "error": "",
+          "message": "configure complete.",
+          "peak_sampled_counter_rate_deg_s": 0,
+          "tx_packets": {
+            "0x0429": 1,
+            "0x0414": 2,
+            "0x0417": 2,
+            "0x043b": 2,
+            "0x0413": 1,
+            "0x0416": 1,
+            "0x043a": 1
+          }
+        },
+        {
+          "command": "jog-reverse",
+          "started_utc": "2026-11-08T23:32:50.836+00:00",
+          "elapsed_s": 0.782,
+          "arguments": [
+            null,
+            0.1,
+            null,
+            false,
+            null
+          ],
+          "final_counts": -13653,
+          "busy": null,
+          "recovery": false,
+          "unknown": false,
+          "error": "",
+          "message": "jog-reverse complete.",
+          "peak_sampled_counter_rate_deg_s": 0.17427,
+          "tx_packets": {
+            "0x0429": 15,
+            "0x0417": 1,
+            "0x0411": 15,
+            "0x046a": 1
+          }
+        },
+        {
+          "command": "jog-forward",
+          "started_utc": "2026-11-08T23:32:54.739+00:00",
+          "elapsed_s": 0.718,
+          "arguments": [
+            null,
+            0.1,
+            null,
+            false,
+            null
+          ],
+          "final_counts": 0,
+          "busy": null,
+          "recovery": false,
+          "unknown": false,
+          "error": "",
+          "message": "jog-forward complete.",
+          "peak_sampled_counter_rate_deg_s": 0.18764,
+          "tx_packets": {
+            "0x0429": 14,
+            "0x0417": 1,
+            "0x0411": 14,
+            "0x046a": 1
+          }
+        },
+        {
+          "command": "drive-forward",
+          "started_utc": "2026-11-08T23:32:59.142+00:00",
+          "elapsed_s": 0.672,
+          "arguments": [
+            null,
+            0.1,
+            null,
+            false,
+            null
+          ],
+          "final_counts": 8096,
+          "busy": null,
+          "recovery": false,
+          "unknown": false,
+          "error": "",
+          "message": "drive-forward complete.",
+          "peak_sampled_counter_rate_deg_s": 0.095333,
+          "tx_packets": {
+            "0x0429": 13,
+            "0x0414": 3,
+            "0x0413": 2,
+            "0x0411": 13,
+            "0x0453": 1,
+            "0x0465": 1
+          }
+        },
+        {
+          "command": "move",
+          "started_utc": "2026-11-08T23:33:16.466+00:00",
+          "elapsed_s": 1.719,
+          "arguments": [
+            null,
+            0.35,
+            null,
+            false,
+            null
+          ],
+          "final_counts": 47787,
+          "busy": null,
+          "recovery": false,
+          "unknown": false,
+          "error": "",
+          "message": "move complete.",
+          "peak_sampled_counter_rate_deg_s": 0.190312,
+          "tx_packets": {
+            "0x0429": 31,
+            "0x0411": 31,
+            "0x0453": 1
+          }
+        },
+        {
+          "command": "stop",
+          "started_utc": "2026-11-08T23:33:20.553+00:00",
+          "elapsed_s": 0.016,
+          "arguments": [
+            "55551174",
+            0.35,
+            null,
+            false,
+            null
+          ],
+          "final_counts": 47787,
+          "busy": null,
+          "recovery": false,
+          "unknown": false,
+          "error": "",
+          "message": "stop complete.",
+          "peak_sampled_counter_rate_deg_s": 0,
+          "tx_packets": {
+            "0x0465": 1,
+            "0x0429": 1,
+            "0x0411": 1
+          }
+        },
+        {
+          "command": "move",
+          "started_utc": "2026-11-08T23:33:36.417+00:00",
+          "elapsed_s": 2.079,
+          "arguments": [
+            null,
+            0,
+            {
+              "velocity": {
+                "velocity": 0.02,
+                "acceleration": 0.2
+              }
+            },
+            false,
+            null
+          ],
+          "final_counts": 42354,
+          "busy": null,
+          "recovery": false,
+          "unknown": false,
+          "error": "",
+          "message": "Stop confirmed by controller.",
+          "peak_sampled_counter_rate_deg_s": 0.019182,
+          "tx_packets": {
+            "0x0429": 38,
+            "0x0414": 2,
+            "0x0413": 1,
+            "0x0411": 37,
+            "0x0453": 1,
+            "0x0465": 1
+          }
+        },
+        {
+          "command": "move",
+          "started_utc": "2026-11-08T23:33:44.706+00:00",
+          "elapsed_s": 1.969,
+          "arguments": [
+            null,
+            0,
+            {
+              "velocity": {
+                "velocity": 0.2,
+                "acceleration": 1
+              }
+            },
+            false,
+            null
+          ],
+          "final_counts": 0,
+          "busy": null,
+          "recovery": false,
+          "unknown": false,
+          "error": "",
+          "message": "move complete.",
+          "peak_sampled_counter_rate_deg_s": 0.17838,
+          "tx_packets": {
+            "0x0429": 36,
+            "0x0414": 2,
+            "0x0413": 1,
+            "0x0411": 35,
+            "0x0453": 1
+          }
+        },
+        {
+          "command": "configure",
+          "started_utc": "2026-11-08T23:34:00.169+00:00",
+          "elapsed_s": 0.016,
+          "arguments": [
+            null,
+            null,
+            {
+              "jog": {
+                "jog_step": 0.09999756,
+                "jog_mode": 2,
+                "jog_stop": 2,
+                "jog_velocity": 11,
+                "jog_acceleration": 1
+              }
+            },
+            false,
+            {
+              "rotation_mode": "equivalent",
+              "rotation_direction": "quickest",
+              "units": "deg",
+              "decimals": 6,
+              "high_power": false,
+              "drives": [
+                0.1,
+                0.1,
+                0.2,
+                0.2
+              ]
+            }
+          ],
+          "final_counts": 0,
+          "busy": null,
+          "recovery": false,
+          "unknown": false,
+          "error": "ValueError: Jog velocity / \u00b0/s must be a finite number from 0.005 to 10",
+          "message": "Operation failed; inspect Activity.",
+          "peak_sampled_counter_rate_deg_s": 0,
+          "tx_packets": {
+            "0x0429": 1,
+            "0x0417": 1
+          }
+        },
+        {
+          "command": "configure",
+          "started_utc": "2026-11-08T23:34:28.042+00:00",
+          "elapsed_s": 0.032,
+          "arguments": [
+            null,
+            null,
+            {
+              "velocity": {
+                "velocity": 10,
+                "acceleration": 20
+              },
+              "jog": {
+                "jog_step": 0.09999756,
+                "jog_mode": 2,
+                "jog_stop": 2,
+                "jog_velocity": 10,
+                "jog_acceleration": 20
+              }
+            },
+            false,
+            {
+              "rotation_mode": "equivalent",
+              "rotation_direction": "quickest",
+              "units": "deg",
+              "decimals": 6,
+              "high_power": false,
+              "drives": [
+                0.1,
+                0.1,
+                0.2,
+                0.2
+              ]
+            }
+          ],
+          "final_counts": 0,
+          "busy": null,
+          "recovery": false,
+          "unknown": false,
+          "error": "",
+          "message": "configure complete.",
+          "peak_sampled_counter_rate_deg_s": 0,
+          "tx_packets": {
+            "0x0429": 1,
+            "0x0414": 2,
+            "0x0417": 2,
+            "0x0413": 1,
+            "0x0416": 1
+          }
+        },
+        {
+          "command": "jog-reverse",
+          "started_utc": "2026-11-08T23:34:36.426+00:00",
+          "elapsed_s": 0.188,
+          "arguments": [
+            null,
+            0.1,
+            null,
+            false,
+            null
+          ],
+          "final_counts": -13653,
+          "busy": null,
+          "recovery": false,
+          "unknown": false,
+          "error": "",
+          "message": "jog-reverse complete.",
+          "peak_sampled_counter_rate_deg_s": 0.886114,
+          "tx_packets": {
+            "0x0429": 5,
+            "0x0417": 1,
+            "0x0411": 5,
+            "0x046a": 1
+          }
+        }
+      ]
+    },
+    {
+      "file": "gui-migration-20261108-233520Z.jsonl",
+      "sha256": "eb384fbb597864f038668247affaa2e6d79b4285233e007872eb7226ee0f87cd",
+      "guards": {
+        "counted_degrees": [
+          -15.0,
+          15.0
+        ],
+        "manual_seconds": 0.4
+      },
+      "counted_extent_degrees": [
+        -12.0,
+        12.0
+      ],
+      "guard_events": [],
+      "shutdown": true,
+      "forbidden_modules": [],
+      "tx_packets": {
+        "0x0005": 2,
+        "0x0429": 937,
+        "0x0411": 933,
+        "0x0414": 11,
+        "0x0417": 7,
+        "0x043b": 2,
+        "0x0441": 2,
+        "0x04b7": 2,
+        "0x0413": 5,
+        "0x0416": 2,
+        "0x0453": 6,
+        "0x0465": 3
+      },
+      "operations": [
+        {
+          "command": "connect",
+          "started_utc": "2026-11-08T23:35:39.466+00:00",
+          "elapsed_s": 0.219,
+          "arguments": [
+            "55551174",
+            0,
+            null,
+            false,
+            null
+          ],
+          "final_counts": -13653,
+          "busy": null,
+          "recovery": false,
+          "unknown": false,
+          "error": "",
+          "message": "connect complete.",
+          "peak_sampled_counter_rate_deg_s": 0,
+          "tx_packets": {
+            "0x0005": 2,
+            "0x0429": 1,
+            "0x0411": 1,
+            "0x0414": 1,
+            "0x0417": 1,
+            "0x043b": 1,
+            "0x0441": 1,
+            "0x04b7": 1
+          }
+        },
+        {
+          "command": "configure",
+          "started_utc": "2026-11-08T23:35:50.574+00:00",
+          "elapsed_s": 0.031,
+          "arguments": [
+            null,
+            null,
+            {
+              "velocity": {
+                "velocity": 20,
+                "acceleration": 20
+              },
+              "jog": {
+                "jog_step": 0.09999756,
+                "jog_mode": 2,
+                "jog_stop": 2,
+                "jog_velocity": 20,
+                "jog_acceleration": 20
+              }
+            },
+            false,
+            {
+              "rotation_mode": "equivalent",
+              "rotation_direction": "quickest",
+              "units": "deg",
+              "decimals": 6,
+              "high_power": true,
+              "drives": [
+                2.5,
+                5,
+                7.5,
+                10
+              ]
+            }
+          ],
+          "final_counts": -13653,
+          "busy": null,
+          "recovery": false,
+          "unknown": false,
+          "error": "",
+          "message": "configure complete.",
+          "peak_sampled_counter_rate_deg_s": 0,
+          "tx_packets": {
+            "0x0429": 1,
+            "0x0414": 2,
+            "0x0417": 2,
+            "0x0413": 1,
+            "0x0416": 1
+          }
+        },
+        {
+          "command": "move",
+          "started_utc": "2026-11-08T23:36:01.201+00:00",
+          "elapsed_s": 1.718,
+          "arguments": [
+            null,
+            348,
+            null,
+            false,
+            null
+          ],
+          "final_counts": -1638400,
+          "busy": null,
+          "recovery": false,
+          "unknown": false,
+          "error": "",
+          "message": "move complete.",
+          "peak_sampled_counter_rate_deg_s": 13.564335,
+          "tx_packets": {
+            "0x0429": 31,
+            "0x0411": 31,
+            "0x0453": 1
+          }
+        },
+        {
+          "command": "move",
+          "started_utc": "2026-11-08T23:36:12.160+00:00",
+          "elapsed_s": 2.235,
+          "arguments": [
+            null,
+            12,
+            null,
+            false,
+            null
+          ],
+          "final_counts": 1638400,
+          "busy": null,
+          "recovery": false,
+          "unknown": false,
+          "error": "",
+          "message": "move complete.",
+          "peak_sampled_counter_rate_deg_s": 18.967718,
+          "tx_packets": {
+            "0x0429": 40,
+            "0x0411": 40,
+            "0x0453": 1
+          }
+        },
+        {
+          "command": "move",
+          "started_utc": "2026-11-08T23:36:26.305+00:00",
+          "elapsed_s": 2.422,
+          "arguments": [
+            null,
+            348,
+            null,
+            false,
+            null
+          ],
+          "final_counts": -1638400,
+          "busy": null,
+          "recovery": false,
+          "unknown": false,
+          "error": "",
+          "message": "move complete.",
+          "peak_sampled_counter_rate_deg_s": 17.837544,
+          "tx_packets": {
+            "0x0429": 43,
+            "0x0411": 43,
+            "0x0453": 1
+          }
+        },
+        {
+          "command": "move",
+          "started_utc": "2026-11-08T23:37:14.610+00:00",
+          "elapsed_s": 22.796,
+          "arguments": [
+            null,
+            0,
+            null,
+            false,
+            null
+          ],
+          "final_counts": -1,
+          "busy": null,
+          "recovery": false,
+          "unknown": false,
+          "error": "",
+          "message": "Stop confirmed by controller.",
+          "peak_sampled_counter_rate_deg_s": 13.841727,
+          "tx_packets": {
+            "0x0429": 392,
+            "0x0411": 392,
+            "0x0453": 1,
+            "0x0465": 1
+          }
+        },
+        {
+          "command": "configure",
+          "started_utc": "2026-11-08T23:38:21.965+00:00",
+          "elapsed_s": 0.016,
+          "arguments": [
+            null,
+            null,
+            {
+              "jog": {
+                "jog_step": 0.09999756,
+                "jog_mode": 1,
+                "jog_stop": 2,
+                "jog_velocity": 20,
+                "jog_acceleration": 20
+              }
+            },
+            false,
+            {
+              "rotation_mode": "equivalent",
+              "rotation_direction": "quickest",
+              "units": "deg",
+              "decimals": 3,
+              "high_power": true,
+              "drives": [
+                2.5,
+                5,
+                7.5,
+                10
+              ]
+            }
+          ],
+          "final_counts": -1,
+          "busy": null,
+          "recovery": false,
+          "unknown": false,
+          "error": "",
+          "message": "configure complete.",
+          "peak_sampled_counter_rate_deg_s": 0,
+          "tx_packets": {
+            "0x0429": 1,
+            "0x0417": 2,
+            "0x0416": 1
+          }
+        },
+        {
+          "command": "configure",
+          "started_utc": "2026-11-08T23:39:30.137+00:00",
+          "elapsed_s": 0.016,
+          "arguments": [
+            null,
+            null,
+            {
+              "velocity": {
+                "velocity": 20,
+                "acceleration": 21
+              }
+            },
+            false,
+            {
+              "rotation_mode": "total",
+              "rotation_direction": "quickest",
+              "units": "counts",
+              "decimals": 3,
+              "high_power": true,
+              "drives": [
+                5,
+                10,
+                15,
+                20
+              ]
+            }
+          ],
+          "final_counts": -1,
+          "busy": null,
+          "recovery": false,
+          "unknown": false,
+          "error": "ValueError: Acceleration / \u00b0/s\u00b2 must be a finite number from 0.001 to 20",
+          "message": "Operation failed; inspect Activity.",
+          "peak_sampled_counter_rate_deg_s": 0,
+          "tx_packets": {
+            "0x0429": 1,
+            "0x0414": 1
+          }
+        },
+        {
+          "command": "load-settings",
+          "started_utc": "2026-11-08T23:39:35.474+00:00",
+          "elapsed_s": 0.031,
+          "arguments": [
+            "55551174",
+            0,
+            null,
+            false,
+            null
+          ],
+          "final_counts": -1,
+          "busy": null,
+          "recovery": false,
+          "unknown": false,
+          "error": "",
+          "message": "load-settings complete.",
+          "peak_sampled_counter_rate_deg_s": 0,
+          "tx_packets": {
+            "0x0429": 1,
+            "0x0411": 1,
+            "0x0414": 1,
+            "0x0417": 1,
+            "0x043b": 1,
+            "0x0441": 1,
+            "0x04b7": 1
+          }
+        },
+        {
+          "command": "jog-reverse",
+          "started_utc": "2026-11-08T23:39:56.748+00:00",
+          "elapsed_s": 0.281,
+          "arguments": [
+            null,
+            5,
+            null,
+            false,
+            null
+          ],
+          "final_counts": -71037,
+          "busy": null,
+          "recovery": false,
+          "unknown": false,
+          "error": "",
+          "message": "jog-reverse complete.",
+          "peak_sampled_counter_rate_deg_s": 3.386347,
+          "tx_packets": {
+            "0x0429": 6,
+            "0x0417": 1,
+            "0x0414": 3,
+            "0x0413": 2,
+            "0x0411": 6,
+            "0x0453": 1,
+            "0x0465": 1
+          }
+        },
+        {
+          "command": "drive-forward",
+          "started_utc": "2026-11-08T23:40:03.021+00:00",
+          "elapsed_s": 0.281,
+          "arguments": [
+            null,
+            20,
+            null,
+            false,
+            null
+          ],
+          "final_counts": 4362,
+          "busy": null,
+          "recovery": false,
+          "unknown": false,
+          "error": "",
+          "message": "drive-forward complete.",
+          "peak_sampled_counter_rate_deg_s": 2.917011,
+          "tx_packets": {
+            "0x0429": 6,
+            "0x0414": 3,
+            "0x0413": 2,
+            "0x0411": 6,
+            "0x0453": 1,
+            "0x0465": 1
+          }
+        }
+      ]
+    },
+    {
+      "file": "gui-migration-20261108-234022Z.jsonl",
+      "sha256": "596f4256a516bf13cef081ef0fef1e60489eed6decafb450b8c67c11e29f4a44",
+      "guards": {
+        "counted_degrees": [
+          -15.0,
+          15.0
+        ],
+        "manual_seconds": 0.4
+      },
+      "counted_extent_degrees": [
+        -12.0,
+        0.09999755859375
+      ],
+      "guard_events": [],
+      "shutdown": true,
+      "forbidden_modules": [],
+      "tx_packets": {
+        "0x0005": 2,
+        "0x0429": 291,
+        "0x0411": 289,
+        "0x0414": 3,
+        "0x0417": 1,
+        "0x043b": 1,
+        "0x0441": 1,
+        "0x04b7": 1,
+        "0x0453": 4,
+        "0x0413": 1
+      },
+      "operations": [
+        {
+          "command": "connect",
+          "started_utc": "2026-11-08T23:40:40.830+00:00",
+          "elapsed_s": 0.219,
+          "arguments": [
+            "55551174",
+            0,
+            null,
+            false,
+            null
+          ],
+          "final_counts": 4362,
+          "busy": null,
+          "recovery": false,
+          "unknown": false,
+          "error": "",
+          "message": "connect complete.",
+          "peak_sampled_counter_rate_deg_s": 0,
+          "tx_packets": {
+            "0x0005": 2,
+            "0x0429": 1,
+            "0x0411": 1,
+            "0x0414": 1,
+            "0x0417": 1,
+            "0x043b": 1,
+            "0x0441": 1,
+            "0x04b7": 1
+          }
+        },
+        {
+          "command": "move",
+          "started_utc": "2026-11-08T23:41:05.414+00:00",
+          "elapsed_s": 1.719,
+          "arguments": [
+            null,
+            348,
+            null,
+            false,
+            null
+          ],
+          "final_counts": -1638400,
+          "busy": null,
+          "recovery": false,
+          "unknown": false,
+          "error": "",
+          "message": "move complete.",
+          "peak_sampled_counter_rate_deg_s": 13.598121,
+          "tx_packets": {
+            "0x0429": 31,
+            "0x0411": 31,
+            "0x0453": 1
+          }
+        },
+        {
+          "command": "move",
+          "started_utc": "2026-11-08T23:41:21.461+00:00",
+          "elapsed_s": 1.594,
+          "arguments": [
+            null,
+            0,
+            null,
+            false,
+            null
+          ],
+          "final_counts": -1,
+          "busy": null,
+          "recovery": false,
+          "unknown": false,
+          "error": "",
+          "message": "move complete.",
+          "peak_sampled_counter_rate_deg_s": 13.665713,
+          "tx_packets": {
+            "0x0429": 29,
+            "0x0411": 29,
+            "0x0453": 1
+          }
+        },
+        {
+          "command": "move",
+          "started_utc": "2026-11-08T23:41:56.523+00:00",
+          "elapsed_s": 0.734,
+          "arguments": [
+            null,
+            0.1,
+            {
+              "velocity": {
+                "velocity": 0.2,
+                "acceleration": 1
+              }
+            },
+            false,
+            null
+          ],
+          "final_counts": 13653,
+          "busy": null,
+          "recovery": false,
+          "unknown": false,
+          "error": "",
+          "message": "move complete.",
+          "peak_sampled_counter_rate_deg_s": 0.189721,
+          "tx_packets": {
+            "0x0429": 15,
+            "0x0414": 2,
+            "0x0413": 1,
+            "0x0411": 14,
+            "0x0453": 1
+          }
+        },
+        {
+          "command": "move",
+          "started_utc": "2026-11-08T23:42:18.758+00:00",
+          "elapsed_s": 0.781,
+          "arguments": [
+            null,
+            0,
+            null,
+            false,
+            null
+          ],
+          "final_counts": 0,
+          "busy": null,
+          "recovery": false,
+          "unknown": false,
+          "error": "",
+          "message": "move complete.",
+          "peak_sampled_counter_rate_deg_s": 0.187291,
+          "tx_packets": {
+            "0x0429": 15,
+            "0x0411": 15,
+            "0x0453": 1
+          }
+        }
+      ]
+    }
+  ],
+  "restoration": {
+    "exact_settings_match": true,
+    "counts": 0,
+    "status_bits": "0x80000400",
+    "home_unchanged": true,
+    "buttons_unchanged": true,
+    "eeprom": false
+  }
+}

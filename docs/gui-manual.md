@@ -89,6 +89,13 @@ reported by the owner worker, and failed device validation leaves session option
 unchanged. GUI-only checks cover display formatting, request identity, owner/lease
 lifecycle and recovery/UNKNOWN state.
 
+The [8 November live GUI test](bench/gui-live-20261108.md) exercised all three
+settings tabs, session display/rotation/Drive options, device profile writes,
+Reset/Cancel/Refresh, cyclic Jog and maximum profiles on the actual mount. It
+also fixed the migration check rejecting valid Dash requests with omitted empty
+State lists, which had left the page disconnected while the USB owner connected.
+Old callback layouts still require a tab reload. Raw settings were restored exactly.
+
 The [migrated-GUI actual-mount test](bench/gui-migration-20261106-231335Z.md) also
 verified small Fixed/Total/Equivalent routes and repeated quantized phase targets.
 Equivalent routing now compares integer counter phases; repeating the reached

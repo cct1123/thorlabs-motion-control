@@ -1,5 +1,32 @@
 # Validation record
 
+## Live GUI debugging and maximum profiles: 8 November 2026
+
+The [live test report](bench/gui-live-20261108.md) records actual user-like browser
+actions on serial 55551174, firmware 2.0.1. Initial ±0.5° testing verified reverse
+Jog from zero, Drive release, Stop and a subsequent Move without reconnecting.
+After the operator expanded clearance to ±20° and confirmed a >0.9 A supply,
+20°/s and 20°/s² profiles completed sweeps between −12° and +12°. Continuous Jog
+and Drive stopped on release. All three settings tabs, Apply, Reset, Cancel and
+Refresh were exercised; invalid supply-speed and acceleration edits sent no
+setting writes. No Home or EEPROM command was sent.
+
+Two reproduced bugs were fixed and retested: rejection of Dash's omitted empty
+State fields froze status rendering, and exact Move-target equality left an idle
+mount waiting at a one-count residual. Absolute Move now accepts ±1 count only
+after fresh healthy idle/homed/enabled state and progress; Home remains exact.
+The same −12° to zero return completed at −1 count with the fix. A slow cleanup
+returned to exact zero, followed by exact raw restoration of all five settings
+groups and an independent fresh GUI connection/readback. The GUI was left running
+and disconnected. See the [summary](bench/gui-live-20261108-summary.json), raw
+traffic linked in the report and [restoration](bench/gui-live-20261108-restored.json).
+
+**363 Python tests and two JavaScript event tests passed**, with repository
+lint/format and JavaScript syntax checks. Offline source/wheel builds passed;
+the wheel contains exactly eight current Python modules, one GUI script, and
+byte-identical source, assets and bundled manual. Controller counters and sampled timing
+do not independently establish physical angle, velocity or stopping distance.
+
 ## GUI pruning: 8 November 2026
 
 `gui.py` shrank from 1,925 to 1,615 lines (310 lines, about 16%). Settings uses a

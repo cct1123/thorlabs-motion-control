@@ -1,0 +1,92 @@
+{
+  "serial": "55551174",
+  "baseline": "docs\\bench\\gui-live-20261108-baseline.json",
+  "motion": false,
+  "eeprom": false,
+  "before": {
+    "velocity": {
+      "channel": 1,
+      "minimum": 0,
+      "acceleration": 1502,
+      "maximum": 1465822
+    },
+    "jog": {
+      "channel": 1,
+      "mode": 1,
+      "step": 13653,
+      "minimum": 0,
+      "acceleration": 30040,
+      "maximum": 146582180,
+      "stop": 2
+    },
+    "backlash": {
+      "channel": 1,
+      "distance": 0
+    },
+    "home": {
+      "channel": 1,
+      "direction": 2,
+      "switch": 1,
+      "velocity": 73300775,
+      "offset": 546133
+    },
+    "buttons": {
+      "channel": 1,
+      "mode": 1,
+      "position1": 136533,
+      "position2": 682667,
+      "timeout1": 500,
+      "timeout2": 500
+    }
+  },
+  "after": {
+    "velocity": {
+      "channel": 1,
+      "minimum": 0,
+      "acceleration": 15020,
+      "maximum": 73291090
+    },
+    "jog": {
+      "channel": 1,
+      "mode": 2,
+      "step": 13653,
+      "minimum": 0,
+      "acceleration": 22530,
+      "maximum": 73291090,
+      "stop": 2
+    },
+    "backlash": {
+      "channel": 1,
+      "distance": 136533
+    },
+    "home": {
+      "channel": 1,
+      "direction": 2,
+      "switch": 1,
+      "velocity": 73300775,
+      "offset": 546133
+    },
+    "buttons": {
+      "channel": 1,
+      "mode": 1,
+      "position1": 136533,
+      "position2": 682667,
+      "timeout1": 500,
+      "timeout2": 500
+    }
+  },
+  "status": {
+    "raw_bits": 2147484672,
+    "moving": false,
+    "homing": false,
+    "homed": true,
+    "enabled": true,
+    "motion_error": false
+  },
+  "position": {
+    "counts": 0,
+    "degrees": 0.0
+  },
+  "exact_match": true,
+  "forbidden_modules": []
+}
