@@ -1,5 +1,45 @@
 # Validation record
 
+## Holistic review and clean migration: 8 November 2026
+
+The [current review](reviews/repository-review-20261108.md) adds reproduced
+regressions for faulted Enable, loss of motor enable/home reference during motion,
+and Stop accepted before a motion write. **354 Python tests and two JavaScript
+event tests passed**, plus repository lint/format checks. Runtime GUI code lives
+in `gui.py`; the split modules and legacy forwarding paths are absent. The review
+records package checks, generated-cache cleanup and the staged source commits.
+No hardware operation or new bench acceptance is claimed.
+
+## Cyclic GUI and settings simplification: 8 November 2026
+
+The GUI now defaults to Equivalent Angle. Scripted USB regressions verify reverse
+jog from zero, forward jog across 360 degrees, wrapped display, and a bounded reverse
+Drive target with same-owner release/Stop and verified velocity restoration. Fixed
+Range remains available explicitly; its outward-travel, inward-recovery and opposite-
+boundary checks remain tested. CLI/library defaults remain fixed.
+
+The Actuator form now has one Apply changes action. Tests verify complete draft
+validation before writes, use of the candidate USB supply rating, opt-in EEPROM
+requests, and deferred publication of session options until device application
+succeeds. A failed device application retains the prior session and reports possible
+partial device changes. No-edit and session-only applications avoid configuration
+requests. Old callback input layouts require a tab reload.
+
+The owner, component construction, routes, callbacks and server are consolidated
+in `gui.py`; named form fields, defaults and draft conversion live in `gui_forms.py`.
+Settings publication/configuration use shared owner helpers. Manual
+target calculation is pure, and `protocol.py` owns wire layouts, packet construction
+and derived settings-reply sizes. Independent literal-frame tests still verify the
+wire contract. Connection recovery and physical-state uncertainty remain distinct.
+
+**345 Python tests and two JavaScript event tests passed**, along with Ruff checks,
+formatting and JavaScript syntax checks. An offline source/wheel build succeeded;
+the wheel contains byte-identical copies of all current Python modules, both
+browser scripts and the manufacturer manual. These are offline/scripted checks;
+no physical mount operation, new bench acceptance or independent angular
+measurement is claimed. Prior dated
+hardware records below retain their original software versions and scope.
+
 ## Repository review after jog acceptance: 6 November 2026
 
 The [follow-up review](reviews/repository-review-20261106.md) fixed shutdown retry

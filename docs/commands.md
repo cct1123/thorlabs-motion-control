@@ -35,7 +35,7 @@ are little-endian. Reply payload sizes below exclude the six-byte header.
 | Identity | 0005 | `05 00 00 00 50 01` | 0006 | 84 bytes | 59-60 |
 | Status | 0429 | `29 04 01 00 50 01` | 042A | channel uint16 + bits uint32 | 148 |
 | Position | 0411 | `11 04 01 00 50 01` | 0412 | channel uint16 + counts int32 | 73-74 |
-| Enable, internal helper | 0210 | `10 02 01 01 50 01` | no direct reply; query enabled bit | none | 52-53 |
+| Enable | 0210 | `10 02 01 01 50 01` | no direct reply; query enabled bit | none | 52-53 |
 | Home | 0443 | `43 04 01 00 50 01` | 0444 | none; channel is header byte 2 | 91 |
 | Absolute move | 0453 | `53 04 06 00 D0 01 01 00` + target int32 | 0464 | documented 14 bytes | 94-96 |
 | Profiled stop | 0465 | `65 04 01 02 50 01` | 0466 | documented 14 bytes | 99-100 |

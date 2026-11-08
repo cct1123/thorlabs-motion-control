@@ -23,8 +23,9 @@ Open **http://127.0.0.1:8050**; use `--port 8051` if that port is occupied.
 Startup only shows the UI; click **Connect** for readback. If the mount is not
 homed, use **Home** explicitly before positioning. Close other software that owns
 the mount first.
-After a software update, reload every open GUI tab before reconnecting; stale
-callback layouts are rejected with a reload-required response.
+To update, Stop active motion, Disconnect, and Close web UI. Restart the server
+with the updated software, then reload every open GUI tab before reconnecting.
+Stale callback layouts are rejected with a reload-required response.
 
 The panel provides Move/profile editing, Home, Stop, held Drive/Jog controls,
 Enable/Disable, Identify, serial/position/status and limit indicators. Settings
@@ -33,10 +34,16 @@ quickest routing, velocity/jog/backlash and hardware-button parameters. **Connec
 reads all five device settings groups; **Refresh readbacks** reloads them and shows
 the read time. **Refresh status** reads status and position without replacing
 settings or settings drafts. Setting writes require fresh readback, validation and verification.
-Persistence is opt-in; an EEPROM write is
-reported as requested, not power-cycle proven. Session display and drive options
-have a separate **Apply session options** button. **Close**, × and Escape discard
-unapplied settings edits. Dialog feedback stays visible beside the actions.
+The GUI defaults to **Equivalent Angle**: reverse Jog/Drive can cross zero and the
+display wraps through 360°. **Fixed Range** remains an explicit single-turn option;
+**Total Angle** shows signed accumulated rotation. All modes retain the counted
+±15,480° software guard at the manual's display/counting bound; it is not a mechanical stop.
+One **Apply changes** action validates the complete form and applies edited device
+settings, then publishes the session display/rotation/drive options. An unchanged
+form sends no configuration request. Device-setting failure leaves session options
+unchanged and reports that device changes may be partial. Persistence is opt-in;
+an EEPROM write is reported as requested, not power-cycle proven. **Close**, × and
+Escape discard unapplied settings edits. Dialog feedback stays visible beside the actions.
 
 Unverified S-curve, power, trigger and factory-reset controls are visibly unavailable;
 stage-specific settings remain locked as instructed by the manual. See the full
@@ -45,7 +52,9 @@ stage-specific settings remain locked as instructed by the manual. See the full
 
 One worker owns USB; motions are not queued. Release, lost focus or an expired
 browser heartbeat requests a stop for held controls. Software Stop is not hard
-real time. Query/motion faults require explicit recovery; an unconfirmed stop
+real time. A confirmed operator Stop on a healthy connection allows another command
+without reconnecting, after any temporary velocity profile is restored and verified.
+Query/motion faults still require explicit recovery; an unconfirmed stop
 retains **physical state UNKNOWN**. **Close web UI** or console **Ctrl+C** waits
 for the owner before releasing USB. Closing a tab alone leaves the server running;
 finite moves continue, while held controls expire. All tabs share the controller.
@@ -53,18 +62,13 @@ The server binds only to loopback and rejects foreign-host/cross-origin writes.
 Normal and recording servers share shutdown handling: a timed-out, interrupted or
 failed shutdown keeps the controls available for Stop/retry.
 
-The [migrated-GUI hardware test](docs/bench/gui-migration-20261106-231335Z.md) passed
-small Fixed/Total/Equivalent moves, all three Equivalent directions, repeated-phase
-no-ops, Jog, Drive/release, Stop and all five settings readbacks on serial 55551174,
-firmware 2.0.1. Two defects were fixed and retested; original raw settings were
-restored exactly. The [earlier test](docs/bench/gui-controls-20261106-211627Z.md)
-also covers Home. The [held-jog acceptance record](docs/bench/gui-jog-20261107-002109Z.md)
-adds continuous jog and 0.05° held-repeat checks: pointer release, focus moving to
-another control, navigation away, and Stop. Release/focus races were fixed and
-retested; original raw settings were restored at zero. Ordinary OS window switching
-was not reproduced. Independent accuracy, full/multi-turn travel and fault scenarios
-remain unverified. Install the `gui` extra for GUI tests; core library/CLI use does
-not require Dash.
+Earlier [migrated-GUI](docs/bench/gui-migration-20261106-231335Z.md) and
+[held-jog](docs/bench/gui-jog-20261107-002109Z.md) bench records cover small motions,
+release/focus/Stop behavior and exact settings restoration on serial 55551174,
+firmware 2.0.1. The latest cyclic-default and settings migration is validated offline.
+Independent accuracy, full/multi-turn travel, ordinary OS window switching and fault
+scenarios still need bench acceptance. Install the `gui` extra for GUI tests; core
+library/CLI use does not require Dash.
 
 ## Setup
 
@@ -113,16 +117,23 @@ uv run --locked k10cr2 --serial 55551174 stop --timeout 5
 An absolute move requires a fresh homed status. Fixed Range accepts finite targets
 in `0 <= angle <= 360` degrees, rounded to the nearest count (ties to even).
 The 360° endpoint is a complete counted turn; targets do not silently wrap.
+An already-homed counter outside Fixed Range can move back to a target inside it.
+In Fixed Range, manual controls permit inward recovery: finite jogs may approach or enter the
+interval without crossing the opposite boundary; held Drive/continuous Jog stops at
+the nearest boundary. The ±15,480° counted bound still applies to the current position.
 CLI, GUI and library share the same modes: `fixed`, `total` (±15,480°) and
 `equivalent` (0–360° phase resolved from a fresh counter). For equivalent routing,
 choose `--direction quickest`, `forward` or `reverse`; use `--mode` to select the mode.
+The GUI starts in `equivalent`; CLI and library defaults remain `fixed`.
 The device's backlash settings remain in effect.
 
 Home/move block until fresh status and position confirm completion. Homing must show
 a new homing/not-homed transition. A move already at its target is reported as a
 `no_op`. A short move can finish without a captured busy flag if the fresh position
 counter changed to the requested target. Completion notification receipt is reported
-separately from these status/counter checks.
+separately from these status/counter checks. Loss of motor enable during Home/Move,
+or loss of the home reference during an absolute Move, triggers same-owner Stop
+cleanup and requires explicit recovery.
 
 While a blocking home/move owns the connection, **Ctrl+C** attempts a profiled stop
 through that same connection. Do not start another CLI or application to interrupt it.
@@ -157,7 +168,10 @@ remain unavailable. Confirmation flags require actual booleans; see the
 `cancel`, plus `on_progress(status, position)`. Setting the event requests
 cooperative cancellation through the active owner. After a motion command,
 cancellation raises `MotionError` with `MotionCancelled` as its original cause
-and a separate stop-cleanup result. Cancellation observed before enabling/motion
+and a separate stop-cleanup result. A clean cooperative cancellation has
+`MotionError.recovery_required == False`; the connection remains usable after a
+confirmed stop and verified temporary-profile restoration. The GUI reports this
+as an informational Stop. Cancellation observed before enabling/motion
 raises `MotionCancelled` directly. Progress callbacks run synchronously on the
 owner thread, must return promptly, and must not call the controller. They add a
 position query to each motion poll; observer failures trigger stop cleanup.
@@ -185,25 +199,28 @@ uv run --locked ruff format --check .
 uv build --no-sources
 ```
 
-See [command reference](docs/commands.md) and [validation record](docs/validation.md).
-The [latest repository review](docs/reviews/repository-review-20261106.md) records
-shutdown/input/migration fixes, **292 Python and 2 JavaScript tests**, offline
-package checks, cleanup and final live readback. Node.js runs the browser-script
-event tests; Python tests use the project environment. The [earlier holistic
-review](docs/reviews/holistic-review-20261106.md) retains its own checkpoint. Older dated
-reviews describe their historical checkpoints.
-The [full capability/coverage catalogue](docs/command-catalog.md) distinguishes
-implemented commands, additional documented queries/settings, explicit exclusions,
-and unresolved K10CR2 applicability. Current settings and manual-motion extensions
-are mapped separately in [the GUI contract](docs/gui-manual.md).
-The tests use independent literal frames, saved device traffic, scripted controller
-responses, and mocked USB calls. They do not move real hardware.
+The current [repository review](docs/reviews/repository-review-20261108.md) records
+**354 Python and 2 JavaScript tests**, regression fixes, the single-script GUI
+migration, offline packaging and generated-cache cleanup. See the
+[validation record](docs/validation.md) for checkpoint-specific evidence and
+[command reference](docs/commands.md) for protocol details. Tests use independent
+literal frames, saved traffic and mocked USB; they do not operate the mount.
 
-Packaged identity/status/position queries, homing, a move to 90 degrees, and return
-to zero passed on serial 55551174, firmware 2.0.1. Profiled stop and real console
-Ctrl+C during motion also passed, with stop acknowledgements, position/status
-queries, and successful returns to zero. The controller reported fresh completion
-messages, expected counts, and stopped/homed status. Additional angles and independent
-direction/angle observations still need bench acceptance.
-A position counter agreement does not establish physical angular accuracy. Reboot
-persistence, long sessions, and coexistence stability remain unverified.
+Runtime source is organized as follows:
+
+- `gui.py`: GUI owner, layout, callbacks, local HTTP routes and server lifecycle.
+- `gui_forms.py`: pure named-form conversion and session-option validation.
+- `controller.py`: explicit-connect device API, motion ownership and recovery.
+- `protocol.py`: APT packet/layout definitions, frame parsing and reply validation.
+- `settings.py`: units, limits, target resolution and editable-setting validation.
+- `transport.py`: lazy USB initialization, FTDI bridge setup and bounded transfers.
+- `cli.py`: JSON command-line interface.
+
+The [capability catalogue](docs/command-catalog.md) distinguishes implemented
+commands, documented possibilities and unsupported K10CR2 mappings; the
+[GUI contract](docs/gui-manual.md) describes settings and operator behavior.
+Historical [6 November review](docs/reviews/repository-review-20261106.md) and
+[bench records](docs/validation.md) retain their original source checkpoints.
+Controller-reported counters and completion do not establish independent angular
+accuracy. Physical speed calibration, reboot persistence, long sessions and
+coexistence stability remain unverified.

@@ -11,11 +11,18 @@ legacy command adapter or automatic startup configuration is retained.
 | GUI `refresh-state` control, which also reloaded settings | `refresh-status` reads status/position only; Settings **Refresh readbacks** reloads device settings. No old-ID alias. |
 | GUI `step-plus` / `step-minus`, `submit(..., step=...)` | Removed. Use native Jog with readback-verified jog settings. |
 | `k10cr2.protocol.angle_to_counts(angle)` | `k10cr2.settings.resolve_target(angle, current_degrees, mode, direction)` for a preview in counts; ordinary code passes degrees to `move_absolute()` |
-| `k10cr2.gui` re-exports of view helpers | `create_app`, `controls`, `CONTROL_IDS` live in `k10cr2.gui_view`; `k10cr2.gui` owns the server, entry point and shared server lifecycle |
-| Settings OK / implicit Apply | Explicit Apply session options, Apply device settings, and Close |
+| Separate `gui_state`, `gui_view` and `gui_layout` modules | `k10cr2.gui` contains the owner, layout, callbacks, `create_app`, controls and server entry point; no forwarding modules remain |
+| `SETTINGS`, `Setting`, `short_packet`, `data_packet` in `k10cr2.settings` | Wire definitions and packet helpers live in `k10cr2.protocol`; `settings` owns units, limits and validation |
+| Separate session/device Apply actions and device-group checkboxes | One Apply changes action; edited groups are detected automatically, EEPROM saving is opt-in, and Close discards unapplied edits |
 
 These interfaces have no compatibility aliases. Repository callers, tests and
 tutorial notebooks are migrated together.
+
+GUI tests import the consolidated module; owner regressions live in
+`tests/test_gui_owner.py`. Form metadata uses `SESSION_FIELDS` and
+`SESSION_SCALAR_FIELDS`, matching the session-option naming in the owner. All
+current callers and the bench recorder use the canonical imports. Old names in
+dated reports, captured requests and negative migration tests are historical evidence.
 
 To update a running GUI, first stop active motion through its current owner,
 disconnect, and close the web UI server. Update the software, start the new version,
@@ -25,13 +32,19 @@ adapted to the new interface. Reconnection does not automatically home or apply 
 
 ## Shared angle contract
 
-- `fixed` (default): finite absolute target **0–360° inclusive**, from a counter
-  already inside that interval. A 360° target is a full counted turn, distinct from
+- `fixed` (CLI/library default): finite absolute target **0–360° inclusive**. A homed counter
+  outside the interval may return to a target inside it, provided the current
+  counter remains within ±15,480°. A 360° target is a full counted turn, distinct from
   zero. Nearest-count rounding can round a value just below 360° to that endpoint.
 - `total`: finite signed target within **±15,480°** (the manual's 43-turn bound).
-- `equivalent`: finite phase **0–360°**, resolved from a fresh counted position
+- `equivalent` (GUI default): finite phase **0–360°**, resolved from a fresh counted position
   using `quickest`, `forward` or `reverse`. The display wraps; the counter retains
   complete turns. A 180° tie chooses forward.
+
+Equivalent and Total manual controls can cross zero and full revolutions in either
+direction. Equivalent wraps the display, including negative counted positions;
+Total displays signed accumulated rotation. Fixed Range deliberately retains its
+single-turn restriction. All retain the current-counter and target bounds.
 
 The controller resolves routes while it owns USB. A GUI preview or earlier
 readback is never used as a substitute for that fresh position. All motion
@@ -40,6 +53,17 @@ perform no USB access. Existing controller backlash parameters remain in effect.
 Equivalent routes compare quantized integer counter phases, so repeating an
 already-reached phase is a no-op in every direction. Unedited Move dialog profiles
 preserve current device settings; actual profile edits still require validation.
+
+Outside Fixed Range, manual controls reject outward travel. Finite jogs may approach
+or enter the interval, but cannot cross its opposite boundary. Held Drive and
+continuous Jog stop at the nearest boundary when recovering from outside.
+
+A cooperative operator Stop no longer requires reconnect when the same owner
+confirms stopped status/position on a healthy connection and restores/verifies any
+temporary velocity profile. The library still raises `MotionError` for an interrupted
+motion, with `recovery_required=False`; the GUI shows an informational Stop. Query,
+transport, controller and profile-restoration faults, and unconfirmed stops, retain
+explicit recovery. A later successful Stop does not clear a prior connection fault.
 
 ```python
 mount.move_absolute(90)  # Fixed Range, degrees
