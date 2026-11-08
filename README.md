@@ -208,8 +208,8 @@ literal frames, saved traffic and mocked USB; they do not operate the mount.
 
 Runtime source is organized as follows:
 
-- `gui.py`: GUI owner, layout, callbacks, local HTTP routes and server lifecycle.
-- `gui_forms.py`: pure named-form conversion and session-option validation.
+- `gui.py`: the only GUI script, including owner, forms, validation, layout,
+  callbacks, local HTTP routes and server lifecycle.
 - `controller.py`: explicit-connect device API, motion ownership and recovery.
 - `protocol.py`: APT packet/layout definitions, frame parsing and reply validation.
 - `settings.py`: units, limits, target resolution and editable-setting validation.

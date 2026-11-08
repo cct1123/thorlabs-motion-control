@@ -1,5 +1,15 @@
 # Validation record
 
+## One GUI script follow-up: 8 November 2026
+
+All GUI code, including named form fields, defaults, draft conversion and session
+validation, now lives in `gui.py`. The final `gui_forms.py` helper module has been
+removed without a compatibility wrapper. GUI tests use the consolidated module;
+core manual-motion tests exercise Equivalent mode directly, keeping core tests
+independent of Dash. The owner regressions still verify the cyclic GUI default.
+All 354 Python tests and repository lint/format checks passed after consolidation.
+The earlier checkpoints below describe their original intermediate layouts.
+
 ## Holistic review and clean migration: 8 November 2026
 
 The [current review](reviews/repository-review-20261108.md) adds reproduced

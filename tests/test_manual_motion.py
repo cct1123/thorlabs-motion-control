@@ -17,7 +17,6 @@ from conftest import (
 )
 
 from k10cr2 import MotionCancelled, MotionError
-from k10cr2.gui_forms import default_session
 from k10cr2.settings import display_angle
 
 # Independent issue-48 single-step jog layout: channel, mode, step, minimum,
@@ -295,11 +294,11 @@ def test_held_recovery_stops_at_nearest_fixed_boundary(
 @pytest.mark.parametrize(
     "counts,direction,target", [(0, -1, -12_288_000), (49_152_000, 1, 61_440_000)]
 )
-def test_default_gui_jog_crosses_zero_and_full_turn(mount_factory, counts, direction, target):
+def test_equivalent_jog_crosses_zero_and_full_turn(mount_factory, counts, direction, target):
     position = bytes.fromhex("12 04 06 00 81 50") + struct.pack("<Hi", 1, counts)
     target_position = bytes.fromhex("12 04 06 00 81 50") + struct.pack("<Hi", 1, target)
     jog = bytes.fromhex("6a 04 01 02 50 01" if direction < 0 else "6a 04 01 01 50 01")
-    mode = default_session()["rotation_mode"]
+    mode = "equivalent"
     mount, fake = mount_factory(
         [
             (STATUS_REQUEST, HOMED),
@@ -311,14 +310,14 @@ def test_default_gui_jog_crosses_zero_and_full_turn(mount_factory, counts, direc
         ]
     )
     result = mount.manual_motion(direction, jog=True, mode=mode)
-    assert mode == "equivalent" and result.position.counts == target
+    assert result.position.counts == target
     assert display_angle(result.position.degrees, mode) == (
         "270.000000" if direction < 0 else "90.000000"
     )
     assert not fake.steps
 
 
-def test_default_reverse_drive_from_zero_is_bounded_and_stops_on_release(mount_factory):
+def test_equivalent_reverse_drive_from_zero_is_bounded_and_stops_on_release(mount_factory):
     # -15,480 degrees = -2,113,536,000 counts, still inside signed int32.
     boundary = bytes.fromhex("53 04 06 00 d0 01") + struct.pack("<Hi", 1, -2_113_536_000)
     held = [True]
@@ -342,7 +341,7 @@ def test_default_reverse_drive_from_zero_is_bounded_and_stops_on_release(mount_f
     result = mount.manual_motion(
         -1,
         speed=1,
-        mode=default_session()["rotation_mode"],
+        mode="equivalent",
         held=lambda: held[0],
         on_progress=lambda *_: held.__setitem__(0, False),
     )

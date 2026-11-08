@@ -11,8 +11,8 @@ from k10cr2.gui import (  # noqa: E402
     GuiController,  # noqa: E402
     controls,
     create_app,
+    form_values,  # noqa: E402
 )
-from k10cr2.gui_forms import form_values  # noqa: E402
 
 
 def test_layout_assets_and_status_never_open_usb():

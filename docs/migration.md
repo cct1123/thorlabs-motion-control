@@ -11,7 +11,7 @@ legacy command adapter or automatic startup configuration is retained.
 | GUI `refresh-state` control, which also reloaded settings | `refresh-status` reads status/position only; Settings **Refresh readbacks** reloads device settings. No old-ID alias. |
 | GUI `step-plus` / `step-minus`, `submit(..., step=...)` | Removed. Use native Jog with readback-verified jog settings. |
 | `k10cr2.protocol.angle_to_counts(angle)` | `k10cr2.settings.resolve_target(angle, current_degrees, mode, direction)` for a preview in counts; ordinary code passes degrees to `move_absolute()` |
-| Separate `gui_state`, `gui_view` and `gui_layout` modules | `k10cr2.gui` contains the owner, layout, callbacks, `create_app`, controls and server entry point; no forwarding modules remain |
+| Separate `gui_state`, `gui_view`, `gui_layout` and `gui_forms` modules | `k10cr2.gui` contains all GUI code, including form helpers, owner, layout, callbacks, `create_app`, controls and server entry point; no forwarding modules remain |
 | `SETTINGS`, `Setting`, `short_packet`, `data_packet` in `k10cr2.settings` | Wire definitions and packet helpers live in `k10cr2.protocol`; `settings` owns units, limits and validation |
 | Separate session/device Apply actions and device-group checkboxes | One Apply changes action; edited groups are detected automatically, EEPROM saving is opt-in, and Close discards unapplied edits |
 

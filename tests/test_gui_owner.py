@@ -8,8 +8,10 @@ import pytest
 pytest.importorskip("dash")
 
 from k10cr2 import CleanupResult, MotionCancelled, MotionError, MotionResult, StopResult  # noqa: E402
-from k10cr2.gui import GuiController  # noqa: E402
-from k10cr2.gui_forms import form_values  # noqa: E402
+from k10cr2.gui import (
+    GuiController,  # noqa: E402
+    form_values,  # noqa: E402
+)
 from k10cr2.protocol import Identity, Position, Status  # noqa: E402
 from k10cr2.settings import encode_changes, position_counts  # noqa: E402
 
