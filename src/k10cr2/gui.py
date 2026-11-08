@@ -1177,10 +1177,13 @@ def create_app(controller=None, *, serial=None):
                 output = payload.get("output") if isinstance(payload, dict) else None
                 if isinstance(output, str):
                     callback = app.callback_map.get(output)
+                    # Dash omits empty State lists in browser requests.
                     if callback is None or any(
-                        not isinstance(payload.get(kind), list)
-                        or any(not isinstance(item, dict) for item in payload[kind])
-                        or [(item.get("id"), item.get("property")) for item in payload[kind]]
+                        not isinstance(payload.get(kind, []), list)
+                        or any(not isinstance(item, dict) for item in payload.get(kind, []))
+                        or [
+                            (item.get("id"), item.get("property")) for item in payload.get(kind, [])
+                        ]
                         != [(item["id"], item["property"]) for item in callback[kind]]
                         for kind in ("inputs", "state")
                     ):

@@ -43,16 +43,19 @@ def post_callback(app, key, values, changed):
     def inputs(items):
         return [{**item, "value": values.get(item["id"])} for item in items]
 
+    payload = {
+        "output": key,
+        "outputs": outputs,
+        "inputs": inputs(meta["inputs"]),
+        "changedPropIds": [changed],
+    }
+    # Match Dash's browser request, which omits State when there are no fields.
+    if meta["state"]:
+        payload["state"] = inputs(meta["state"])
     return app.server.test_client().post(
         "/_dash-update-component",
         base_url="http://127.0.0.1",
-        json={
-            "output": key,
-            "outputs": outputs,
-            "inputs": inputs(meta["inputs"]),
-            "state": inputs(meta["state"]),
-            "changedPropIds": [changed],
-        },
+        json=payload,
     )
 
 
