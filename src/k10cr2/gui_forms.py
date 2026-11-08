@@ -9,9 +9,9 @@ GROUP_FIELDS = {
     "buttons": ("button_mode", "button_position1", "button_position2"),
 }
 DEVICE_FIELDS = tuple(field for fields in GROUP_FIELDS.values() for field in fields)
-DISPLAY_FIELDS = ("rotation_mode", "rotation_direction", "units", "decimals")
+SESSION_SCALAR_FIELDS = ("rotation_mode", "rotation_direction", "units", "decimals")
 DRIVE_FIELDS = tuple(f"drive{i}" for i in range(1, 5))
-HOST_FIELDS = (*DISPLAY_FIELDS, "high_power", *DRIVE_FIELDS)
+SESSION_FIELDS = (*SESSION_SCALAR_FIELDS, "high_power", *DRIVE_FIELDS)
 
 
 def default_session():
@@ -47,7 +47,7 @@ def session_draft(fields):
         raise ValueError("Invalid USB supply confirmation")
     return validate_session(
         {
-            **{name: fields[name] for name in DISPLAY_FIELDS},
+            **{name: fields[name] for name in SESSION_SCALAR_FIELDS},
             "high_power": "yes" in confirmation,
             "drives": [fields[name] for name in DRIVE_FIELDS],
         }
@@ -67,7 +67,7 @@ def form_values(snapshot):
     ui = snapshot["ui"]
     return {
         **to_display(snapshot["settings"]),
-        **{name: ui[name] for name in DISPLAY_FIELDS},
+        **{name: ui[name] for name in SESSION_SCALAR_FIELDS},
         "high_power": ["yes"] if ui["high_power"] else [],
         **dict(zip(DRIVE_FIELDS, ui["drives"], strict=True)),
     }

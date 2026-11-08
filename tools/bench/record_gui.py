@@ -17,9 +17,14 @@ from pathlib import Path
 
 from flask import g, request
 
-from k10cr2.gui import LocalServer, serve_gui
-from k10cr2.gui_state import MANUAL_COMMANDS, MOTION_COMMANDS, GuiController
-from k10cr2.gui_view import create_app
+from k10cr2.gui import (
+    MANUAL_COMMANDS,
+    MOTION_COMMANDS,
+    GuiController,
+    LocalServer,
+    create_app,
+    serve_gui,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 

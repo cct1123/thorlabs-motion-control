@@ -6,8 +6,13 @@ import pytest
 
 pytest.importorskip("dash")
 
-from k10cr2.gui_state import GuiController  # noqa: E402
-from k10cr2.gui_view import CONTROL_IDS, controls, create_app  # noqa: E402
+from k10cr2.gui import (  # noqa: E402
+    CONTROL_IDS,
+    GuiController,  # noqa: E402
+    controls,
+    create_app,
+)
+from k10cr2.gui_forms import form_values  # noqa: E402
 
 
 def test_layout_assets_and_status_never_open_usb():
@@ -97,7 +102,6 @@ def test_move_only_applies_an_edited_profile(monkeypatch, velocity, acceleration
             "target": 0,
             "move_velocity": velocity,
             "move_acceleration": acceleration,
-            "apply-groups": [],
             "persist": [],
             "panel": "move",
         },
@@ -106,6 +110,76 @@ def test_move_only_applies_an_edited_profile(monkeypatch, velocity, acceleration
     assert response.status_code == 200
     assert calls == [("move", dict(target=0, changes=changes))]
     assert response.json["response"]["panel"]["data"] is None
+
+
+@pytest.mark.parametrize(
+    "edits,groups",
+    [
+        ({}, set()),
+        ({"velocity": 0.5, "acceleration": 1}, {"velocity"}),
+        ({"backlash": 2}, {"backlash"}),
+        ({"jog_step": 0.5, "button_mode": 2}, {"jog", "buttons"}),
+    ],
+)
+@pytest.mark.parametrize("persist", [False, True])
+def test_settings_apply_detects_edits_without_group_choices(monkeypatch, edits, groups, persist):
+    owner = GuiController(lambda serial: pytest.fail("Unexpected USB access"))
+    owner._state["settings"] = {
+        # This unedited readback exceeds the session's 10 degree/s validation
+        # threshold and must not prevent changes to unrelated device settings.
+        "velocity": dict(channel=1, minimum=0, maximum=73300775, acceleration=15020),
+        "jog": dict(
+            channel=1, mode=2, step=13653, minimum=0, acceleration=1502, maximum=7329109, stop=2
+        ),
+        "backlash": dict(channel=1, distance=136533),
+        "buttons": dict(
+            channel=1, mode=1, position1=136533, position2=682667, timeout1=500, timeout2=500
+        ),
+    }
+    calls = []
+    monkeypatch.setattr(
+        owner, "submit", lambda command, **kwargs: calls.append((command, kwargs)) or "requested"
+    )
+    app = create_app(owner)
+    key = next(key for key in app.callback_map if "request-result.children" in key)
+    fields = {**form_values(owner.snapshot()), **edits}
+    response = post_callback(
+        app,
+        key,
+        {
+            **fields,
+            "settings-revision": 0,
+            "persist": ["yes"] if persist else [],
+            "panel": "settings",
+        },
+        "apply-settings.n_clicks",
+    )
+    assert response.status_code == 200
+    if groups:
+        command, arguments = calls[0]
+        assert len(calls) == 1 and command == "configure"
+        assert set(arguments["changes"]) == groups
+        assert arguments["persist"] == persist
+        for draft in arguments["changes"].values():
+            assert all(value == fields[field] for field, value in draft.items())
+    else:
+        assert not calls
+        assert response.json["response"]["request-result"]["children"] == "No settings changed."
+
+
+def test_settings_apply_does_not_treat_a_stale_form_as_new_edits(monkeypatch):
+    owner = GuiController(lambda serial: pytest.fail("Unexpected USB access"))
+    owner._state["settings_revision"] = 2
+    monkeypatch.setattr(owner, "submit", lambda *args, **kwargs: pytest.fail("Stale form applied"))
+    app = create_app(owner)
+    key = next(key for key in app.callback_map if "request-result.children" in key)
+    response = post_callback(
+        app, key, {"settings-revision": 1, "panel": "settings"}, "apply-settings.n_clicks"
+    )
+    assert response.status_code == 200
+    assert (
+        "Review the refreshed settings" in response.json["response"]["request-result"]["children"]
+    )
 
 
 def test_manual_is_served_from_the_repository():
@@ -169,7 +243,7 @@ def test_all_callback_components_exist_and_settings_fields_remain_mounted():
         assert all(out.component_id in ids for out in outputs)
 
 
-def test_settings_tabs_and_display_apply_do_not_access_usb():
+def test_session_only_apply_does_not_access_usb():
     owner = GuiController(lambda serial: pytest.fail("Unexpected USB access"))
     app = create_app(owner)
     key = next(key for key in app.callback_map if "request-result.children" in key)
@@ -183,9 +257,9 @@ def test_settings_tabs_and_display_apply_do_not_access_usb():
         drive2=5,
         drive3=7.5,
         drive4=10,
-        **{"apply-groups": [], "persist": [], "panel": "settings"},
+        **{"settings-revision": 0, "persist": [], "panel": "settings"},
     )
-    response = post_callback(app, key, values, "apply-display.n_clicks")
+    response = post_callback(app, key, values, "apply-settings.n_clicks")
     assert response.status_code == 200
     assert owner.snapshot()["ui"]["units"] == "rad"
     assert not owner.snapshot()["connected"]
@@ -203,7 +277,6 @@ def test_closing_settings_discards_drafts_without_applying(button):
             "panel": "settings",
             "units": "rad",
             "decimals": 3,
-            "apply-groups": ["velocity"],
             "persist": ["yes"],
         },
         f"{button}.n_clicks",
@@ -216,12 +289,11 @@ def test_closing_settings_discards_drafts_without_applying(button):
     assert response.status_code == 200
     assert response.json["response"]["units"]["value"] == "deg"
     assert response.json["response"]["decimals"]["value"] == 6
-    assert response.json["response"]["apply-groups"]["value"] == []
     assert response.json["response"]["persist"]["value"] == []
 
 
 def test_completed_feedback_replaces_request_and_reaches_both_dialogs():
-    from k10cr2.gui_view import visible_feedback
+    from k10cr2.gui import visible_feedback
 
     owner = GuiController(lambda serial: pytest.fail("Unexpected USB access"))
     owner._state["message"] = "load-settings complete."
@@ -294,6 +366,24 @@ def test_gui_help_and_import_do_not_import_usb():
         env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
     )
     assert result.returncode == 0, result.stderr
+
+
+def test_old_callback_inputs_require_reload_even_with_the_same_output():
+    owner = GuiController(lambda serial: pytest.fail("Stale GUI attempted USB access"))
+    app = create_app(owner)
+    key = next(key for key in app.callback_map if "request-result.children" in key)
+    response = app.server.test_client().post(
+        "/_dash-update-component",
+        base_url="http://127.0.0.1",
+        json={
+            "output": key,
+            "inputs": [{"id": "apply-display", "property": "n_clicks", "value": 1}],
+            "state": [],
+            "changedPropIds": ["apply-display.n_clicks"],
+        },
+    )
+    assert response.status_code == 409 and "Reload this tab" in response.json["message"]
+    assert not owner.snapshot()["connected"] and owner.snapshot()["busy"] is None
 
 
 def test_server_refuses_to_share_an_occupied_port():

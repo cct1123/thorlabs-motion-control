@@ -1,12 +1,17 @@
+"""No-hardware regressions for the owner in the consolidated GUI module."""
+
 import threading
 import time
 
 import pytest
 
-from k10cr2 import CleanupResult, MotionCancelled, MotionError, MotionResult, StopResult
-from k10cr2.gui_state import GuiController
-from k10cr2.protocol import Identity, Position, Status
-from k10cr2.settings import position_counts
+pytest.importorskip("dash")
+
+from k10cr2 import CleanupResult, MotionCancelled, MotionError, MotionResult, StopResult  # noqa: E402
+from k10cr2.gui import GuiController  # noqa: E402
+from k10cr2.gui_forms import form_values  # noqa: E402
+from k10cr2.protocol import Identity, Position, Status  # noqa: E402
+from k10cr2.settings import encode_changes, position_counts  # noqa: E402
 
 
 class FakeMount:
@@ -76,6 +81,14 @@ class FakeMount:
             raise OSError("USB gone")
         return StopResult(self.status(), self.position())
 
+    def configure(self, changes, *, high_power=False, persist=False):
+        self.record(f"configure:{high_power}:{persist}")
+        current = self.query_settings(changes)
+        return {
+            group: encode_changes(group, draft, current[group], high_power)
+            for group, draft in changes.items()
+        }
+
     def home(self, **kwargs):
         return self.move_absolute(0, **kwargs)
 
@@ -85,12 +98,16 @@ class FakeMount:
         self.started.set()
         while not self.release.wait(0.01):
             if cancel.is_set():
-                self.recovery_required = True
                 try:
                     cleanup = CleanupResult(True, stop=self.stop())
                 except OSError as exc:
                     cleanup = CleanupResult(False, error=str(exc))
-                raise MotionError(MotionCancelled("Stop requested"), cleanup)
+                self.recovery_required = not cleanup.confirmed_stopped
+                raise MotionError(
+                    MotionCancelled("Stop requested"),
+                    cleanup,
+                    recovery_required=self.recovery_required,
+                )
         self.homed = True
         self.angle = angle
         return MotionResult(self.status(), self.position(), True)
@@ -128,6 +145,7 @@ def connect(owner):
 
 def test_startup_and_connect_are_read_only(gui_owner):
     owner, mount = gui_owner
+    assert owner.snapshot()["ui"]["rotation_mode"] == "equivalent"
     owner.refresh()
     assert not mount.calls
     assert "eight-digit" in owner.submit("connect", serial="123")
@@ -173,7 +191,10 @@ def test_session_options_do_not_race_or_block_on_background_readback(gui_owner):
     try:
         assert entered.wait(1)
         before = list(mount.calls)
-        assert "session only" in owner.set_display({"decimals": 3})
+        assert "session only" in owner.apply_settings(
+            {**form_values(owner.snapshot()), "decimals": 3},
+            revision=owner.snapshot()["settings_revision"],
+        )
         assert owner.snapshot()["ui"]["decimals"] == 3
         assert mount.calls == before
     finally:
@@ -187,7 +208,10 @@ def test_session_options_do_not_race_or_block_on_background_readback(gui_owner):
     owner.submit("move", target=1)
     assert mount.started.wait(1)
     try:
-        assert "Wait" in owner.set_display({"decimals": 6})
+        assert "Wait" in owner.apply_settings(
+            {**form_values(owner.snapshot()), "decimals": 6},
+            revision=owner.snapshot()["settings_revision"],
+        )
         assert owner.snapshot()["ui"]["decimals"] == 3
     finally:
         mount.release.set()
@@ -231,7 +255,7 @@ def test_removed_step_commands_are_rejected_without_io(gui_owner):
     assert mount.calls == before
 
 
-def test_stop_uses_active_owner_and_requires_reconnect(gui_owner):
+def test_confirmed_stop_uses_active_owner_and_allows_next_move(gui_owner):
     owner, mount = gui_owner
     mount.homed = True
     connect(owner)
@@ -242,14 +266,59 @@ def test_stop_uses_active_owner_and_requires_reconnect(gui_owner):
     assert "not queued" in owner.submit("disconnect")
     assert "Stop requested" in owner.submit("stop")
     snap = wait_idle(owner)
-    assert snap["recovery"] and not snap["unknown"]
-    assert "stop confirmed" in snap["error"]
+    assert not snap["recovery"] and not snap["unknown"] and not snap["error"]
+    assert "Stop confirmed" in snap["message"]
+    assert snap["events"][0]["level"] == "info"
     move_thread = next(ident for name, ident in mount.calls if name == "move:90")
     assert [ident for name, ident in mount.calls if name == "stop"] == [move_thread]
-    before = len(mount.calls)
-    owner.refresh()
-    assert "reconnect" in owner.submit("home")
-    assert len(mount.calls) == before
+    mount.release.set()
+    assert "requested" in owner.submit("move", target=1)
+    assert wait_idle(owner)["position"]["degrees"] == 1
+    names = [name for name, _ in mount.calls]
+    assert names.count("connect") == 1 and "close" not in names
+
+
+@pytest.mark.parametrize("fail_stop", [False, True])
+def test_stop_before_motion_write_reports_the_actual_stop_outcome(gui_owner, fail_stop):
+    owner, mount = gui_owner
+    mount.homed = True
+    mount.fail_stop = fail_stop
+    connect(owner)
+    entered, release = threading.Event(), threading.Event()
+
+    def preflight(angle, *, cancel, **kwargs):
+        mount.record("preflight")
+        entered.set()
+        assert release.wait(2)
+        assert cancel.is_set()
+        raise MotionCancelled("Cancelled before motion; no motion command sent")
+
+    mount.move_absolute = preflight
+    owner.submit("move", target=1)
+    try:
+        assert entered.wait(1)
+        assert "Stop requested" in owner.submit("stop")
+    finally:
+        release.set()
+    snapshot = wait_idle(owner)
+    assert [name for name, _ in mount.calls].count("stop") == 1
+    if fail_stop:
+        assert snapshot["unknown"] and snapshot["recovery"] and "USB gone" in snapshot["error"]
+    else:
+        assert not snapshot["error"] and not snapshot["unknown"] and not snapshot["recovery"]
+        assert snapshot["message"] == "Stop confirmed by controller."
+        assert snapshot["events"][0]["level"] == "info"
+
+
+@pytest.mark.parametrize("angle", [-90, 450])
+def test_gui_accepts_fixed_target_from_outside_interval(gui_owner, angle):
+    owner, mount = gui_owner
+    owner._state["ui"]["rotation_mode"] = "fixed"
+    mount.homed = True
+    mount.angle = angle
+    connect(owner)
+    assert "requested" in owner.submit("move", target=90)
+    assert wait_idle(owner)["position"]["degrees"] == 90
 
 
 def test_failed_stop_reports_unknown_and_allows_explicit_retry(gui_owner):
@@ -490,3 +559,82 @@ def test_stop_accepted_during_readback_is_serviced_by_that_owner(gui_owner):
     calls = mount.calls[-5:]
     assert len({ident for _, ident in calls}) == 1
     assert [name for name, _ in mount.calls].count("stop") == 1
+
+
+def test_one_apply_uses_candidate_supply_rating_then_publishes_session(gui_owner):
+    owner, mount = gui_owner
+    connect(owner)
+    entered, release = threading.Event(), threading.Event()
+    configure = mount.configure
+
+    def blocked_configure(changes, **kwargs):
+        entered.set()
+        assert release.wait(2)
+        return configure(changes, **kwargs)
+
+    mount.configure = blocked_configure
+    before = owner.snapshot()
+    fields = {**form_values(before), "high_power": ["yes"], "velocity": 15, "units": "rad"}
+    assert "requested" in owner.apply_settings(
+        fields, revision=before["settings_revision"], persist=True
+    )
+    try:
+        assert entered.wait(1)
+        assert owner.snapshot()["ui"] == before["ui"]
+    finally:
+        release.set()
+    after = wait_idle(owner)
+    assert not after["error"] and after["ui"]["high_power"] and after["ui"]["units"] == "rad"
+    assert after["settings"]["velocity"]["maximum"] == 109_936_635
+    assert after["settings_revision"] == before["settings_revision"] + 1
+    assert "configure:True:True" in [name for name, _ in mount.calls]
+    assert "EEPROM save requested" in after["message"]
+
+
+def test_failed_device_apply_keeps_old_session_and_reports_partial_application(gui_owner):
+    owner, mount = gui_owner
+    connect(owner)
+    before = owner.snapshot()
+
+    def partial_failure(*args, **kwargs):
+        mount.recovery_required = True
+        raise OSError("Readback failed after write")
+
+    mount.configure = partial_failure
+    fields = {**form_values(before), "backlash": 2, "units": "rad"}
+    owner.apply_settings(fields, revision=before["settings_revision"])
+    after = wait_idle(owner)
+    assert after["recovery"] and after["unknown"]
+    assert after["ui"] == before["ui"] and after["settings"] == before["settings"]
+    assert after["settings_revision"] == before["settings_revision"]
+    assert (
+        "partially applied" in after["error"]
+        and "Session options were not changed" in after["error"]
+    )
+
+
+@pytest.mark.parametrize("invalid", [{"decimals": -1}, {"drive1": 25}, {"high_power": "yes"}])
+def test_invalid_session_draft_cannot_write_device_settings(gui_owner, invalid):
+    owner, mount = gui_owner
+    connect(owner)
+    before = owner.snapshot()
+    calls = list(mount.calls)
+    with pytest.raises(ValueError):
+        owner.apply_settings(
+            {**form_values(before), "backlash": 2, **invalid},
+            revision=before["settings_revision"],
+        )
+    assert mount.calls == calls and owner.snapshot()["ui"] == before["ui"]
+
+
+def test_invalid_device_draft_cannot_commit_session_options(gui_owner):
+    owner, mount = gui_owner
+    connect(owner)
+    before = owner.snapshot()
+    calls = list(mount.calls)
+    message = owner.apply_settings(
+        {**form_values(before), "velocity": 15, "units": "rad"},
+        revision=before["settings_revision"],
+    )
+    assert "Velocity" in message
+    assert mount.calls == calls and owner.snapshot()["ui"] == before["ui"]

@@ -7,12 +7,15 @@ import pytest
 
 pytest.importorskip("dash")
 
-from k10cr2.gui_state import GuiController  # noqa: E402
-from k10cr2.gui_view import controls, create_app  # noqa: E402
+from k10cr2.gui import (  # noqa: E402
+    GuiController,  # noqa: E402
+    controls,
+    create_app,
+)
 
 
 def test_expired_manual_lease_cannot_be_revived_by_a_late_heartbeat(monkeypatch):
-    import k10cr2.gui_state as module
+    import k10cr2.gui as module
 
     owner = GuiController()
     owner._hold_token = "expired-lease"
@@ -74,7 +77,7 @@ def test_worker_rejects_motion_while_physical_state_is_unknown():
 
 
 def test_move_request_closes_dialog_so_stop_is_accessible(monkeypatch):
-    import k10cr2.gui_view as view
+    import k10cr2.gui as gui
 
     calls = []
 
@@ -91,22 +94,23 @@ def test_move_request_closes_dialog_so_stop_is_accessible(monkeypatch):
             for output in (item["output"] if isinstance(item["output"], list) else [item["output"]])
         )
     )
-    state = {
-        "serial": "55551174",
-        "target": 90,
-        "apply-groups": [],
-        "persist": [],
-        "panel": "move",
-    }
-    args = [0] * len(callback["inputs"]) + [state.get(item["id"]) for item in callback["state"]]
-    monkeypatch.setattr(view, "ctx", SimpleNamespace(triggered_id="move"))
-    message, panel, _ = callback["callback"].__wrapped__(*args)
+    monkeypatch.setattr(gui, "ctx", SimpleNamespace(triggered_id="move"))
+    message, panel, _ = callback["callback"].__wrapped__(
+        clicks={},
+        serial_value="55551174",
+        target=90,
+        move_profile={"velocity": None, "acceleration": None},
+        fields={},
+        revision=0,
+        persist=[],
+        panel="move",
+    )
     assert calls == ["move"] and message == "move requested."
     assert panel is None
 
 
 def test_manual_is_bundled_and_served_outside_the_source_checkout(monkeypatch, tmp_path):
-    import k10cr2.gui_view as view
+    import k10cr2.gui as gui
 
     source = (
         Path(__file__).resolve().parents[1] / "docs/references/k10cr2-user-guide-etn064249-d02.pdf"
@@ -116,7 +120,7 @@ def test_manual_is_bundled_and_served_outside_the_source_checkout(monkeypatch, t
     packaged = installed / "site-packages/k10cr2/manuals/k10cr2-user-guide-etn064249-d02.pdf"
     packaged.parent.mkdir(parents=True)
     packaged.write_bytes(expected)
-    monkeypatch.setattr(view, "__file__", str(installed / "site-packages/k10cr2/gui_view.py"))
+    monkeypatch.setattr(gui, "__file__", str(installed / "site-packages/k10cr2/gui.py"))
     app = create_app()
     response = app.server.test_client().get("/manual", base_url="http://127.0.0.1")
     assert response.status_code == 200 and response.data == expected
@@ -130,7 +134,7 @@ def test_manual_is_bundled_and_served_outside_the_source_checkout(monkeypatch, t
     "button", ["move-open", "position-open", "settings-open", "drive-open", "jog-open"]
 )
 def test_opening_another_dialog_cannot_obscure_stop_during_motion(monkeypatch, button):
-    import k10cr2.gui_view as view
+    import k10cr2.gui as gui
 
     snapshot = GuiController().snapshot()
     snapshot.update(connected=True, busy="move")
@@ -138,8 +142,16 @@ def test_opening_another_dialog_cannot_obscure_stop_during_motion(monkeypatch, b
     callback = next(
         item for key, item in app.callback_map.items() if "request-result.children" in key
     )
-    args = [0] * len(callback["inputs"]) + [None] * len(callback["state"])
-    monkeypatch.setattr(view, "ctx", SimpleNamespace(triggered_id=button))
-    message, panel, _ = callback["callback"].__wrapped__(*args)
-    assert panel is None or panel is view.no_update
+    monkeypatch.setattr(gui, "ctx", SimpleNamespace(triggered_id=button))
+    message, panel, _ = callback["callback"].__wrapped__(
+        clicks={},
+        serial_value=None,
+        target=None,
+        move_profile={},
+        fields={},
+        revision=0,
+        persist=[],
+        panel=None,
+    )
+    assert panel is None or panel is gui.no_update
     assert message.startswith("Panel request declined during motion.")
