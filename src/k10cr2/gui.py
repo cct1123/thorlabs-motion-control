@@ -1,5 +1,8 @@
 """Local K10CR2 web UI: single USB owner, component layout, callbacks and server."""
 
+# Logic flow: form input -> single USB owner -> controller -> readback -> rendering.
+# Definitions follow that flow; local server startup is at the end of the file.
+
 import argparse
 import logging
 import socket
@@ -30,26 +33,41 @@ from .settings import (
     to_display,
 )
 
+# Shared identifiers and form schema.
 GROUP_FIELDS = {
     "velocity": ("velocity", "acceleration"),
     "jog": ("jog_step", "jog_mode", "jog_stop", "jog_velocity", "jog_acceleration"),
     "backlash": ("backlash",),
     "buttons": ("button_mode", "button_position1", "button_position2"),
 }
-
-
 DEVICE_FIELDS = tuple(field for fields in GROUP_FIELDS.values() for field in fields)
-
-
 SESSION_SCALAR_FIELDS = ("rotation_mode", "rotation_direction", "units", "decimals")
-
-
 DRIVE_FIELDS = tuple(f"drive{i}" for i in range(1, 5))
-
-
 SESSION_FIELDS = (*SESSION_SCALAR_FIELDS, "high_power", *DRIVE_FIELDS)
 
+MOTION_COMMANDS = {"home", "move"}
+MANUAL_COMMANDS = {"jog-forward", "jog-reverse", "drive-forward", "drive-reverse"}
+MOTION_COMMANDS |= MANUAL_COMMANDS
 
+CONTROL_IDS = (
+    "connect",
+    "disconnect",
+    "refresh-status",
+    "home",
+    "move",
+    "stop",
+    "enable",
+    "disable",
+    "identify",
+    "load-settings",
+    "jog-forward",
+    "jog-reverse",
+)
+
+UNAVAILABLE = "Unavailable: K10CR2 command mapping is not verified. No command will be sent."
+
+
+# Form defaults, hydration, draft conversion and validation.
 def default_session():
     return dict(
         rotation_mode="equivalent",
@@ -58,6 +76,29 @@ def default_session():
         decimals=6,
         high_power=False,
         drives=[2.5, 5, 7.5, 10],
+    )
+
+
+def form_values(snapshot):
+    ui = snapshot["ui"]
+    return {
+        **to_display(snapshot["settings"]),
+        **{name: ui[name] for name in SESSION_SCALAR_FIELDS},
+        "high_power": ["yes"] if ui["high_power"] else [],
+        **dict(zip(DRIVE_FIELDS, ui["drives"], strict=True)),
+    }
+
+
+def session_draft(fields):
+    confirmation = fields["high_power"]
+    if not isinstance(confirmation, list) or any(value != "yes" for value in confirmation):
+        raise ValueError("Invalid USB supply confirmation")
+    return validate_session(
+        {
+            **{name: fields[name] for name in SESSION_SCALAR_FIELDS},
+            "high_power": "yes" in confirmation,
+            "drives": [fields[name] for name in DRIVE_FIELDS],
+        }
     )
 
 
@@ -77,19 +118,6 @@ def validate_session(options):
     return candidate
 
 
-def session_draft(fields):
-    confirmation = fields["high_power"]
-    if not isinstance(confirmation, list) or any(value != "yes" for value in confirmation):
-        raise ValueError("Invalid USB supply confirmation")
-    return validate_session(
-        {
-            **{name: fields[name] for name in SESSION_SCALAR_FIELDS},
-            "high_power": "yes" in confirmation,
-            "drives": [fields[name] for name in DRIVE_FIELDS],
-        }
-    )
-
-
 def changed_settings(fields, raw):
     current = to_display(raw)
     return {
@@ -99,22 +127,9 @@ def changed_settings(fields, raw):
     }
 
 
-def form_values(snapshot):
-    ui = snapshot["ui"]
-    return {
-        **to_display(snapshot["settings"]),
-        **{name: ui[name] for name in SESSION_SCALAR_FIELDS},
-        "high_power": ["yes"] if ui["high_power"] else [],
-        **dict(zip(DRIVE_FIELDS, ui["drives"], strict=True)),
-    }
-
-
-MOTION_COMMANDS = {"home", "move"}
-MANUAL_COMMANDS = {"jog-forward", "jog-reverse", "drive-forward", "drive-reverse"}
-MOTION_COMMANDS |= MANUAL_COMMANDS
-
-
+# Single-operation USB owner.
 class GuiController:
+    # State initialization and read-only snapshots.
     def __init__(self, factory=K10CR2):
         self._factory = factory
         self._condition = threading.Condition()
@@ -142,6 +157,26 @@ class GuiController:
             ui=default_session(),
         )
 
+    def snapshot(self):
+        with self._condition:
+            return deepcopy({**self._state, "closing": self._closing, "events": list(self._events)})
+
+    def refresh(self):
+        with self._condition:
+            if (
+                self._closing
+                or not self._state["connected"]
+                or self._state["busy"]
+                or self._state["recovery"]
+            ):
+                return
+            updated = self._state["updated"]
+            if updated is not None and time.time() - updated < 0.5:
+                return
+            # Reserve under the same lock so a simultaneous command cannot be queued.
+            self.submit("refresh")
+
+    # User requests: validate input and reserve the owner.
     def apply_settings(self, fields, *, revision, persist=False):
         """Apply one form; publish session options only after device writes succeed."""
         with self._condition:
@@ -203,25 +238,6 @@ class GuiController:
     def _held(self):
         with self._condition:
             return time.monotonic() < self._hold_until
-
-    def snapshot(self):
-        with self._condition:
-            return deepcopy({**self._state, "closing": self._closing, "events": list(self._events)})
-
-    def _event(self, message, level="info"):
-        self._events.appendleft(
-            dict(
-                time=datetime.now().astimezone().isoformat(timespec="seconds"),
-                message=message,
-                level=level,
-            )
-        )
-
-    def _readback(self, status, position):
-        with self._condition:
-            self._state.update(
-                status=asdict(status), position=asdict(position), updated=time.time(), unknown=False
-            )
 
     def submit(
         self, command, *, serial=None, target=None, changes=None, persist=False, session=None
@@ -325,46 +341,7 @@ class GuiController:
                 raise
             return f"{command} requested."
 
-    def _disconnect(self):
-        if self._mount is not None:
-            self._mount.close()
-        self._mount = None
-        with self._condition:
-            self._state.update(
-                connected=False,
-                recovery=False,
-                identity={},
-                status={},
-                position=None,
-                updated=None,
-                unknown=False,
-                settings={},
-                settings_revision=self._state["settings_revision"] + 1,
-                settings_updated=None,
-            )
-
-    def _publish_settings(self, actual, session=None):
-        with self._condition:
-            self._state["settings"].update(actual)
-            self._state["settings_updated"] = time.time()
-            self._state["settings_revision"] += 1
-            if session is not None:
-                self._state["ui"] = session
-
-    def _configure(self, changes, *, persist=False, session=None):
-        try:
-            actual = self._mount.configure(
-                changes, high_power=(session or self._state["ui"])["high_power"], persist=persist
-            )
-        except Exception as exc:
-            if self._mount.recovery_required:
-                exc.add_note(
-                    "Device changes may be partially applied. Session options were not changed; "
-                    "reconnect and refresh readbacks before retrying."
-                )
-            raise
-        self._publish_settings(actual, session)
-
+    # Worker: execute commands and publish verified readbacks.
     def _run(self, command, serial, target, changes, persist, session):
         stop_handled = False
         cancelled_before_motion = False
@@ -481,14 +458,44 @@ class GuiController:
                     with self._condition:
                         self._finish_operation()
 
-    def _finish_operation(self):
-        """Publish owner release while holding the condition lock."""
-        self._state.update(
-            busy=None,
-            recovery=self._mount is not None and self._mount.recovery_required,
-        )
-        self._condition.notify_all()
+    def _configure(self, changes, *, persist=False, session=None):
+        try:
+            actual = self._mount.configure(
+                changes, high_power=(session or self._state["ui"])["high_power"], persist=persist
+            )
+        except Exception as exc:
+            if self._mount.recovery_required:
+                exc.add_note(
+                    "Device changes may be partially applied. Session options were not changed; "
+                    "reconnect and refresh readbacks before retrying."
+                )
+            raise
+        self._publish_settings(actual, session)
 
+    def _publish_settings(self, actual, session=None):
+        with self._condition:
+            self._state["settings"].update(actual)
+            self._state["settings_updated"] = time.time()
+            self._state["settings_revision"] += 1
+            if session is not None:
+                self._state["ui"] = session
+
+    def _readback(self, status, position):
+        with self._condition:
+            self._state.update(
+                status=asdict(status), position=asdict(position), updated=time.time(), unknown=False
+            )
+
+    def _event(self, message, level="info"):
+        self._events.appendleft(
+            dict(
+                time=datetime.now().astimezone().isoformat(timespec="seconds"),
+                message=message,
+                level=level,
+            )
+        )
+
+    # Completion, cancellation and fault reporting.
     def _failed(self, command, exc):
         if isinstance(exc, MotionError) and exc.cleanup.stop is not None:
             self._readback(exc.cleanup.stop.status, exc.cleanup.stop.position)
@@ -517,20 +524,32 @@ class GuiController:
             self._state.update(error=message, message="Operation failed; inspect Activity.")
             self._event(message, "error")
 
-    def refresh(self):
+    def _finish_operation(self):
+        """Publish owner release while holding the condition lock."""
+        self._state.update(
+            busy=None,
+            recovery=self._mount is not None and self._mount.recovery_required,
+        )
+        self._condition.notify_all()
+
+    # Connection release and coordinated shutdown.
+    def _disconnect(self):
+        if self._mount is not None:
+            self._mount.close()
+        self._mount = None
         with self._condition:
-            if (
-                self._closing
-                or not self._state["connected"]
-                or self._state["busy"]
-                or self._state["recovery"]
-            ):
-                return
-            updated = self._state["updated"]
-            if updated is not None and time.time() - updated < 0.5:
-                return
-            # Reserve under the same lock so a simultaneous command cannot be queued.
-            self.submit("refresh")
+            self._state.update(
+                connected=False,
+                recovery=False,
+                identity={},
+                status={},
+                position=None,
+                updated=None,
+                unknown=False,
+                settings={},
+                settings_revision=self._state["settings_revision"] + 1,
+                settings_updated=None,
+            )
 
     def shutdown(self, timeout=15):
         """Cancel through the active owner, wait, then release USB. Never race close."""
@@ -588,9 +607,7 @@ class GuiController:
                 self._condition.notify_all()
 
 
-UNAVAILABLE = "Unavailable: K10CR2 command mapping is not verified. No command will be sent."
-
-
+# Component construction: primitives, panels, then the complete page.
 def field(label, name, *, value=None, options=None, disabled=False, **kwargs):
     kwargs.setdefault("step", "any")
     control = (
@@ -623,6 +640,27 @@ def action(label, name, glyph, *, disabled=True, cls="", **kwargs):
         className=f"tool {cls}",
         title=label,
         **kwargs,
+    )
+
+
+def drive(direction):
+    return html.Div(
+        [
+            html.Button(
+                html.Span(className="drive-bar"),
+                id=f"{direction}-{i}",
+                disabled=True,
+                className=f"drive-division division-{i}",
+                title=f"Hold to drive {direction} · velocity {i + 1}",
+                **{
+                    "data-hold": f"drive-{direction}",
+                    "data-index": str(i),
+                    "aria-label": f"Drive {direction}, speed {i + 1}",
+                },
+            )
+            for i in (range(3, -1, -1) if direction == "forward" else range(4))
+        ],
+        className="drive-stack",
     )
 
 
@@ -1068,27 +1106,6 @@ def settings_panel():
     ]
 
 
-def drive(direction):
-    return html.Div(
-        [
-            html.Button(
-                html.Span(className="drive-bar"),
-                id=f"{direction}-{i}",
-                disabled=True,
-                className=f"drive-division division-{i}",
-                title=f"Hold to drive {direction} · velocity {i + 1}",
-                **{
-                    "data-hold": f"drive-{direction}",
-                    "data-index": str(i),
-                    "aria-label": f"Drive {direction}, speed {i + 1}",
-                },
-            )
-            for i in (range(3, -1, -1) if direction == "forward" else range(4))
-        ],
-        className="drive-stack",
-    )
-
-
 def build_layout(serial=None):
     return html.Main(
         [
@@ -1333,22 +1350,7 @@ def build_layout(serial=None):
     )
 
 
-CONTROL_IDS = (
-    "connect",
-    "disconnect",
-    "refresh-status",
-    "home",
-    "move",
-    "stop",
-    "enable",
-    "disable",
-    "identify",
-    "load-settings",
-    "jog-forward",
-    "jog-reverse",
-)
-
-
+# Presentation derived from owner snapshots.
 def visible_feedback(snapshot, request_message):
     """Keep validation feedback, but replace queued-request text with its actual outcome."""
     if request_message and not (
@@ -1429,7 +1431,9 @@ def controls(snapshot, target):
     return disabled, error
 
 
+# Application assembly, local routes and Dash callbacks.
 def create_app(controller=None, *, serial=None):
+    # Create the owner and app without accessing USB.
     owner = controller if controller is not None else GuiController()
     app = Dash(
         __name__,
@@ -1439,6 +1443,7 @@ def create_app(controller=None, *, serial=None):
     )
     app.server.config["GUI_CONTROLLER"] = owner
 
+    # Guard local requests before exposing routes.
     @app.server.before_request
     def local_requests_only():
         if urlsplit(request.host_url).hostname not in {"127.0.0.1", "localhost"}:
@@ -1465,6 +1470,7 @@ def create_app(controller=None, *, serial=None):
                             message="GUI layout changed. Reload this tab to continue."
                         ), 409
 
+    # Local routes: snapshots, held-control leases and the user guide.
     @app.server.get("/api/status")
     def api_status():
         return jsonify(owner.snapshot())
@@ -1498,6 +1504,7 @@ def create_app(controller=None, *, serial=None):
             abort(404, description="The bundled user guide is missing. Reinstall the package.")
         return send_file(path, mimetype="application/pdf")
 
+    # Build the page, then bind operator actions to owner requests.
     app.layout = build_layout(serial)
 
     buttons = (
@@ -1619,6 +1626,7 @@ def create_app(controller=None, *, serial=None):
             panel = None  # Keep the main Stop control immediately accessible.
         return message, panel, no_update
 
+    # Dialog visibility and the selected settings tab.
     @app.callback(
         Output("backdrop", "style"),
         Output("move-dialog", "style"),
@@ -1646,6 +1654,7 @@ def create_app(controller=None, *, serial=None):
             for name in ("moves", "rotation", "stage", "advanced", "defaults")
         ]
 
+    # Populate or reset drafts from the latest verified readbacks.
     @app.callback(
         Output("move_velocity", "value"),
         Output("move_acceleration", "value"),
@@ -1681,6 +1690,7 @@ def create_app(controller=None, *, serial=None):
             [],
         ]
 
+    # Render owner snapshots as status, available controls and feedback.
     @app.callback(
         Output("angle", "children"),
         Output("angle-unit", "children"),
@@ -1857,6 +1867,7 @@ def create_app(controller=None, *, serial=None):
     return app
 
 
+# Local HTTP lifecycle and command-line startup.
 class LocalServer(ThreadedWSGIServer):
     """Reject occupied ports, including Windows SO_REUSEADDR double binds."""
 
