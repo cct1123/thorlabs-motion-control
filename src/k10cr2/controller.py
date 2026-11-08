@@ -38,6 +38,10 @@ from .transport import WinUSBTransport, remaining
 _owners_lock = threading.Lock()
 _owners: dict[str, "K10CR2"] = {}
 
+# Firmware 2.0.1 can finish an absolute move one counter increment from target.
+# This is a completion tolerance, not a claim about mechanical accuracy.
+MOVE_TOLERANCE_COUNTS = 1
+
 
 def validate_timeout(value: float) -> float:
     if isinstance(value, bool) or not isinstance(value, (int, float)):
@@ -607,7 +611,8 @@ class K10CR2:
                         progressed = transitioned or (
                             name == "move" and before.counts != position.counts
                         )
-                        if progressed and position.counts == expected:
+                        tolerance = MOVE_TOLERANCE_COUNTS if name == "move" else 0
+                        if progressed and abs(position.counts - expected) <= tolerance:
                             if cancel is not None and cancel.is_set():
                                 raise MotionCancelled("Stop requested")
                             remaining(deadline)

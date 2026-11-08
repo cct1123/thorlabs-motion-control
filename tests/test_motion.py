@@ -60,6 +60,24 @@ def test_home_uses_transition_if_end_notification_missing(mount_factory):
     assert not mount.home().completion_received
 
 
+def test_home_still_requires_exact_zero(mount_factory):
+    position_one = bytes.fromhex("12 04 06 00 81 50 01 00 01 00 00 00")
+    mount, fake = mount_factory(
+        [
+            (STATUS_REQUEST, IDLE),
+            (POSITION_REQUEST, POSITION_ZERO),
+            (HOME_REQUEST, b""),
+            (STATUS_REQUEST, HOMING),
+            (STATUS_REQUEST, HOME_DONE + HOMED),
+            (POSITION_REQUEST, position_one),
+            (STATUS_REQUEST, HOMED),
+            (POSITION_REQUEST, POSITION_ZERO),
+        ]
+    )
+    assert mount.home().position.counts == 0
+    assert not fake.steps
+
+
 def test_stale_home_event_and_initial_idle_are_not_completion(mount_factory):
     mount, fake = mount_factory(
         [
@@ -114,6 +132,60 @@ def test_already_at_target_no_op(mount_factory):
     mount, fake = mount_factory([(STATUS_REQUEST, HOMED), (POSITION_REQUEST, POSITION_90)])
     assert mount.move_absolute(90).no_op
     assert MOVE_90 not in fake.sent and ENABLE_REQUEST not in fake.sent
+
+
+@pytest.mark.parametrize("offset", [-1, 1])
+def test_absolute_move_accepts_one_count_residual_after_progress(mount_factory, offset):
+    position = bytes.fromhex("12 04 06 00 81 50 01 00") + struct.pack("<i", 12_288_000 + offset)
+    mount, fake = mount_factory(
+        [
+            (STATUS_REQUEST, HOMED),
+            (POSITION_REQUEST, POSITION_ZERO),
+            (MOVE_90, b""),
+            (STATUS_REQUEST, HOMED),
+            (POSITION_REQUEST, position),
+        ]
+    )
+    result = mount.move_absolute(90)
+    assert result.position.counts == 12_288_000 + offset
+    assert not result.completion_received and not fake.steps
+
+
+@pytest.mark.parametrize("offset", [-2, 2])
+def test_absolute_move_keeps_waiting_outside_one_count_tolerance(mount_factory, offset):
+    position = bytes.fromhex("12 04 06 00 81 50 01 00") + struct.pack("<i", 12_288_000 + offset)
+    mount, fake = mount_factory(
+        [
+            (STATUS_REQUEST, HOMED),
+            (POSITION_REQUEST, POSITION_ZERO),
+            (MOVE_90, b""),
+            (STATUS_REQUEST, MOVE_DONE + HOMED),
+            (POSITION_REQUEST, position),
+            (STATUS_REQUEST, HOMED),
+            (POSITION_REQUEST, POSITION_90),
+        ]
+    )
+    assert mount.move_absolute(90).position.counts == 12_288_000
+    assert not fake.steps
+
+
+def test_one_count_move_still_requires_fresh_progress(mount_factory):
+    position_minus_one = bytes.fromhex("12 04 06 00 81 50 01 00 ff ff ff ff")
+    move_zero = bytes.fromhex("53 04 06 00 d0 01 01 00 00 00 00 00")
+    mount, fake = mount_factory(
+        [
+            (STATUS_REQUEST, HOMED),
+            (POSITION_REQUEST, position_minus_one),
+            (move_zero, b""),
+            (STATUS_REQUEST, MOVE_DONE + HOMED),
+            (POSITION_REQUEST, position_minus_one),
+            (STATUS_REQUEST, MOVING),
+            (STATUS_REQUEST, HOMED),
+            (POSITION_REQUEST, POSITION_ZERO),
+        ]
+    )
+    assert mount.move_absolute(0, mode="total").position.counts == 0
+    assert not fake.steps and fake.sent.count(move_zero) == 1
 
 
 def test_fixed_range_full_turn_matches_the_gui_and_cli_contract(mount_factory):

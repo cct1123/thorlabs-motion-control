@@ -131,9 +131,12 @@ The GUI starts in `equivalent`; CLI and library defaults remain `fixed`.
 The device's backlash settings remain in effect.
 
 Home/move block until fresh status and position confirm completion. Homing must show
-a new homing/not-homed transition. A move already at its target is reported as a
-`no_op`. A short move can finish without a captured busy flag if the fresh position
-counter changed to the requested target. Completion notification receipt is reported
+a new homing/not-homed transition and reach exactly zero counts. Absolute Move accepts
+a residual of at most one count (about 0.0000073°) after fresh idle/homed/enabled status
+and evidence of progress. Firmware 2.0.1 can stop one count from the requested target;
+this completion tolerance does not establish mechanical accuracy. A move already at
+its exact target is reported as a `no_op`. A short move can finish without a captured
+busy flag if the fresh counter changed. Completion notification receipt is reported
 separately from these status/counter checks. Loss of motor enable during Home/Move,
 or loss of the home reference during an absolute Move, triggers same-owner Stop
 cleanup and requires explicit recovery.

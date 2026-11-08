@@ -40,6 +40,13 @@ explicit recovery. An operator Stop accepted before a motion command is written
 still receives same-owner confirmation; successful cleanup is informational and
 does not leave a cancellation error banner. Failed confirmation retains UNKNOWN.
 
+Absolute Move completes only after fresh idle/homed/enabled readback and evidence
+of progress, with at most one count of target residual (about 0.0000073°). The
+actual counter is displayed without snapping it to the target. Firmware 2.0.1 was
+observed stopping at −1 count after a maximum-profile move to zero; requiring exact
+equality left the GUI waiting despite idle status. Home still requires exact zero.
+This software completion tolerance does not measure mechanical angular accuracy.
+
 The normal GUI and bench recorder share server shutdown handling. Failed shutdown,
 timeout or an interrupted wait keeps the current owner and controls available for
 Stop/retry. Shutdown query interruptions retain an unknown-state indication until
