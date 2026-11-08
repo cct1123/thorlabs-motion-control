@@ -8,10 +8,7 @@ import pytest
 pytest.importorskip("dash")
 
 from k10cr2 import CleanupResult, MotionCancelled, MotionError, MotionResult, StopResult  # noqa: E402
-from k10cr2.gui import (
-    GuiController,  # noqa: E402
-    form_values,  # noqa: E402
-)
+from k10cr2.gui import DEVICE_FIELDS, GuiController, form_values  # noqa: E402
 from k10cr2.protocol import Identity, Position, Status  # noqa: E402
 from k10cr2.settings import encode_changes, position_counts  # noqa: E402
 
@@ -162,8 +159,6 @@ def test_startup_and_connect_are_read_only(gui_owner):
     ]
     assert set(owner.snapshot()["settings"]) == {"velocity", "jog", "backlash", "home", "buttons"}
     assert owner.snapshot()["settings_updated"] is not None
-    assert "Home" in owner.submit("move", target=90)
-    assert "Home" in owner.submit("jog-forward")
     assert len(mount.calls) == 5
 
 
@@ -238,13 +233,30 @@ def test_failed_initial_settings_read_releases_connection_and_can_retry(gui_owne
 
 
 @pytest.mark.parametrize("angle", [-1, 360.1, float("nan"), float("inf"), None, True])
-def test_invalid_targets_never_reach_worker(gui_owner, angle):
-    owner, mount = gui_owner
-    mount.homed = True
-    connect(owner)
-    before = len(mount.calls)
-    assert "angle" in owner.submit("move", target=angle).lower()
-    assert len(mount.calls) == before
+def test_controller_rejects_invalid_targets_without_device_io(mount_factory, angle):
+    mount, transport = mount_factory([])
+    owner = GuiController()
+    owner._mount = mount
+    owner._state.update(connected=True, status={"homed": True, "enabled": True})
+    before = list(transport.sent)
+    assert owner.submit("move", target=angle) == "move requested."
+    snapshot = wait_idle(owner)
+    assert "angle" in snapshot["error"].lower()
+    assert transport.sent == before and not snapshot["recovery"]
+
+
+@pytest.mark.parametrize("moving", [False, True])
+def test_controller_fresh_status_protects_motion_despite_stale_gui_flags(mount_factory, moving):
+    from conftest import IDLE, MOVING, STATUS_REQUEST
+
+    mount, transport = mount_factory([(STATUS_REQUEST, MOVING if moving else IDLE)])
+    owner = GuiController()
+    owner._mount = mount
+    owner._state.update(connected=True, status={"homed": True, "enabled": True})
+    assert owner.submit("move", target=90) == "move requested."
+    snapshot = wait_idle(owner)
+    assert ("already moving" if moving else "Home") in snapshot["error"]
+    assert transport.sent[-1] == STATUS_REQUEST and not transport.steps
 
 
 def test_removed_step_commands_are_rejected_without_io(gui_owner):
@@ -615,7 +627,7 @@ def test_failed_device_apply_keeps_old_session_and_reports_partial_application(g
     )
 
 
-@pytest.mark.parametrize("invalid", [{"decimals": -1}, {"drive1": 25}, {"high_power": "yes"}])
+@pytest.mark.parametrize("invalid", [{"decimals": -1}, {"units": "invalid"}, {"high_power": "yes"}])
 def test_invalid_session_draft_cannot_write_device_settings(gui_owner, invalid):
     owner, mount = gui_owner
     connect(owner)
@@ -633,10 +645,28 @@ def test_invalid_device_draft_cannot_commit_session_options(gui_owner):
     owner, mount = gui_owner
     connect(owner)
     before = owner.snapshot()
-    calls = list(mount.calls)
     message = owner.apply_settings(
         {**form_values(before), "velocity": 15, "units": "rad"},
         revision=before["settings_revision"],
     )
-    assert "Velocity" in message
-    assert mount.calls == calls and owner.snapshot()["ui"] == before["ui"]
+    assert message == "configure requested."
+    after = wait_idle(owner)
+    assert "Velocity" in after["error"]
+    assert after["ui"] == before["ui"] and after["settings"] == before["settings"]
+    assert not after["recovery"]
+
+
+def test_controller_validates_selected_drive_speed_before_usb_io(mount_factory):
+    mount, transport = mount_factory([])
+    owner = GuiController()
+    owner._mount = mount
+    owner._state.update(connected=True, status={"homed": True, "enabled": True})
+    fields = {**dict.fromkeys(DEVICE_FIELDS), **form_values(owner.snapshot()), "drive1": 25}
+    assert "session only" in owner.apply_settings(fields, revision=0)
+    before = list(transport.sent)
+    assert (
+        owner.hold("start", "drive-speed-check", "drive-forward", 0) == "drive-forward requested."
+    )
+    snapshot = wait_idle(owner)
+    assert "Drive velocity" in snapshot["error"]
+    assert transport.sent == before and not snapshot["recovery"]

@@ -14,6 +14,7 @@ legacy command adapter or automatic startup configuration is retained.
 | Separate `gui_state`, `gui_view`, `gui_layout` and `gui_forms` modules | `k10cr2.gui` contains all GUI code, including form helpers, owner, layout, callbacks, `create_app`, controls and server entry point; no forwarding modules remain |
 | `SETTINGS`, `Setting`, `short_packet`, `data_packet` in `k10cr2.settings` | Wire definitions and packet helpers live in `k10cr2.protocol`; `settings` owns units, limits and validation |
 | Separate session/device Apply actions and device-group checkboxes | One Apply changes action; edited groups are detected automatically, EEPROM saving is opt-in, and Close discards unapplied edits |
+| `controls(snapshot, target)` | `controls(snapshot)` derives button availability only; the controller validates device values and fresh motion state |
 
 These interfaces have no compatibility aliases. Repository callers, tests and
 tutorial notebooks are migrated together.
@@ -23,6 +24,11 @@ GUI tests import the consolidated module; owner regressions live in
 `SESSION_SCALAR_FIELDS`, matching the session-option naming in the owner. All
 current callers and the bench recorder use the canonical imports. Old names in
 dated reports, captured requests and negative migration tests are historical evidence.
+
+Settings now has only Moves/Jogs, Rotation and Advanced tabs. Read-only homing
+settings moved to Advanced; unsupported control placeholders and the Stage/Axis
+and Defaults tabs are removed. Device-input errors are reported asynchronously by
+the owner after controller validation, rather than duplicated GUI preflight checks.
 
 To update a running GUI, first stop active motion through its current owner,
 disconnect, and close the web UI server. Update the software, start the new version,

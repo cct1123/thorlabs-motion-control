@@ -20,7 +20,7 @@ an SDK startup profile or automatically homes, enables, configures, or moves a m
 | Drive bar graph | Four session-configured speeds per direction; hold to move, release to stop. A temporary move profile is readback-verified and restored after normal stop | 16,23 |
 | Jog arrows | Native single-step jog command, one step per click; holding repeats completed steps. Continuous jog uses the jog profile and stops on release; immediate/profiled stop choice is honored | 14,16,18 |
 | Status strip | Idle, Moving, Homing, or Unverified, together with stage model and serial | 16 |
-| Settings | Moves/Jogs, Rotation, Stage/Axis, Advanced, Defaults. One Apply changes action validates device and session edits; Reset/Close/×/Escape discard unapplied edits. Scrollable form, fixed feedback/actions and keyboard focus containment | 17-24 |
+| Settings | Moves/Jogs, Rotation and Advanced. Advanced includes hardware buttons, Drive speeds and read-only homing settings. One Apply changes action applies edits; Reset/Close/×/Escape discard unapplied edits. Scrollable form, fixed feedback/actions and keyboard focus containment | 17-24 |
 
 Held controls use pointer capture and support Space/Enter. Release, pointer cancel,
 loss of the active pointer's capture,
@@ -73,6 +73,14 @@ display. Total Angle also permits crossing zero but shows the signed accumulated
 angle. Fixed Range remains an explicit bounded mode; CLI/library defaults stay fixed.
 
 ## Settings and wire support
+
+The controller performs device numeric validation and fresh homed/enabled/busy
+checks; the GUI does not repeat them against cached values. Invalid target/Drive
+values are rejected before device I/O; setting drafts may require fresh readback
+before validation but cannot write until every requested group passes. Errors are
+reported by the owner worker, and failed device validation leaves session options
+unchanged. GUI-only checks cover display formatting, request identity, owner/lease
+lifecycle and recovery/UNKNOWN state.
 
 The [migrated-GUI actual-mount test](bench/gui-migration-20261106-231335Z.md) also
 verified small Fixed/Total/Equivalent routes and repeated quantized phase targets.
@@ -146,10 +154,10 @@ message gains zero-host acceptance; device source, exact length and channel are
 still validated. The bench record retains the original rejection and corrected
 readback, and the saved actual reply is an offline regression fixture.
 
-## Visible unavailable and locked controls
+## Unsupported features
 
-Per the user's explicit decision to retain WinUSB, these elements are displayed
-with reasons and cannot emit a command:
+Per the user's explicit decision to retain WinUSB, these unsupported controls are
+not displayed and cannot emit a command:
 
 - **S-curve / Bow Index:** documented GUI behavior on pp18-19, but 04F4/04F5/04F6
   is absent from the K10CR1 applicability index; K10CR2 mapping is not established.
@@ -160,7 +168,8 @@ with reasons and cannot emit a command:
 - **Factory reset:** manual p24 defines the effect at next power-up. Protocol p69
   explicitly limits 0686 and 04F3 to other controller families; neither is sent.
 - **Stage/Axis fields and limit policy:** the manual p21 instructs not to alter
-  stage-specific defaults. Readbacks and fixed explanatory fields remain visible.
+  stage-specific defaults. Only homing readbacks and the reported limit indicators
+  remain visible; the placeholder Stage/Axis and Defaults tabs are removed.
 
 Unavailable readbacks are blank, not presented as factory or current values. No
 firmware, unverified command, driver replacement, Kinesis backend, or SDK fallback

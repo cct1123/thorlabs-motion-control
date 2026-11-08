@@ -24,12 +24,8 @@ from .protocol import COUNTS_PER_DEGREE, SETTINGS
 from .settings import (
     UNIT_FACTORS,
     VELOCITY_SCALE,
-    boolean,
     display_angle,
-    encode_changes,
-    finite,
     integer,
-    resolve_target,
     to_display,
 )
 
@@ -64,8 +60,6 @@ CONTROL_IDS = (
     "jog-reverse",
 )
 
-UNAVAILABLE = "Unavailable: K10CR2 command mapping is not verified. No command will be sent."
-
 
 # Form defaults, hydration, draft conversion and validation.
 def default_session():
@@ -93,28 +87,16 @@ def session_draft(fields):
     confirmation = fields["high_power"]
     if not isinstance(confirmation, list) or any(value != "yes" for value in confirmation):
         raise ValueError("Invalid USB supply confirmation")
-    return validate_session(
-        {
-            **{name: fields[name] for name in SESSION_SCALAR_FIELDS},
-            "high_power": "yes" in confirmation,
-            "drives": [fields[name] for name in DRIVE_FIELDS],
-        }
-    )
-
-
-def validate_session(options):
-    """Validate the full candidate before either device writes or publication."""
-    candidate = dict(options)
-    resolve_target(0, 0, candidate["rotation_mode"], candidate["rotation_direction"])
+    candidate = {
+        **{name: fields[name] for name in SESSION_SCALAR_FIELDS},
+        "high_power": "yes" in confirmation,
+        "drives": [fields[name] for name in DRIVE_FIELDS],
+    }
+    # Only display formatting needs GUI validation; device values are checked by
+    # the controller against fresh readback before any write or motion.
     if candidate["units"] not in UNIT_FACTORS:
         raise ValueError("Unknown display units")
     candidate["decimals"] = integer(candidate["decimals"], "decimal places", set(range(10)))
-    if not isinstance(candidate["high_power"], bool) or len(candidate["drives"]) != 4:
-        raise ValueError("Invalid drive options")
-    candidate["drives"] = [
-        finite(speed, "Drive velocity / °/s", 0.005, 20 if candidate["high_power"] else 10)
-        for speed in candidate["drives"]
-    ]
     return candidate
 
 
@@ -180,16 +162,10 @@ class GuiController:
     def apply_settings(self, fields, *, revision, persist=False):
         """Apply one form; publish session options only after device writes succeed."""
         with self._condition:
-            if (
-                self._state["busy"] not in {None, "refresh"}
-                or self._closing
-                or self._state["status"].get("moving")
-                or self._state["status"].get("homing")
-            ):
+            if self._state["busy"] not in {None, "refresh"} or self._closing:
                 return "Wait for the active operation before applying settings."
             if revision != self._state["settings_revision"]:
                 return "Device readbacks changed. Review the refreshed settings and apply again."
-            boolean(persist, "EEPROM persistence")
             candidate = session_draft(fields)
             changes = changed_settings(fields, self._state["settings"])
             if changes:
@@ -285,43 +261,6 @@ class GuiController:
                     )
                 elif self._state["recovery"] and command not in {"disconnect", "stop"}:
                     raise ValueError("Disconnect and explicitly reconnect before continuing.")
-                if command in MOTION_COMMANDS:
-                    status = self._state["status"]
-                    if status.get("moving") or status.get("homing"):
-                        raise ValueError("Mount is already moving; use Stop.")
-                    if command != "home":
-                        if not status.get("homed"):
-                            raise ValueError("Home the mount explicitly before moving.")
-                        if command in MANUAL_COMMANDS:
-                            if not status.get("enabled"):
-                                raise ValueError(
-                                    "Enable the motor explicitly before manual control."
-                                )
-                            if command.startswith("jog-") and "jog" not in self._state["settings"]:
-                                raise ValueError("Load Jog settings before jogging.")
-                        else:
-                            resolve_target(
-                                target,
-                                self._state["position"]["degrees"],
-                                self._state["ui"]["rotation_mode"],
-                                self._state["ui"]["rotation_direction"],
-                            )
-                if command == "configure" or (command == "move" and changes):
-                    if not changes:
-                        raise ValueError("No device settings changed.")
-                    if session is not None:
-                        session = validate_session(session)
-                    for group, draft in changes.items():
-                        if group not in self._state["settings"]:
-                            raise ValueError(
-                                f"Load {group} settings from the device before editing."
-                            )
-                        encode_changes(
-                            group,
-                            draft,
-                            self._state["settings"][group],
-                            (session or self._state["ui"])["high_power"],
-                        )
             except (ValueError, TypeError) as exc:
                 return str(exc)
             self._cancel.clear()
@@ -608,19 +547,18 @@ class GuiController:
 
 
 # Component construction: primitives, panels, then the complete page.
-def field(label, name, *, value=None, options=None, disabled=False, **kwargs):
+def field(label, name, *, value=None, options=None, **kwargs):
     kwargs.setdefault("step", "any")
     control = (
         dcc.Dropdown(
             id=name,
-            options=options,
+            options=[{"label": label, "value": value} for label, value in options],
             value=value,
             clearable=False,
-            disabled=disabled,
-            placeholder="Unavailable" if disabled else "Select…",
+            placeholder="Select…",
         )
         if options is not None
-        else dcc.Input(id=name, type="number", value=value, disabled=disabled, **kwargs)
+        else dcc.Input(id=name, type="number", value=value, **kwargs)
     )
     return html.Div([html.Label(label, htmlFor=name), control], className="field")
 
@@ -666,7 +604,133 @@ def drive(direction):
 
 def settings_panel():
     defaults = default_session()
-    result = [
+    pages = {
+        "moves": (
+            "Moves / Jogs",
+            [
+                group(
+                    "Position display",
+                    [
+                        field(
+                            "Units",
+                            "units",
+                            value=defaults["units"],
+                            options=(
+                                ("Degrees / °", "deg"),
+                                ("Radians / rad", "rad"),
+                                ("Milliradians / mrad", "mrad"),
+                                ("Microradians / μrad", "urad"),
+                                ("Device counts", "counts"),
+                            ),
+                        ),
+                        field("Decimal places", "decimals", value=6, min=0, max=9, step=1),
+                        html.Div(id="display-factor", className="hint"),
+                    ],
+                    "Display units affect the readout. Motion inputs remain in degrees.",
+                ),
+                group(
+                    "Jog",
+                    [
+                        field("Step size / °", "jog_step"),
+                        field("Mode", "jog_mode", options=[("Single step", 2), ("Continuous", 1)]),
+                        field("Stop", "jog_stop", options=[("Profiled", 2), ("Immediate", 1)]),
+                        field("Maximum velocity / °/s", "jog_velocity"),
+                        field("Acceleration / °/s²", "jog_acceleration"),
+                    ],
+                    "One step per click; hold to repeat. Continuous mode stops on release.",
+                ),
+                group(
+                    "Velocity",
+                    [
+                        field("Maximum velocity / °/s", "velocity"),
+                        field("Acceleration / °/s²", "acceleration"),
+                        html.P("Minimum velocity: 0 (locked)", className="hint"),
+                    ],
+                ),
+                group(
+                    "Backlash",
+                    [field("Distance / °", "backlash")],
+                    "Zero disables backlash compensation.",
+                ),
+            ],
+        ),
+        "rotation": (
+            "Rotation",
+            [
+                group(
+                    "Rotation",
+                    [
+                        field(
+                            "Rotation mode",
+                            "rotation_mode",
+                            value=defaults["rotation_mode"],
+                            options=[
+                                ("Fixed range · 0 to 360°", "fixed"),
+                                ("Equivalent angle · wraps display", "equivalent"),
+                                ("Total angle · accumulated rotation", "total"),
+                            ],
+                        ),
+                        field(
+                            "Rotation direction (equivalent angle)",
+                            "rotation_direction",
+                            value=defaults["rotation_direction"],
+                            options=(
+                                ("Rotate quickest", "quickest"),
+                                ("Rotate forwards", "forward"),
+                                ("Rotate reverse", "reverse"),
+                            ),
+                        ),
+                    ],
+                    "Session rotation rules; counted travel stays within ±15,480° (manual p20).",
+                )
+            ],
+        ),
+        "advanced": (
+            "Advanced",
+            [
+                group(
+                    "Button control",
+                    [
+                        field(
+                            "Mode", "button_mode", options=[("Move By (Jog)", 1), ("Move To", 2)]
+                        ),
+                        field("Left / Top button position / °", "button_position1"),
+                        field("Right / Lower button position / °", "button_position2"),
+                    ],
+                    "Hardware-button behavior; hold both physical buttons ~2 s to home.",
+                ),
+                group(
+                    "Drive array velocities",
+                    [
+                        field(f"Velocity {i} / °/s", f"drive{i}", value=speed)
+                        for i, speed in enumerate(defaults["drives"], 1)
+                    ],
+                    "Session speeds only; not saved to device EEPROM.",
+                ),
+                group(
+                    "Homing settings",
+                    [html.Dl(id="homing-readback", className="readback")],
+                    "Read-only stage settings. The home switch is a datum, not a travel stop.",
+                ),
+            ],
+        ),
+    }
+    tabs = dcc.Tabs(
+        id="settings-tab",
+        value="moves",
+        children=[
+            dcc.Tab(label=label, value=name, children=None) for name, (label, _) in pages.items()
+        ],
+    )
+    panels = [
+        html.Div(
+            html.Div(fields, className="settings-grid"),
+            id=f"settings-page-{name}",
+            style={} if name == "moves" else {"display": "none"},
+        )
+        for name, (_, fields) in pages.items()
+    ]
+    return [
         html.Div(
             [
                 html.H2("Actuator settings"),
@@ -693,413 +757,55 @@ def settings_panel():
             ],
             className="read-toolbar",
         ),
-        dcc.Tabs(
-            id="settings-tab",
-            value="moves",
-            children=[
-                dcc.Tab(
-                    label="Moves / Jogs",
-                    value="moves",
-                    children=html.Div(
-                        [
-                            group(
-                                "Position display",
-                                [
-                                    field(
-                                        "Units",
-                                        "units",
-                                        value=defaults["units"],
-                                        options=[
-                                            {"label": label, "value": value}
-                                            for label, value in (
-                                                ("Degrees / °", "deg"),
-                                                ("Radians / rad", "rad"),
-                                                ("Milliradians / mrad", "mrad"),
-                                                ("Microradians / μrad", "urad"),
-                                                ("Device counts", "counts"),
-                                            )
-                                        ],
-                                    ),
-                                    field(
-                                        "Decimal places", "decimals", value=6, min=0, max=9, step=1
-                                    ),
-                                    html.Div(id="display-factor", className="hint"),
-                                ],
-                                "Display units affect the readout. Motion inputs remain "
-                                "in degrees.",
-                            ),
-                            group(
-                                "Jog",
-                                [
-                                    field("Step size / °", "jog_step"),
-                                    field(
-                                        "Mode",
-                                        "jog_mode",
-                                        options=[
-                                            {"label": "Single step", "value": 2},
-                                            {"label": "Continuous", "value": 1},
-                                        ],
-                                    ),
-                                    field(
-                                        "Stop",
-                                        "jog_stop",
-                                        options=[
-                                            {"label": "Profiled", "value": 2},
-                                            {"label": "Immediate", "value": 1},
-                                        ],
-                                    ),
-                                    field("Maximum velocity / °/s", "jog_velocity"),
-                                    field("Acceleration / °/s²", "jog_acceleration"),
-                                ],
-                                "One step per click; hold to repeat. Continuous mode "
-                                "stops on release.",
-                            ),
-                            group(
-                                "Velocity",
-                                [
-                                    field("Maximum velocity / °/s", "velocity"),
-                                    field("Acceleration / °/s²", "acceleration"),
-                                    html.P("Minimum velocity: 0 (locked)", className="hint"),
-                                ],
-                            ),
-                            group(
-                                "Backlash",
-                                [field("Distance / °", "backlash")],
-                                "Zero disables backlash compensation.",
-                            ),
-                            group(
-                                "Velocity profile",
-                                [
-                                    field(
-                                        "Profile",
-                                        "profile",
-                                        options=[
-                                            {"label": "Trapezoidal", "value": 0},
-                                            {"label": "S-curve", "value": 1},
-                                        ],
-                                        disabled=True,
-                                    ),
-                                    field("Bow index / 1–18", "bow-index", disabled=True),
-                                ],
-                                UNAVAILABLE,
-                            ),
-                        ],
-                        className="settings-grid",
-                    ),
-                ),
-                dcc.Tab(
-                    label="Rotation",
-                    value="rotation",
-                    children=html.Div(
-                        [
-                            group(
-                                "Rotation",
-                                [
-                                    field(
-                                        "Rotation mode",
-                                        "rotation_mode",
-                                        value=defaults["rotation_mode"],
-                                        options=[
-                                            {"label": "Fixed range · 0 to 360°", "value": "fixed"},
-                                            {
-                                                "label": "Equivalent angle · wraps display",
-                                                "value": "equivalent",
-                                            },
-                                            {
-                                                "label": "Total angle · accumulated rotation",
-                                                "value": "total",
-                                            },
-                                        ],
-                                    ),
-                                    field(
-                                        "Rotation direction (equivalent angle)",
-                                        "rotation_direction",
-                                        value=defaults["rotation_direction"],
-                                        options=[
-                                            {"label": label, "value": value}
-                                            for label, value in (
-                                                ("Rotate quickest", "quickest"),
-                                                ("Rotate forwards", "forward"),
-                                                ("Rotate reverse", "reverse"),
-                                            )
-                                        ],
-                                    ),
-                                ],
-                                "These are host control/display rules. The counted range "
-                                "is limited to "
-                                "±15,480°; home before exceeding it (manual p20).",
-                            ),
-                        ],
-                        className="settings-grid",
-                    ),
-                ),
-                dcc.Tab(
-                    label="Stage / Axis",
-                    value="stage",
-                    children=html.Div(
-                        [
-                            group(
-                                "Homing settings",
-                                [
-                                    html.Dl(id="homing-readback", className="readback"),
-                                ],
-                                "Locked: the manual p21 instructs that stage-specific parameters "
-                                "should not be altered after defaults are established.",
-                            ),
-                            group(
-                                "Hardware limit switches",
-                                [
-                                    html.P("Reverse home datum · switch makes on contact."),
-                                    html.P(
-                                        "The rotary stage has one home switch; it can "
-                                        "rotate through the datum.",
-                                        className="hint",
-                                    ),
-                                    field(
-                                        "Forward limit",
-                                        "forward-limit-setting",
-                                        disabled=True,
-                                        options=[{"label": "Switch makes", "value": 2}],
-                                    ),
-                                    field(
-                                        "Reverse limit",
-                                        "reverse-limit-setting",
-                                        disabled=True,
-                                        options=[{"label": "Switch makes", "value": 2}],
-                                    ),
-                                ],
-                                "Stage parameters remain unchanged; status lamps show "
-                                "reported bits.",
-                            ),
-                            group(
-                                "Limit switch software policy",
-                                [
-                                    field(
-                                        "Policy",
-                                        "limit-policy",
-                                        disabled=True,
-                                        options=[
-                                            {"label": label, "value": i}
-                                            for i, label in enumerate(
-                                                (
-                                                    "Complete moves only",
-                                                    "Clip move to limit",
-                                                    "Ignore",
-                                                )
-                                            )
-                                        ],
-                                    )
-                                ],
-                                "Locked stage configuration. Fixed-range host controls "
-                                "enforce 0–360° targets.",
-                            ),
-                        ],
-                        className="settings-grid",
-                    ),
-                ),
-                dcc.Tab(
-                    label="Advanced",
-                    value="advanced",
-                    children=html.Div(
-                        [
-                            group(
-                                "Power",
-                                [
-                                    field(
-                                        "Resting power / %",
-                                        "rest-power",
-                                        disabled=True,
-                                        min=1,
-                                        max=100,
-                                    )
-                                ],
-                                UNAVAILABLE
-                                + " Moving power is automatic and is not adjustable (manual p22).",
-                            ),
-                            group(
-                                "Button control",
-                                [
-                                    field(
-                                        "Mode",
-                                        "button_mode",
-                                        options=[
-                                            {"label": "Move By (Jog)", "value": 1},
-                                            {"label": "Move To", "value": 2},
-                                        ],
-                                    ),
-                                    field("Left / Top button position / °", "button_position1"),
-                                    field("Right / Lower button position / °", "button_position2"),
-                                ],
-                                "Changes hardware-button behavior. Hold both physical "
-                                "buttons for ~2 s to home.",
-                            ),
-                            group(
-                                "Drive array velocities",
-                                [
-                                    field(
-                                        f"Velocity {i} / °/s",
-                                        f"drive{i}",
-                                        value=speed,
-                                        min=0.005,
-                                        max=20,
-                                    )
-                                    for i, speed in enumerate(defaults["drives"], 1)
-                                ],
-                                "Four speeds in both directions. Host session only; not "
-                                "saved to device EEPROM.",
-                            ),
-                            group(
-                                "Hardware triggering",
-                                [
-                                    field(
-                                        "Input triggers",
-                                        "trigger-input",
-                                        disabled=True,
-                                        options=[
-                                            {"label": label, "value": i}
-                                            for i, label in enumerate(
-                                                (
-                                                    "Disabled",
-                                                    "Relative move (Fall)",
-                                                    "Relative move (Rise)",
-                                                    "Absolute move (Fall)",
-                                                    "Absolute move (Rise)",
-                                                    "Home move (Fall)",
-                                                    "Home move (Rise)",
-                                                )
-                                            )
-                                        ],
-                                    ),
-                                    field(
-                                        "Output triggers",
-                                        "trigger-output",
-                                        disabled=True,
-                                        options=[
-                                            {"label": label, "value": i}
-                                            for i, label in enumerate(
-                                                (
-                                                    "Disabled",
-                                                    "In motion (Low)",
-                                                    "In motion (High)",
-                                                    "Move completed (Low)",
-                                                    "Move completed (High)",
-                                                    "At maximum velocity (Low)",
-                                                    "At maximum velocity (High)",
-                                                )
-                                            )
-                                        ],
-                                    ),
-                                    field(
-                                        "Move relative distance / °",
-                                        "trigger-relative",
-                                        disabled=True,
-                                    ),
-                                    field(
-                                        "Move absolute position / °",
-                                        "trigger-absolute",
-                                        disabled=True,
-                                    ),
-                                ],
-                                UNAVAILABLE,
-                            ),
-                        ],
-                        className="settings-grid",
-                    ),
-                ),
-                dcc.Tab(
-                    label="Defaults",
-                    value="defaults",
-                    children=html.Div(
-                        [
-                            group(
-                                "Reset stage to factory defaults",
-                                [
-                                    html.P(
-                                        "The manufacturer GUI can reset persisted device "
-                                        "parameters. "
-                                        "Defaults take effect at the next power-up (manual p24)."
-                                    ),
-                                    html.Button(
-                                        "Reset Stage To Factory Defaults",
-                                        disabled=True,
-                                        className="button",
-                                        title=UNAVAILABLE,
-                                    ),
-                                ],
-                                UNAVAILABLE + " No reset packet is guessed or sent.",
-                            ),
-                            group(
-                                "Startup settings",
-                                [
-                                    html.P(
-                                        "Device settings are read on connection. Select the "
-                                        "persistence checkbox to save supported settings groups "
-                                        "to the device."
-                                    )
-                                ],
-                            ),
-                        ],
-                        className="settings-grid",
-                    ),
-                ),
-            ],
-        ),
-        dcc.Checklist(
-            id="high_power",
-            options=[
-                {
-                    "label": " USB supply is rated ≥900 mA (permits speeds above 10 °/s)",
-                    "value": "yes",
-                }
-            ],
-            value=[],
-        ),
         html.Div(
             [
+                tabs,
+                *panels,
                 dcc.Checklist(
-                    id="persist",
+                    id="high_power",
                     options=[
-                        {"label": " Save changed settings to device (EEPROM)", "value": "yes"}
+                        {
+                            "label": " USB supply is rated ≥900 mA (permits speeds above 10 °/s)",
+                            "value": "yes",
+                        }
                     ],
                     value=[],
                 ),
+                html.Div(
+                    [
+                        dcc.Checklist(
+                            id="persist",
+                            options=[
+                                {
+                                    "label": " Save changed settings to device (EEPROM)",
+                                    "value": "yes",
+                                }
+                            ],
+                            value=[],
+                        )
+                    ],
+                    className="apply-options",
+                ),
+                html.P(
+                    "Apply updates your edited settings. Saving to the device is optional.",
+                    className="hint",
+                ),
             ],
-            className="apply-options",
+            className="settings-body",
         ),
-        html.P(
-            "Apply updates your edited settings. Saving to the device is optional.",
-            className="hint",
-        ),
-        html.Div(
-            [
-                html.Button("Reset edits", id="reset-settings", className="button"),
-                html.Button("Apply changes", id="apply-settings", className="button primary"),
-                html.Button("Close", id="settings-close", className="button"),
-            ],
-            className="dialog-actions",
-        ),
-    ]
-    # Mount all fields once: switching tabs must not remove callback State inputs.
-    tabs = result[3]
-    panels = []
-    for tab in tabs.children:
-        content = tab.children
-        tab.children = None
-        panels.append(
-            html.Div(
-                content,
-                id=f"settings-page-{tab.value}",
-                style={} if tab.value == "moves" else {"display": "none"},
-            )
-        )
-    # Scroll only the settings body; feedback and actions stay visible.
-    return [
-        *result[:3],
-        html.Div([tabs, *panels, *result[4:-1]], className="settings-body"),
         html.Div(
             [
                 html.Div(id="settings-feedback", role="status", className="dialog-feedback"),
-                result[-1],
+                html.Div(
+                    [
+                        html.Button("Reset edits", id="reset-settings", className="button"),
+                        html.Button(
+                            "Apply changes", id="apply-settings", className="button primary"
+                        ),
+                        html.Button("Close", id="settings-close", className="button"),
+                    ],
+                    className="dialog-actions",
+                ),
             ],
             className="settings-footer",
         ),
@@ -1366,7 +1072,7 @@ def visible_feedback(snapshot, request_message):
     }.get(message, message)
 
 
-def controls(snapshot, target):
+def controls(snapshot):
     status = snapshot["status"]
     busy = snapshot["busy"]
     idle = snapshot["connected"] and not busy and not snapshot["closing"]
@@ -1398,18 +1104,7 @@ def controls(snapshot, target):
     )
     for name in ("refresh-status", "load-settings"):
         disabled[name] = not ready
-    error = ""
-    ui = snapshot["ui"]
-    try:
-        resolve_target(
-            target,
-            snapshot["position"]["degrees"] if snapshot["position"] else 0,
-            ui["rotation_mode"],
-            ui["rotation_direction"],
-        )
-    except (ValueError, TypeError) as exc:
-        error = str(exc)
-    disabled["move"] = not ready or not status.get("homed") or bool(error)
+    disabled["move"] = not ready or not status.get("homed")
     for name in MANUAL_COMMANDS:
         # Keep the held control focusable while it owns motion. Disabling it
         # would blur it immediately and turn every keyboard hold into a release.
@@ -1428,7 +1123,7 @@ def controls(snapshot, target):
             or not status.get("enabled")
             or (name.startswith("jog-") and "jog" not in snapshot["settings"])
         )
-    return disabled, error
+    return disabled
 
 
 # Application assembly, local routes and Dash callbacks.
@@ -1642,16 +1337,13 @@ def create_app(controller=None, *, serial=None):
         )
 
     @app.callback(
-        *[
-            Output(f"settings-page-{name}", "style")
-            for name in ("moves", "rotation", "stage", "advanced", "defaults")
-        ],
+        *[Output(f"settings-page-{name}", "style") for name in ("moves", "rotation", "advanced")],
         Input("settings-tab", "value"),
     )
     def settings_tabs(selected):
         return [
             {} if name == selected else {"display": "none"}
-            for name in ("moves", "rotation", "stage", "advanced", "defaults")
+            for name in ("moves", "rotation", "advanced")
         ]
 
     # Populate or reset drafts from the latest verified readbacks.
@@ -1728,13 +1420,12 @@ def create_app(controller=None, *, serial=None):
             for i in range(4)
         ],
         Input("refresh", "n_intervals"),
-        Input("target", "value"),
         Input("request-result", "children"),
     )
-    def render(_ticks, target, request_message):
+    def render(_ticks, request_message):
         snap = owner.snapshot()
         owner.refresh()
-        disabled, target_error = controls(snap, target)
+        disabled = controls(snap)
         state, ui = snap["status"], snap["ui"]
         position = snap["position"]
         angle = position["degrees"] if position else None
@@ -1843,8 +1534,7 @@ def create_app(controller=None, *, serial=None):
                 ],
                 className="device-facts",
             ),
-            target_error
-            or f"Rotation: {ui['rotation_mode']} · Direction: {ui['rotation_direction']}",
+            f"Rotation: {ui['rotation_mode']} · Direction: {ui['rotation_direction']}",
             snap["connected"] or bool(snap["busy"]),
             {"display": "none"} if state.get("enabled") else {},
             {} if state.get("enabled") else {"display": "none"},

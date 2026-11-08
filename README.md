@@ -45,8 +45,11 @@ unchanged and reports that device changes may be partial. Persistence is opt-in;
 an EEPROM write is reported as requested, not power-cycle proven. **Close**, × and
 Escape discard unapplied settings edits. Dialog feedback stays visible beside the actions.
 
-Unverified S-curve, power, trigger and factory-reset controls are visibly unavailable;
-stage-specific settings remain locked as instructed by the manual. See the full
+Settings contains Moves / Jogs, Rotation and Advanced. Unsupported S-curve, power,
+trigger and factory-reset widgets are omitted; homing readbacks remain in Advanced.
+Device numeric limits and motion-state checks run once in the controller against
+fresh device state. The GUI retains ownership/fault handling and display-format
+validation. See the full
 [GUI mapping, packet references and limitations](docs/gui-manual.md). The original
 [manual and protocol PDFs](docs/references/README.md) are retained in the repository.
 
@@ -199,9 +202,9 @@ uv run --locked ruff format --check .
 uv build --no-sources
 ```
 
-The current [repository review](docs/reviews/repository-review-20261108.md) records
-**354 Python and 2 JavaScript tests**, regression fixes, the single-script GUI
-migration, offline packaging and generated-cache cleanup. See the
+The [repository review](docs/reviews/repository-review-20261108.md) records the
+controller/GUI migration checkpoint. Subsequent pruning reduced `gui.py` from
+1,925 to 1,615 lines; **357 Python tests** pass. See the
 [validation record](docs/validation.md) for checkpoint-specific evidence and
 [command reference](docs/commands.md) for protocol details. Tests use independent
 literal frames, saved traffic and mocked USB; they do not operate the mount.

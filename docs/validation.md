@@ -1,5 +1,21 @@
 # Validation record
 
+## GUI pruning: 8 November 2026
+
+`gui.py` shrank from 1,925 to 1,615 lines (310 lines, about 16%). Settings uses a
+named page structure rather than index-based tab mutation. Unsupported widgets and
+the Stage/Axis/Defaults tabs were removed; homing readbacks moved to Advanced.
+Snapshot comparison retained all supported fields/readbacks, with only duplicate
+device numeric constraints removed. Display-format checks remain GUI-local.
+
+Cached GUI motion permissions, repeated target/settings validation and Drive-speed
+preflight were removed. The controller remains authoritative against fresh state.
+Real-controller scripted regressions verify that invalid targets/speeds cause no
+device I/O, stale GUI flags cannot bypass fresh busy/home checks, and failed device
+validation cannot commit session options. Ownership, lease, worker, fault and
+shutdown methods remain AST-identical. **357 Python tests passed**. No hardware
+was operated; earlier dated reports retain their original checkpoint scope.
+
 ## One GUI script follow-up: 8 November 2026
 
 All GUI code, including named form fields, defaults, draft conversion and session

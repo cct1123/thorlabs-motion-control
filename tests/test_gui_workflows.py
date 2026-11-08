@@ -35,7 +35,7 @@ def test_unknown_state_blocks_motion_even_without_a_recovery_flag():
         status={"homed": True, "enabled": True},
         position={"degrees": 0},
     )
-    disabled, _ = controls(snapshot, 90)
+    disabled = controls(snapshot)
     assert not disabled["stop"]
     assert disabled["disconnect"]
     assert disabled["home"] and disabled["move"] and disabled["disable"]
@@ -53,13 +53,13 @@ def test_held_control_keeps_focus_while_other_motion_controls_are_disabled(comma
         settings={"jog": {}},
         position={"degrees": 0},
     )
-    disabled, _ = controls(snapshot, 0)
+    disabled = controls(snapshot)
     assert not disabled[command] and not disabled["stop"]
     assert disabled["home"] and disabled["move"]
     for other in {"jog-forward", "jog-reverse", "drive-forward", "drive-reverse"} - {command}:
         assert disabled[other]
     snapshot["unknown"] = True
-    assert controls(snapshot, 0)[0][command]
+    assert controls(snapshot)[command]
 
 
 def test_worker_rejects_motion_while_physical_state_is_unknown():
