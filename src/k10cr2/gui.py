@@ -61,8 +61,9 @@ CONTROL_IDS = (
 )
 
 
-# Form defaults, hydration, draft conversion and validation.
+# Form defaults, widget values and settings drafts.
 def default_session():
+    """Create independent session defaults without changing the device."""
     return dict(
         rotation_mode="equivalent",
         rotation_direction="quickest",
@@ -74,43 +75,54 @@ def default_session():
 
 
 def form_values(snapshot):
-    ui = snapshot["ui"]
+    """Convert device readbacks and session options into widget values."""
+    session_options = snapshot["ui"]
     return {
         **to_display(snapshot["settings"]),
-        **{name: ui[name] for name in SESSION_SCALAR_FIELDS},
-        "high_power": ["yes"] if ui["high_power"] else [],
-        **dict(zip(DRIVE_FIELDS, ui["drives"], strict=True)),
+        **{name: session_options[name] for name in SESSION_SCALAR_FIELDS},
+        "high_power": ["yes"] if session_options["high_power"] else [],
+        **dict(zip(DRIVE_FIELDS, session_options["drives"], strict=True)),
     }
 
 
 def session_draft(fields):
+    """Parse widget values; leave device validation to the controller."""
     confirmation = fields["high_power"]
     if not isinstance(confirmation, list) or any(value != "yes" for value in confirmation):
         raise ValueError("Invalid USB supply confirmation")
-    candidate = {
+    session_options = {
         **{name: fields[name] for name in SESSION_SCALAR_FIELDS},
         "high_power": "yes" in confirmation,
         "drives": [fields[name] for name in DRIVE_FIELDS],
     }
     # Only display formatting needs GUI validation; device values are checked by
     # the controller against fresh readback before any write or motion.
-    if candidate["units"] not in UNIT_FACTORS:
+    if session_options["units"] not in UNIT_FACTORS:
         raise ValueError("Unknown display units")
-    candidate["decimals"] = integer(candidate["decimals"], "decimal places", set(range(10)))
-    return candidate
+    session_options["decimals"] = integer(
+        session_options["decimals"], "decimal places", set(range(10))
+    )
+    return session_options
 
 
 def changed_settings(fields, raw):
-    current = to_display(raw)
+    """Group edited device fields without revalidating cached readbacks."""
+    current_values = to_display(raw)
     return {
-        group: {key: fields[key] for key in keys}
-        for group, keys in GROUP_FIELDS.items()
-        if any(fields[key] != current.get(key) for key in keys)
+        group_name: {field_name: fields[field_name] for field_name in field_names}
+        for group_name, field_names in GROUP_FIELDS.items()
+        if any(fields[field_name] != current_values.get(field_name) for field_name in field_names)
     }
 
 
 # Single-operation USB owner.
 class GuiController:
+    """Keep one USB owner and protect shared state with the condition lock.
+
+    Callbacks submit requests; the worker performs device I/O. Shutdown waits for
+    that worker before accessing or releasing the connection itself.
+    """
+
     # State initialization and read-only snapshots.
     def __init__(self, factory=K10CR2):
         self._factory = factory
@@ -122,6 +134,8 @@ class GuiController:
         self._hold_until = 0
         self._released_tokens = deque(maxlen=64)
         self._events = deque(maxlen=100)
+        # "busy" reserves the owner; "recovery" requires reconnecting, while
+        # "unknown" means that the physical state has not been confirmed.
         self._state = dict(
             connected=False,
             busy=None,
@@ -140,10 +154,12 @@ class GuiController:
         )
 
     def snapshot(self):
+        """Return a detached copy so callbacks cannot mutate owner state."""
         with self._condition:
             return deepcopy({**self._state, "closing": self._closing, "events": list(self._events)})
 
     def refresh(self):
+        """Request a readback when the owner is idle and the last sample is old."""
         with self._condition:
             if (
                 self._closing
@@ -166,13 +182,15 @@ class GuiController:
                 return "Wait for the active operation before applying settings."
             if revision != self._state["settings_revision"]:
                 return "Device readbacks changed. Review the refreshed settings and apply again."
-            candidate = session_draft(fields)
+            session_options = session_draft(fields)
             changes = changed_settings(fields, self._state["settings"])
             if changes:
-                return self.submit("configure", changes=changes, persist=persist, session=candidate)
-            if candidate == self._state["ui"]:
+                return self.submit(
+                    "configure", changes=changes, persist=persist, session=session_options
+                )
+            if session_options == self._state["ui"]:
                 return "No settings changed."
-            self._state["ui"] = candidate
+            self._state["ui"] = session_options
             self._state["settings_revision"] += 1
             self._event("Settings applied (session only).")
             return "Settings applied (session only)."
@@ -218,6 +236,7 @@ class GuiController:
     def submit(
         self, command, *, serial=None, target=None, changes=None, persist=False, session=None
     ):
+        """Reserve one worker or reject the request; never queue another start."""
         with self._condition:
             if self._closing:
                 return "The GUI is shutting down."
@@ -335,17 +354,16 @@ class GuiController:
             else:
                 if command == "move" and changes:
                     self._configure(changes)
-                kwargs = dict(cancel=self._cancel, on_progress=self._readback)
-                result = (
-                    self._mount.home(**kwargs)
-                    if command == "home"
-                    else self._mount.move_absolute(
+                motion_options = dict(cancel=self._cancel, on_progress=self._readback)
+                if command == "home":
+                    result = self._mount.home(**motion_options)
+                else:
+                    result = self._mount.move_absolute(
                         target,
                         mode=self._state["ui"]["rotation_mode"],
                         direction=self._state["ui"]["rotation_direction"],
-                        **kwargs,
+                        **motion_options,
                     )
-                )
                 self._readback(result.status, result.position)
             with self._condition:
                 if command != "refresh":
@@ -399,7 +417,7 @@ class GuiController:
 
     def _configure(self, changes, *, persist=False, session=None):
         try:
-            actual = self._mount.configure(
+            verified_settings = self._mount.configure(
                 changes, high_power=(session or self._state["ui"])["high_power"], persist=persist
             )
         except Exception as exc:
@@ -409,7 +427,7 @@ class GuiController:
                     "reconnect and refresh readbacks before retrying."
                 )
             raise
-        self._publish_settings(actual, session)
+        self._publish_settings(verified_settings, session)
 
     def _publish_settings(self, actual, session=None):
         with self._condition:
@@ -548,11 +566,15 @@ class GuiController:
 
 # Component construction: primitives, panels, then the complete page.
 def field(label, name, *, value=None, options=None, **kwargs):
+    """Build a numeric input or a dropdown from (label, value) choices."""
     kwargs.setdefault("step", "any")
-    control = (
+    input_control = (
         dcc.Dropdown(
             id=name,
-            options=[{"label": label, "value": value} for label, value in options],
+            options=[
+                {"label": option_label, "value": option_value}
+                for option_label, option_value in options
+            ],
             value=value,
             clearable=False,
             placeholder="Select…",
@@ -560,7 +582,7 @@ def field(label, name, *, value=None, options=None, **kwargs):
         if options is not None
         else dcc.Input(id=name, type="number", value=value, **kwargs)
     )
-    return html.Div([html.Label(label, htmlFor=name), control], className="field")
+    return html.Div([html.Label(label, htmlFor=name), input_control], className="field")
 
 
 def group(title, children, note=None):
@@ -1073,57 +1095,58 @@ def visible_feedback(snapshot, request_message):
 
 
 def controls(snapshot):
+    """Map cached state to button availability, not device permission checks."""
     status = snapshot["status"]
-    busy = snapshot["busy"]
-    idle = snapshot["connected"] and not busy and not snapshot["closing"]
-    ready = (
-        idle
+    active_command = snapshot["busy"]
+    owner_idle = snapshot["connected"] and not active_command and not snapshot["closing"]
+    can_start = (
+        owner_idle
         and not snapshot.get("unknown", False)
         and not snapshot["recovery"]
         and not status.get("moving")
         and not status.get("homing")
         and not status.get("motion_error")
-        and not status.get("raw_bits", 0) & 0x40000000
+        and not (status.get("raw_bits", 0) & 0x40000000)
     )
-    disabled = {name: True for name in (*CONTROL_IDS, *MANUAL_COMMANDS)}
-    disabled.update(
-        connect=snapshot["connected"] or bool(busy) or snapshot["closing"],
-        disconnect=not idle
+    disabled_controls = {name: True for name in (*CONTROL_IDS, *MANUAL_COMMANDS)}
+    disabled_controls.update(
+        connect=snapshot["connected"] or bool(active_command) or snapshot["closing"],
+        disconnect=not owner_idle
         or snapshot.get("unknown", False)
         or status.get("moving", False)
         or status.get("homing", False),
-        home=not ready,
-        enable=not ready or status.get("enabled", False),
-        disable=not ready or not status.get("enabled", False),
-        identify=not ready,
+        home=not can_start,
+        enable=not can_start or status.get("enabled", False),
+        disable=not can_start or not status.get("enabled", False),
+        identify=not can_start,
     )
-    disabled["stop"] = (
+    disabled_controls["stop"] = (
         not snapshot["connected"]
         or snapshot["closing"]
-        or busy in {"connect", "disconnect", "stop"}
+        or active_command in {"connect", "disconnect", "stop"}
     )
     for name in ("refresh-status", "load-settings"):
-        disabled[name] = not ready
-    disabled["move"] = not ready or not status.get("homed")
+        disabled_controls[name] = not can_start
+    disabled_controls["move"] = not can_start or not status.get("homed")
     for name in MANUAL_COMMANDS:
         # Keep the held control focusable while it owns motion. Disabling it
         # would blur it immediately and turn every keyboard hold into a release.
-        holding = (
-            busy == name
+        is_active_hold = (
+            active_command == name
             and snapshot["connected"]
             and not snapshot["closing"]
             and not snapshot.get("unknown", False)
             and not snapshot["recovery"]
             and not status.get("motion_error")
-            and not status.get("raw_bits", 0) & 0x40000000
+            and not (status.get("raw_bits", 0) & 0x40000000)
         )
-        disabled[name] = (
-            not (ready or holding)
+        disabled_controls[name] = (
+            not (can_start or is_active_hold)
             or not status.get("homed")
             or not status.get("enabled")
             or (name.startswith("jog-") and "jog" not in snapshot["settings"])
         )
-    return disabled
+    return disabled_controls
 
 
 # Application assembly, local routes and Dash callbacks.
@@ -1235,14 +1258,17 @@ def create_app(controller=None, *, serial=None):
         Output("panel", "data"),
         Output("settings-tab", "value"),
         inputs={
-            "clicks": {name: Input(name, "n_clicks") for name in buttons},
+            "clicks": {trigger_id: Input(trigger_id, "n_clicks") for trigger_id in buttons},
             "serial_value": State("serial", "value"),
             "target": State("target", "value"),
             "move_profile": {
                 "velocity": State("move_velocity", "value"),
                 "acceleration": State("move_acceleration", "value"),
             },
-            "fields": {name: State(name, "value") for name in DEVICE_FIELDS + SESSION_FIELDS},
+            "fields": {
+                trigger_id: State(trigger_id, "value")
+                for trigger_id in DEVICE_FIELDS + SESSION_FIELDS
+            },
             "revision": State("settings-revision", "data"),
             "persist": State("persist", "value"),
             "panel": State("panel", "data"),
@@ -1250,8 +1276,8 @@ def create_app(controller=None, *, serial=None):
         prevent_initial_call=True,
     )
     def dispatch(clicks, serial_value, target, move_profile, fields, revision, persist, panel):
-        name = ctx.triggered_id
-        if name in {"move-open", "position-open", "settings-open", "jog-open", "drive-open"}:
+        trigger_id = ctx.triggered_id
+        if trigger_id in {"move-open", "position-open", "settings-open", "jog-open", "drive-open"}:
             snapshot = owner.snapshot()
             if (
                 snapshot["busy"] in MOTION_COMMANDS
@@ -1264,37 +1290,39 @@ def create_app(controller=None, *, serial=None):
                     None,
                     no_update,
                 )
-        if name in {"move-open", "position-open"}:
+        if trigger_id in {"move-open", "position-open"}:
             return no_update, "move", no_update
-        if name in {"settings-open", "jog-open", "drive-open"}:
-            return no_update, "settings", "advanced" if name == "drive-open" else "moves"
-        if name in {"cancel-move", "cancel-settings", "settings-close"}:
+        if trigger_id in {"settings-open", "jog-open", "drive-open"}:
+            return no_update, "settings", "advanced" if trigger_id == "drive-open" else "moves"
+        if trigger_id in {"cancel-move", "cancel-settings", "settings-close"}:
             return "", None, no_update
-        if name in {"reset-settings", "reset-move"}:
+        if trigger_id in {"reset-settings", "reset-move"}:
             return "Edits reset to the last readback and applied session options.", panel, no_update
         try:
-            if name == "apply-settings":
+            if trigger_id == "apply-settings":
                 message = owner.apply_settings(
                     fields, revision=revision, persist="yes" in (persist or [])
                 )
-            elif name in {"apply-move", "move"}:
+            elif trigger_id in {"apply-move", "move"}:
                 changes = None
-                if name == "apply-move" or (
+                if trigger_id == "apply-move" or (
                     any(value is not None for value in move_profile.values())
                 ):
-                    draft = move_profile
-                    current = to_display(owner.snapshot()["settings"]) if name == "move" else {}
-                    if name == "apply-move" or any(
-                        value is not None and value != current.get(key)
-                        for key, value in draft.items()
+                    requested_profile = move_profile
+                    current_profile = (
+                        to_display(owner.snapshot()["settings"]) if trigger_id == "move" else {}
+                    )
+                    if trigger_id == "apply-move" or any(
+                        value is not None and value != current_profile.get(key)
+                        for key, value in requested_profile.items()
                     ):
-                        changes = {"velocity": draft}
+                        changes = {"velocity": requested_profile}
                 message = owner.submit(
-                    "configure" if name == "apply-move" else "move",
+                    "configure" if trigger_id == "apply-move" else "move",
                     target=target,
                     changes=changes,
                 )
-            elif name == "close-gui":
+            elif trigger_id == "close-gui":
                 shutdown = app.server.config.get("GUI_SHUTDOWN")
                 if shutdown is None:
                     message = "Close this UI from the application hosting it."
@@ -1307,17 +1335,16 @@ def create_app(controller=None, *, serial=None):
                     threading.Thread(target=close, name="k10cr2-shutdown", daemon=True).start()
                     message = "Closing web UI; waiting for the USB owner. Then close this tab."
             else:
-                command = (
-                    "refresh"
-                    if name == "refresh-status"
-                    else "stop"
-                    if name in {"settings-dialog-stop", "move-dialog-stop"}
-                    else name
-                )
+                if trigger_id == "refresh-status":
+                    command = "refresh"
+                elif trigger_id in {"settings-dialog-stop", "move-dialog-stop"}:
+                    command = "stop"
+                else:
+                    command = trigger_id
                 message = owner.submit(command, serial=serial_value, target=target)
         except (ValueError, TypeError, KeyError) as exc:
             message = str(exc)
-        if name == "move" and message == "move requested.":
+        if trigger_id == "move" and message == "move requested.":
             panel = None  # Keep the main Stop control immediately accessible.
         return message, panel, no_update
 
@@ -1369,21 +1396,23 @@ def create_app(controller=None, *, serial=None):
         State("settings-revision", "data"),
     )
     def settings_values(_ticks, _reset, _cancel, _close, revision):
-        snap = owner.snapshot()
-        if revision == snap["settings_revision"] and ctx.triggered_id not in {
+        snapshot = owner.snapshot()
+        if revision == snapshot["settings_revision"] and ctx.triggered_id not in {
             "reset-settings",
             "cancel-settings",
             "settings-close",
         }:
             return [no_update] * (len(DEVICE_FIELDS + SESSION_FIELDS) + 2)
-        values = form_values(snap)
+        values = form_values(snapshot)
         return [values.get(name) for name in DEVICE_FIELDS + SESSION_FIELDS] + [
-            snap["settings_revision"],
+            snapshot["settings_revision"],
             [],
         ]
 
     # Render owner snapshots as status, available controls and feedback.
     @app.callback(
+        # These groups match the return tuple in render().
+        # Position, connection and homing indicators.
         Output("angle", "children"),
         Output("angle-unit", "children"),
         Output("instrument-serial", "children"),
@@ -1394,6 +1423,7 @@ def create_app(controller=None, *, serial=None):
         Output("homed-lamp", "className"),
         Output("forward-lamp", "className"),
         Output("reverse-lamp", "className"),
+        # Parameters, faults, activity and device details.
         Output("velocity-summary", "children"),
         Output("acceleration-summary", "children"),
         Output("jog-summary", "children"),
@@ -1402,6 +1432,7 @@ def create_app(controller=None, *, serial=None):
         Output("activity", "children"),
         Output("device-details", "children"),
         Output("move-preview", "children"),
+        # Dialog metadata, feedback and command availability.
         Output("serial", "disabled"),
         Output("enable", "style"),
         Output("disable", "style"),
@@ -1423,132 +1454,158 @@ def create_app(controller=None, *, serial=None):
         Input("request-result", "children"),
     )
     def render(_ticks, request_message):
-        snap = owner.snapshot()
+        snapshot = owner.snapshot()
         owner.refresh()
-        disabled = controls(snap)
-        state, ui = snap["status"], snap["ui"]
-        position = snap["position"]
+        disabled_controls = controls(snapshot)
+        device_status, session_options = snapshot["status"], snapshot["ui"]
+        position = snapshot["position"]
         angle = position["degrees"] if position else None
-        age = time.time() - snap["updated"] if snap["updated"] is not None else None
-        fresh = age is not None and age < 2 and not snap["recovery"]
-        bits = state.get("raw_bits", 0)
-        operation = (
-            "Homing"
-            if snap["busy"] == "home" or state.get("homing")
-            else "Moving"
-            if snap["busy"] in MOTION_COMMANDS or state.get("moving")
-            else "Idle"
-            if fresh
-            else "Disconnected"
-            if not snap["connected"]
-            else "Unverified"
+        readback_age = (
+            time.time() - snapshot["updated"] if snapshot["updated"] is not None else None
         )
-        if snap["busy"] not in {None, "refresh", *MOTION_COMMANDS}:
+        readback_is_fresh = (
+            readback_age is not None and readback_age < 2 and not snapshot["recovery"]
+        )
+        status_bits = device_status.get("raw_bits", 0)
+        # Keep the label precedence explicit: active motion wins over stale data.
+        if snapshot["busy"] == "home" or device_status.get("homing"):
+            operation = "Homing"
+        elif snapshot["busy"] in MOTION_COMMANDS or device_status.get("moving"):
+            operation = "Moving"
+        elif readback_is_fresh:
+            operation = "Idle"
+        elif not snapshot["connected"]:
+            operation = "Disconnected"
+        else:
+            operation = "Unverified"
+        if snapshot["busy"] not in {None, "refresh", *MOTION_COMMANDS}:
             operation = {
                 "connect": "Connecting…",
                 "load-settings": "Reading settings…",
                 "configure": "Applying settings…",
                 "disconnect": "Disconnecting…",
-            }.get(snap["busy"], operation)
-        label = (
-            "Physical state UNKNOWN"
-            if snap["unknown"]
-            else "Reconnect required"
-            if snap["recovery"]
-            else "Connected"
-            if fresh
-            else "Disconnected"
-            if not snap["connected"]
-            else "Readback stale"
-        )
+            }.get(snapshot["busy"], operation)
+        if snapshot["unknown"]:
+            connection_label = "Physical state UNKNOWN"
+        elif snapshot["recovery"]:
+            connection_label = "Reconnect required"
+        elif readback_is_fresh:
+            connection_label = "Connected"
+        elif not snapshot["connected"]:
+            connection_label = "Disconnected"
+        else:
+            connection_label = "Readback stale"
+
+        if not snapshot["connected"]:
+            homing_caption = "Home reference —"
+        elif device_status.get("homing"):
+            homing_caption = "Homing"
+        elif device_status.get("homed"):
+            homing_caption = "Homed"
+        else:
+            homing_caption = "Not Homed"
 
         def lamp(active):
-            return "lamp unknown" if not fresh else "lamp on" if active else "lamp off"
+            if not readback_is_fresh:
+                return "lamp unknown"
+            return "lamp on" if active else "lamp off"
 
-        settings = to_display(snap["settings"])
+        display_settings = to_display(snapshot["settings"])
 
         def summary(prefix, key, suffix):
-            return f"{prefix}: {settings[key]:.6g}{suffix}" if key in settings else f"{prefix}: —"
+            if key not in display_settings:
+                return f"{prefix}: —"
+            return f"{prefix}: {display_settings[key]:.6g}{suffix}"
 
-        events = [
+        activity_items = [
             html.Div(
                 [html.Time(event["time"]), html.Span(event["message"])],
                 className=f"event {event['level']}",
             )
-            for event in snap["events"]
+            for event in snapshot["events"]
         ]
-        home = snap["settings"].get("home")
-        home_details = (
-            [
+        home_settings = snapshot["settings"].get("home")
+        if home_settings:
+            homing_details = [
                 html.Dt("Direction / switch"),
-                html.Dd(f"{home['direction']} / {home['switch']}"),
+                html.Dd(f"{home_settings['direction']} / {home_settings['switch']}"),
                 html.Dt("Zero offset / °"),
-                html.Dd(f"{home['offset'] / COUNTS_PER_DEGREE:.6f}"),
+                html.Dd(f"{home_settings['offset'] / COUNTS_PER_DEGREE:.6f}"),
                 html.Dt("Velocity / °/s"),
-                html.Dd(f"{home['velocity'] / VELOCITY_SCALE:.6f}"),
+                html.Dd(f"{home_settings['velocity'] / VELOCITY_SCALE:.6f}"),
             ]
-            if home
-            else [html.Dd("Load from device to read homing settings.")]
+        else:
+            homing_details = [html.Dd("Load from device to read homing settings.")]
+
+        if snapshot.get("settings_updated"):
+            settings_read_status = "Read at " + time.strftime(
+                "%H:%M:%S", time.localtime(snapshot["settings_updated"])
+            )
+        else:
+            settings_read_status = "Connect to read device settings."
+
+        device_facts = []
+        for fact_name, fact_value in (
+            ("Model", snapshot["identity"].get("model", "—")),
+            ("Firmware", snapshot["identity"].get("firmware", "—")),
+            ("Raw counts", position["counts"] if position else "—"),
+            ("Status bits", f"{status_bits:#010x}" if device_status else "—"),
+        ):
+            device_facts.extend([html.Dt(fact_name), html.Dd(str(fact_value))])
+        device_details = html.Dl(device_facts, className="device-facts")
+        rotation_description = (
+            f"Rotation: {session_options['rotation_mode']}"
+            f" · Direction: {session_options['rotation_direction']}"
         )
-        read_status = (
-            "Read at " + time.strftime("%H:%M:%S", time.localtime(snap["settings_updated"]))
-            if snap.get("settings_updated")
-            else "Connect to read device settings."
-        )
-        feedback = visible_feedback(snap, request_message)
+        display_factor = UNIT_FACTORS[session_options["units"]]
+        operator_feedback = visible_feedback(snapshot, request_message)
         return (
-            display_angle(angle, ui["rotation_mode"], ui["units"], ui["decimals"]),
+            # Position, connection and homing indicators.
+            display_angle(
+                angle,
+                session_options["rotation_mode"],
+                session_options["units"],
+                session_options["decimals"],
+            ),
             {"deg": "°", "rad": " rad", "mrad": " mrad", "urad": " μrad", "counts": " cts"}[
-                ui["units"]
+                session_options["units"]
             ],
-            "S/N " + snap["identity"].get("serial", "—"),
+            "S/N " + snapshot["identity"].get("serial", "—"),
             operation,
-            label,
-            "No readback" if age is None else f"Last counted readback: {age:.1f} s ago",
-            "Home reference —"
-            if not snap["connected"]
-            else "Homing"
-            if state.get("homing")
-            else "Homed"
-            if state.get("homed")
-            else "Not Homed",
-            "lamp homing" if state.get("homing") and fresh else lamp(state.get("homed")),
-            lamp(bits & 1),
-            lamp(bits & 2),
+            connection_label,
+            "No readback"
+            if readback_age is None
+            else f"Last counted readback: {readback_age:.1f} s ago",
+            homing_caption,
+            "lamp homing"
+            if device_status.get("homing") and readback_is_fresh
+            else lamp(device_status.get("homed")),
+            lamp(status_bits & 1),
+            lamp(status_bits & 2),
+            # Parameters, faults, activity and device details.
             summary("Vel", "velocity", "°/s"),
             summary("Acc", "acceleration", "°/s²"),
             summary("Jog Step", "jog_step", "°"),
-            snap["error"],
-            {} if snap["error"] else {"display": "none"},
-            events,
-            html.Dl(
-                [
-                    item
-                    for label, value in (
-                        ("Model", snap["identity"].get("model", "—")),
-                        ("Firmware", snap["identity"].get("firmware", "—")),
-                        ("Raw counts", position["counts"] if position else "—"),
-                        ("Status bits", f"{bits:#010x}" if snap["status"] else "—"),
-                    )
-                    for item in (html.Dt(label), html.Dd(str(value)))
-                ],
-                className="device-facts",
-            ),
-            f"Rotation: {ui['rotation_mode']} · Direction: {ui['rotation_direction']}",
-            snap["connected"] or bool(snap["busy"]),
-            {"display": "none"} if state.get("enabled") else {},
-            {} if state.get("enabled") else {"display": "none"},
-            read_status,
-            home_details,
-            f"Factor: {UNIT_FACTORS[ui['units']]:.12g} per degree (applied display units).",
-            disabled["stop"],
-            disabled["stop"],
-            "" if snap["error"] else feedback,
-            snap["error"] or feedback,
-            snap["error"] or feedback,
-            *[disabled[name] for name in CONTROL_IDS],
+            snapshot["error"],
+            {} if snapshot["error"] else {"display": "none"},
+            activity_items,
+            device_details,
+            rotation_description,
+            # Dialog metadata, feedback and command availability.
+            snapshot["connected"] or bool(snapshot["busy"]),
+            {"display": "none"} if device_status.get("enabled") else {},
+            {} if device_status.get("enabled") else {"display": "none"},
+            settings_read_status,
+            homing_details,
+            f"Factor: {display_factor:.12g} per degree (applied display units).",
+            disabled_controls["stop"],
+            disabled_controls["stop"],
+            "" if snapshot["error"] else operator_feedback,
+            snapshot["error"] or operator_feedback,
+            snapshot["error"] or operator_feedback,
+            *[disabled_controls[name] for name in CONTROL_IDS],
             *[
-                disabled[f"drive-{direction}"]
+                disabled_controls[f"drive-{direction}"]
                 for direction in ("forward", "reverse")
                 for _ in range(4)
             ],
