@@ -1,115 +1,87 @@
 # K10CR2 controller
 
-A small synchronous Python library and CLI for one Thorlabs K10CR2 rotation mount on
-Windows, using our WinUSB/PyUSB/libusb/APT communication. Includes a flat web UI,
-identity/status/position queries, Home/Move/Jog/Drive/Stop and verified settings
-readback/editing. No Kinesis application, SDK, pythonnet or manufacturer runtime
-is used.
+A synchronous Python library, command-line interface and local web GUI for one
+Thorlabs K10CR2 rotation mount on Windows. Communication uses WinUSB, PyUSB,
+libusb and an independent APT implementation. No Kinesis application, SDK,
+pythonnet or manufacturer runtime is required.
 
-## Local graphical interface
+Supports identity/status/position queries, Home, absolute Move, Jog, held Drive,
+Stop and verified settings editing. The GUI follows the K10CR2 manufacturer's
+panel and settings; unsupported controls are omitted.
 
-The GUI follows the Thorlabs K10CR2 panel (Figure 16) and settings in the
-[manufacturer manual](docs/references/k10cr2-user-guide-etn064249-d02.pdf).
-All communication is our own WinUSB/APT implementation; no Kinesis or SDK is used.
-The [migration guide](docs/migration.md) records the consolidated API, removed
-development interfaces and shared angle contract.
+## Setup
+
+Install [uv](https://docs.astral.sh/uv/), then run from this repository:
 
 ```powershell
 uv sync --locked --extra gui
 uv run --locked --extra gui k10cr2-gui --serial 55551174
 ```
 
-Open **http://127.0.0.1:8050**; use `--port 8051` if that port is occupied.
-Startup only shows the UI; click **Connect** for readback. If the mount is not
-homed, use **Home** explicitly before positioning. Close other software that owns
-the mount first.
-To update, Stop active motion, Disconnect, and Close web UI. Restart the server
-with the updated software, then reload every open GUI tab before reconnecting.
-Stale callback layouts are rejected with a reload-required response.
+Replace `55551174` with the mount's actual eight-digit serial. This is the unit
+used for the recorded bench tests. Python 3.12 is selected by `.python-version`;
+`uv.lock` pins runtime and development dependencies. `--locked` rejects a stale
+or missing lockfile. For library/CLI use, omit `--extra gui`; add `--no-dev` to
+`uv sync` for a runtime-only environment.
 
-The panel provides Move/profile editing, Home, Stop, held Drive/Jog controls,
-Enable/Disable, Identify, serial/position/status and limit indicators. Settings
-include display units, Fixed/Equivalent/Total rotation modes, forward/reverse/
-quickest routing, velocity/jog/backlash and hardware-button parameters. **Connect**
-reads all five device settings groups; **Refresh readbacks** reloads them and shows
-the read time. **Refresh status** reads status and position without replacing
-settings or settings drafts. Setting writes require fresh readback, validation and verification.
-The GUI defaults to **Equivalent Angle**: reverse Jog/Drive can cross zero and the
-display wraps through 360°. **Fixed Range** remains an explicit single-turn option;
-**Total Angle** shows signed accumulated rotation. All modes retain the counted
-±15,480° software guard at the manual's display/counting bound; it is not a mechanical stop.
-One **Apply changes** action validates the complete form and applies edited device
-settings, then publishes the session display/rotation/drive options. An unchanged
-form sends no configuration request. Device-setting failure leaves session options
-unchanged and reports that device changes may be partial. Persistence is opt-in;
-an EEPROM write is reported as requested, not power-cycle proven. **Close**, × and
-Escape discard unapplied settings edits. Dialog feedback stays visible beside the actions.
+The mount must already use the **WinUSB** Windows driver. Driver installation is
+a separate operator step; this package does not install or replace drivers. The
+tested USB bridge is VID `0403`, PID `FAF0`, bcdDevice `1000`, with 64-byte bulk
+endpoints. Match the mount's **name and serial** because other Thorlabs devices
+may share those IDs. WinUSB binding does not provide Kinesis/D2XX/COM access;
+other serial adapters should retain their own driver bindings.
 
-Settings contains Moves / Jogs, Rotation and Advanced. Unsupported S-curve, power,
-trigger and factory-reset widgets are omitted; homing readbacks remain in Advanced.
-Device numeric limits and motion-state checks run once in the controller against
-fresh device state. The GUI retains ownership/fault handling and display-format
-validation. See the full
-[GUI mapping, packet references and limitations](docs/gui-manual.md). The original
-[manual and protocol PDFs](docs/references/README.md) are retained in the repository.
+## Local web GUI
 
-One worker owns USB; motions are not queued. Release, lost focus or an expired
-browser heartbeat requests a stop for held controls. Software Stop is not hard
-real time. A confirmed operator Stop on a healthy connection allows another command
-without reconnecting, after any temporary velocity profile is restored and verified.
-Query/motion faults still require explicit recovery; an unconfirmed stop
-retains **physical state UNKNOWN**. **Close web UI** or console **Ctrl+C** waits
-for the owner before releasing USB. Closing a tab alone leaves the server running;
-finite moves continue, while held controls expire. All tabs share the controller.
-The server binds only to loopback and rejects foreign-host/cross-origin writes.
-Normal and recording servers share shutdown handling: a timed-out, interrupted or
-failed shutdown keeps the controls available for Stop/retry.
+Open [http://127.0.0.1:8050](http://127.0.0.1:8050); add `--port 8051` to the launch
+command if needed. Startup does not access USB. Close other software that owns
+the mount, then click **Connect** to read identity, status and all five settings
+groups. If the mount is not homed, use **Home** explicitly before positioning.
 
-Earlier [migrated-GUI](docs/bench/gui-migration-20261106-231335Z.md) and
-[held-jog](docs/bench/gui-jog-20261107-002109Z.md) bench records cover small motions,
-release/focus/Stop behavior and exact settings restoration on serial 55551174,
-firmware 2.0.1. The latest cyclic-default and settings migration is validated offline.
-Independent accuracy, full/multi-turn travel, ordinary OS window switching and fault
-scenarios still need bench acceptance. Install the `gui` extra for GUI tests; core
-library/CLI use does not require Dash.
+The panel provides Move/profile editing, Home, Stop, Drive/Jog, Enable/Disable,
+Identify and status/limit indicators. Settings has Moves / Jogs, Rotation and
+Advanced tabs. **Apply changes** validates the complete form, applies edited
+device groups with readback verification, then publishes session options. A
+failure can leave partial device changes and requires recovery. EEPROM saving
+is opt-in and reported as requested, not power-cycle proven. Close/×/Escape
+discard unapplied edits.
 
-## Setup
+**Refresh status** reads status and position; **Refresh readbacks** reloads the
+five settings groups. Display units, rotation rules, USB supply confirmation and
+Drive speeds are session options. Homing settings are read-only; S-curve, power,
+trigger and factory-reset controls are unavailable. See the
+[GUI contract](docs/gui-manual.md) for the full behavior and wire mappings.
 
-Install [uv](https://docs.astral.sh/uv/). From this repository:
+One worker owns USB and motions are not queued. Release, lost focus or an expired
+browser heartbeat requests a stop for held controls. A confirmed operator Stop on
+a healthy connection permits another command after any temporary profile is
+restored and verified. Communication/controller faults require explicit recovery;
+an unconfirmed stop retains **physical state UNKNOWN**.
+
+All tabs share the controller. Closing a tab leaves the server running and finite
+moves continue; held controls expire. **Close web UI** or console **Ctrl+C** waits
+for the owner before releasing USB. Failed shutdown keeps controls available for
+Stop/retry. To update: stop motion, disconnect, close the server, update/restart,
+then **reload every open GUI tab** before reconnecting. Stale callback layouts
+are rejected. The server binds only to loopback and rejects foreign-host and
+cross-origin writes.
+
+## Command-line use
+
+Queries return JSON and do not enable or move the motor:
 
 ```powershell
-uv sync --locked
 uv run --locked k10cr2 --help
-```
-
-Python 3.12 is selected by `.python-version`; validation used 3.12.7. `uv.lock` pins
-runtime and development dependencies. `--locked` rejects a missing/stale lockfile.
-For runtime-only installation use `uv sync --locked --no-dev`.
-
-The mount must already use the **WinUSB** Windows driver. Driver installation is a
-separate operator step; this package does not install or replace drivers. The tested
-USB bridge is VID `0403`, PID `FAF0`, bcdDevice `1000`, with 64-byte bulk endpoints.
-Match the mount's **name and serial**, because another Thorlabs device may share the
-USB IDs. A WinUSB binding does not provide Kinesis/D2XX/COM access to that device.
-Other serial adapters should retain their own driver bindings.
-
-## Query the mount
-
-Supply the actual eight-digit serial; `55551174` is the unit tested in this project.
-
-```powershell
 uv run --locked k10cr2 --serial 55551174 info
 uv run --locked k10cr2 --serial 55551174 status
 uv run --locked k10cr2 --serial 55551174 position
 ```
 
-Results are JSON. Add `--verbose` before the subcommand to log raw APT traffic to
-stderr. Queries configure the USB-to-UART bridge and request data; they do not enable
-or move the motor. Imports and CLI help do not access USB.
+Add `--verbose` before the subcommand to log raw APT traffic to stderr. Queries
+configure the USB-to-UART bridge and request data. Imports and CLI help do not
+access USB.
 
-## Home, move, stop
-
-These commands **cause physical motion**. Run them only with the mounted setup ready.
+These commands **cause physical motion**; prepare the mounted setup first:
 
 ```powershell
 uv run --locked k10cr2 --serial 55551174 home --timeout 120
@@ -117,35 +89,28 @@ uv run --locked k10cr2 --serial 55551174 move 90 --timeout 120
 uv run --locked k10cr2 --serial 55551174 stop --timeout 5
 ```
 
-An absolute move requires a fresh homed status. Fixed Range accepts finite targets
-in `0 <= angle <= 360` degrees, rounded to the nearest count (ties to even).
-The 360° endpoint is a complete counted turn; targets do not silently wrap.
-An already-homed counter outside Fixed Range can move back to a target inside it.
-In Fixed Range, manual controls permit inward recovery: finite jogs may approach or enter the
-interval without crossing the opposite boundary; held Drive/continuous Jog stops at
-the nearest boundary. The ±15,480° counted bound still applies to the current position.
-CLI, GUI and library share the same modes: `fixed`, `total` (±15,480°) and
-`equivalent` (0–360° phase resolved from a fresh counter). For equivalent routing,
-choose `--direction quickest`, `forward` or `reverse`; use `--mode` to select the mode.
-The GUI starts in `equivalent`; CLI and library defaults remain `fixed`.
-The device's backlash settings remain in effect.
+During a blocking Home/Move, use **Ctrl+C in that same process** to request Stop
+through its active owner. The standalone `stop` command is for a mount with no
+other active owner. One owner per serial is enforced within a process;
+cross-process ownership remains the operator's responsibility.
 
-Home/move block until fresh status and position confirm completion. Homing must show
-a new homing/not-homed transition and reach exactly zero counts. Absolute Move accepts
-a residual of at most one count (about 0.0000073°) after fresh idle/homed/enabled status
-and evidence of progress. Firmware 2.0.1 can stop one count from the requested target;
-this completion tolerance does not establish mechanical accuracy. A move already at
-its exact target is reported as a `no_op`. A short move can finish without a captured
-busy flag if the fresh counter changed. Completion notification receipt is reported
-separately from these status/counter checks. Loss of motor enable during Home/Move,
-or loss of the home reference during an absolute Move, triggers same-owner Stop
-cleanup and requires explicit recovery.
+## Rotation modes
 
-While a blocking home/move owns the connection, **Ctrl+C** attempts a profiled stop
-through that same connection. Do not start another CLI or application to interrupt it.
-The standalone `stop` command is for a mount with no other active owner. There is one
-owner per serial within this process; cross-process ownership is the operator's
-responsibility. Close other control software before using this package.
+CLI, GUI and library share the same angle contract. Absolute moves require a
+fresh home reference; existing device backlash settings remain in effect.
+
+| Mode | Target and behavior | Default for |
+| --- | --- | --- |
+| `fixed` | 0–360° inclusive; 360° is a complete counted turn, distinct from zero | CLI/library |
+| `equivalent` | 0–360° phase, resolved from the fresh counter using quickest/forward/reverse routing; display wraps | GUI |
+| `total` | Signed accumulated angle within ±15,480° | Explicit selection |
+
+Use `move 10 --mode equivalent --direction reverse` for an equivalent-angle CLI
+move. Equivalent and Total Jog/Drive can cross zero and full turns. Fixed Range
+manual controls permit inward recovery from outside its interval. Every mode
+retains the ±15,480° counted software guard; it is not a mechanical stop. See the
+[shared angle contract](docs/migration.md#shared-angle-contract) for routing,
+rounding and boundary details.
 
 ## Python library
 
@@ -158,44 +123,29 @@ with K10CR2("55551174") as mount:
     print(mount.position())
 ```
 
-Explicit motion uses `mount.home()`, `mount.move_absolute(90)`, and `mount.stop()`.
-Each accepts a positive finite `timeout` in seconds. Constructor defaults are
-`query_timeout=3`, `motion_timeout=120`, and `cleanup_timeout=5`.
-Construction alone does not connect; `connect()` / `close()` are also available.
-Close releases the USB handle and leaves motor enable/holding state unchanged.
+Construction alone does not connect; the context manager connects and closes.
+Motion is explicit through `home()`, `move_absolute()` and `stop()`. Settings are
+read with `query_settings()` and edited with `configure()`. The
+[Python API guide](docs/python-api.md) covers timeouts, completion, cancellation,
+settings and recovery. The [tutorial notebooks](examples/notebooks/README.md)
+provide nine independent examples with device access disabled by default.
 
-`query_settings()` reads velocity, jog, backlash, home and hardware buttons.
-`configure(changes, high_power=False, persist=False)` validates all selected groups
-before writing and verifies each changed group. Home edits and unverified mappings
-remain unavailable. Confirmation flags require actual booleans; see the
-[settings contract](docs/gui-manual.md#settings-and-wire-support).
+## Validation and limits
 
-`home()` and `move_absolute()` also accept an optional `threading.Event` as
-`cancel`, plus `on_progress(status, position)`. Setting the event requests
-cooperative cancellation through the active owner. After a motion command,
-cancellation raises `MotionError` with `MotionCancelled` as its original cause
-and a separate stop-cleanup result. A clean cooperative cancellation has
-`MotionError.recovery_required == False`; the connection remains usable after a
-confirmed stop and verified temporary-profile restoration. The GUI reports this
-as an informational Stop. Cancellation observed before enabling/motion
-raises `MotionCancelled` directly. Progress callbacks run synchronously on the
-owner thread, must return promptly, and must not call the controller. They add a
-position query to each motion poll; observer failures trigger stop cleanup.
+The [8 November 2026 live GUI test](docs/bench/gui-live-20261108.md) exercised
+settings, cyclic Jog, Drive/release, Stop and subsequent motion on serial
+55551174, firmware 2.0.1, including ±12° sweeps with a 20°/s, 20°/s² profile.
+It reproduced and retested callback-rendering and one-count Move-completion
+fixes, then restored all five raw settings groups and exactly zero counts.
+That checkpoint passed **363 Python tests and two JavaScript event tests**.
 
-Query timeouts or protocol failures require close and explicit reconnect before
-normal operations resume, avoiding ambiguous delayed same-ID replies. A failed
-motion raises `MotionError`, retaining `original` and `cleanup` records. Cleanup has
-its own deadline; it is not cut off by an expired motion deadline. A failed or
-unconfirmed stop reports **physical state unknown**. Motion is never replayed
-automatically. Reconnecting alone does not establish a new physical home reference;
-query state and explicitly home when required.
+Controller counters and completion do not establish independent angular accuracy.
+Physical speed/acceleration calibration, full/multi-turn travel, EEPROM retention,
+native OS focus switching, hardware fault injection and endurance remain open.
+Software Stop is not hard real time; its acknowledgement is controller evidence,
+not independent proof of mechanical rest or optical safety.
 
-Timeouts bound software operations and propagate to USB transfers. USB enumeration,
-Windows driver calls, scheduling, and resource release cannot provide a hard real-time
-guarantee. A software stop acknowledgement is controller evidence, not independent
-proof of mechanical rest or optical safety.
-
-## Development and evidence
+## Development
 
 ```powershell
 uv run --locked --extra gui pytest
@@ -205,33 +155,24 @@ uv run --locked ruff format --check .
 uv build --no-sources
 ```
 
-The [repository review](docs/reviews/repository-review-20261108.md) records the
-controller/GUI migration checkpoint. Subsequent pruning reduced `gui.py` from
-1,925 to 1,615 lines. The current checks pass **363 Python tests and two JavaScript
-event tests**. The [8 November live GUI test](docs/bench/gui-live-20261108.md)
-exercised settings, cyclic Jog, Drive/release, Stop and subsequent motion on the
-actual mount, including ±12° sweeps with a 20°/s, 20°/s² profile. It found and
-retested callback rendering and one-count Move-completion fixes, then restored
-all raw settings and exactly zero counts. See the
-[validation record](docs/validation.md) for checkpoint-specific evidence and
-[command reference](docs/commands.md) for protocol details. Tests use independent
-literal frames, saved traffic and mocked USB; they do not operate the mount.
+Tests use literal frames, saved traffic and mocked USB; they do not operate the
+mount. Install the `gui` extra for GUI tests. Runtime source lives in `src/k10cr2/`:
+`controller.py` owns the device API and recovery, `protocol.py` the APT layouts,
+`settings.py` units and validation, `transport.py` USB, `cli.py` the CLI, and
+`gui.py` the GUI owner, forms, callbacks and server lifecycle.
 
-Runtime source is organized as follows:
+## Documentation
 
-- `gui.py`: the only GUI script, including owner, forms, validation, layout,
-  callbacks, local HTTP routes and server lifecycle.
-- `controller.py`: explicit-connect device API, motion ownership and recovery.
-- `protocol.py`: APT packet/layout definitions, frame parsing and reply validation.
-- `settings.py`: units, limits, target resolution and editable-setting validation.
-- `transport.py`: lazy USB initialization, FTDI bridge setup and bounded transfers.
-- `cli.py`: JSON command-line interface.
+| Guide | Contents |
+| --- | --- |
+| [GUI contract](docs/gui-manual.md) | Controls, settings, ownership, packet mappings and unsupported features |
+| [Python API](docs/python-api.md) | Connection, motion completion, cancellation and recovery |
+| [Tutorial notebooks](examples/notebooks/README.md) | Environment checks through a bounded angle sequence |
+| [Migration guide](docs/migration.md) | Shared angle contract, removed interfaces and reference paths |
+| [Command reference](docs/commands.md) | APT frames, units, status and USB bridge setup |
+| [Capability catalogue](docs/command-catalog.md) | Implemented commands and unverified mappings |
+| [Validation record](docs/validation.md) | Dated software and hardware checkpoints with evidence links |
+| [Manufacturer references](docs/references/README.md) | Original PDFs and provenance |
+| [Bench tools](tools/bench/README.md) | GUI recording and exact raw-settings restoration |
 
-The [capability catalogue](docs/command-catalog.md) distinguishes implemented
-commands, documented possibilities and unsupported K10CR2 mappings; the
-[GUI contract](docs/gui-manual.md) describes settings and operator behavior.
-Historical [6 November review](docs/reviews/repository-review-20261106.md) and
-[bench records](docs/validation.md) retain their original source checkpoints.
-Controller-reported counters and completion do not establish independent angular
-accuracy. Physical speed calibration, reboot persistence, long sessions and
-coexistence stability remain unverified.
+Dated reviews and bench captures retain their original software versions and scope.
